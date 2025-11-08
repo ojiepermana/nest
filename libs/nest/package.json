@@ -1,0 +1,23 @@
+{
+    "name": "@ojiepermana/nest",
+    "version": "1.0.0",
+    "description": "NestJS Core Library",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "author": "Ojie Permana",
+    "license": "MIT",
+    "keywords": [
+        "nestjs",
+        "core",
+        "library"
+    ],
+    "peerDependencies": {
+        "@nestjs/common": "^11.0.0",
+        "@nestjs/core": "^11.0.0",
+        "reflect-metadata": "^0.2.0",
+        "rxjs": "^7.0.0"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

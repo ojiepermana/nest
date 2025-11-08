@@ -13,7 +13,8 @@
       "entryFile": "index",
       "sourceRoot": "libs/generator/src",
       "compilerOptions": {
-        "tsConfigPath": "libs/generator/tsconfig.lib.json"
+        "tsConfigPath": "libs/generator/tsconfig.lib.json",
+        "webpack": false
       }
     },
     "nest": {
@@ -22,7 +23,8 @@
       "entryFile": "index",
       "sourceRoot": "libs/nest/src",
       "compilerOptions": {
-        "tsConfigPath": "libs/nest/tsconfig.lib.json"
+        "tsConfigPath": "libs/nest/tsconfig.lib.json",
+        "webpack": false
       }
     }
   }

@@ -3,6 +3,11 @@
 /node_modules
 /build
 
+# Library build outputs
+/libs/*/dist
+libs/generator/dist
+libs/nest/dist
+
 # Logs
 logs
 *.log

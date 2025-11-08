@@ -5,3 +5,4 @@ tsconfig.lib.json
 **/*.spec.ts
 **/*.spec.js
 *.tsbuildinfo
+**/*.map

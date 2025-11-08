@@ -1,15 +1,26 @@
 {
     "name": "@ojiepermana/nest",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "NestJS Core Library",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "author": "Ojie Permana",
     "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ojiepermana/nest.git",
+        "directory": "libs/nest"
+    },
+    "homepage": "https://github.com/ojiepermana/nest/tree/main/libs/nest#readme",
+    "bugs": {
+        "url": "https://github.com/ojiepermana/nest/issues"
+    },
     "keywords": [
         "nestjs",
         "core",
-        "library"
+        "library",
+        "utilities",
+        "helpers"
     ],
     "peerDependencies": {
         "@nestjs/common": "^11.0.0",
@@ -19,5 +30,10 @@
     },
     "publishConfig": {
         "access": "public"
-    }
+    },
+    "files": [
+        "dist/**/*.js",
+        "dist/**/*.d.ts",
+        "README.md"
+    ]
 }

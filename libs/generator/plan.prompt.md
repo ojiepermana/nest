@@ -8561,7 +8561,9 @@ Critical architecture patterns added to support production-scale applications.
 
 ### Phase 4: Code Generation Engine
 
-- [ ] Template engine setup (Handlebars/EJS)
+- [ ] Template engine setup (Handlebars + ES Module .mjs support)
+- [ ] Template loader with .mjs priority, .hbs fallback
+- [ ] Shared template helpers (filter-helper.mjs, join-helper.mjs)
 - [ ] DTO generator with class-validator
 - [ ] **Implement FilterCompiler for auto-generated filters**
 - [ ] **Query generator with dialect-aware SQL**
@@ -8803,6 +8805,15 @@ libs/generator/
       controller-gateway.template.hbs
       controller-handler.template.hbs
       module.template.hbs
+      # OR use .mjs templates (ES Modules)
+      dto.template.mjs
+      query.template.mjs
+      repository.template.mjs
+      service.template.mjs
+      controller-rest.template.mjs
+      controller-gateway.template.mjs
+      controller-handler.template.mjs
+      module.template.mjs
     utils/
       file.service.ts
       block-parser.service.ts
@@ -8811,6 +8822,375 @@ libs/generator/
     index.ts
     generator.module.ts
 ```
+
+---
+
+## Template System
+
+**Support for both Handlebars (.hbs) and ES Module (.mjs) templates.**
+
+### Why .mjs Templates?
+
+ES Module templates provide several advantages:
+
+1. **Full JavaScript Power**: Use loops, conditionals, functions, imports
+2. **Type Safety**: Import TypeScript types for template data
+3. **Code Reusability**: Share helper functions across templates
+4. **Better IDE Support**: Full autocomplete and syntax highlighting
+5. **Dynamic Logic**: Complex business rules in template generation
+6. **Tree-shaking**: Unused template code can be eliminated
+
+### Template Format Comparison
+
+**Handlebars Template (.hbs):**
+
+```handlebars
+{{! dto.template.hbs }}
+import { IsString, IsNumber, IsOptional } from 'class-validator'; export class
+{{pascalCase tableName}}Dto {
+{{#each columns}}
+  {{#if isRequired}}
+    @{{validatorDecorator}}()
+  {{else}}
+    @IsOptional() @{{validatorDecorator}}()
+  {{/if}}
+  {{camelCase columnName}}:
+  {{typescriptType}};
+
+{{/each}}
+}
+```
+
+**ES Module Template (.mjs):**
+
+```javascript
+// dto.template.mjs
+export default function generateDto(data) {
+  const { tableName, columns, pascalCase, camelCase } = data;
+
+  const imports = new Set(['IsOptional']);
+  columns.forEach((col) => {
+    imports.add(col.validatorDecorator);
+  });
+
+  return `
+import { ${Array.from(imports).join(', ')} } from 'class-validator';
+
+export class ${pascalCase(tableName)}Dto {
+${columns
+  .map((col) => {
+    const decorators = [];
+    if (!col.isRequired) decorators.push('  @IsOptional()');
+    decorators.push(`  @${col.validatorDecorator}()`);
+
+    return `${decorators.join('\n')}
+  ${camelCase(col.columnName)}: ${col.typescriptType};`;
+  })
+  .join('\n\n')}
+}
+`.trim();
+}
+```
+
+### Advanced .mjs Template Example
+
+```javascript
+// repository.template.mjs
+import { generateFilterClause } from './helpers/filter-helper.mjs';
+import { generateJoinClause } from './helpers/join-helper.mjs';
+
+export default function generateRepository(data) {
+  const {
+    tableName,
+    schemaName,
+    columns,
+    foreignKeys,
+    hasSoftDelete,
+    dialectType,
+  } = data;
+
+  // Dynamic import based on dialect
+  const quoteIdentifier =
+    dialectType === 'postgres'
+      ? (name) => `"${name}"`
+      : (name) => `\`${name}\``;
+
+  // Generate filter methods
+  const filterMethods = columns
+    .filter((col) => col.isFilterable)
+    .map((col) => generateFilterMethod(col, quoteIdentifier))
+    .join('\n\n');
+
+  // Generate JOIN queries if has foreign keys
+  const joinMethods =
+    foreignKeys.length > 0
+      ? generateJoinClause(foreignKeys, quoteIdentifier)
+      : '';
+
+  return `
+// GENERATED_FILE_START
+import { Injectable } from '@nestjs/common';
+import { Pool } from 'pg';
+import { ${pascalCase(tableName)}FilterDto } from './${tableName}.dto';
+
+@Injectable()
+export class ${pascalCase(tableName)}Repository {
+  constructor(private readonly pool: Pool) {}
+
+  // GENERATED_METHOD_START: find-all
+  async findAll(filters?: ${pascalCase(tableName)}FilterDto) {
+    const baseQuery = \`
+      SELECT * FROM ${quoteIdentifier(schemaName)}.${quoteIdentifier(tableName)}
+      ${hasSoftDelete ? 'WHERE deleted_at IS NULL' : ''}
+    \`;
+
+    ${filterMethods}
+
+    const result = await this.pool.query(baseQuery);
+    return result.rows;
+  }
+  // GENERATED_METHOD_END: find-all
+
+  ${joinMethods}
+
+  // CUSTOM_METHODS_START
+  // Add your custom methods here
+  // CUSTOM_METHODS_END
+}
+// GENERATED_FILE_END
+`.trim();
+}
+
+function generateFilterMethod(column, quoteIdentifier) {
+  const { columnName, typescriptType, operator } = column;
+
+  return `
+  // Filter by ${columnName}
+  if (filters?.${columnName}) {
+    baseQuery += \` AND ${quoteIdentifier(columnName)} ${operator} $\${paramIndex++}\`;
+    params.push(filters.${columnName});
+  }
+  `.trim();
+}
+
+function pascalCase(str) {
+  return str
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join('');
+}
+```
+
+### Template Loader Service
+
+```typescript
+// template-loader.service.ts
+import { Injectable } from '@nestjs/common';
+import * as Handlebars from 'handlebars';
+import { readFile } from 'fs/promises';
+import { join } from 'path';
+
+@Injectable()
+export class TemplateLoaderService {
+  private templateCache = new Map<string, any>();
+
+  async loadTemplate(templateName: string): Promise<(data: any) => string> {
+    if (this.templateCache.has(templateName)) {
+      return this.templateCache.get(templateName);
+    }
+
+    // Try .mjs first (preferred)
+    const mjsPath = join(
+      __dirname,
+      '../templates',
+      `${templateName}.template.mjs`,
+    );
+    try {
+      const mjsTemplate = await import(mjsPath);
+      const templateFn = mjsTemplate.default;
+      this.templateCache.set(templateName, templateFn);
+      return templateFn;
+    } catch (mjsError) {
+      // Fallback to .hbs
+      const hbsPath = join(
+        __dirname,
+        '../templates',
+        `${templateName}.template.hbs`,
+      );
+      try {
+        const hbsContent = await readFile(hbsPath, 'utf-8');
+        const compiled = Handlebars.compile(hbsContent);
+        this.templateCache.set(templateName, compiled);
+        return compiled;
+      } catch (hbsError) {
+        throw new Error(`Template not found: ${templateName} (.mjs or .hbs)`);
+      }
+    }
+  }
+
+  async renderTemplate(templateName: string, data: any): Promise<string> {
+    const templateFn = await this.loadTemplate(templateName);
+    return templateFn(data);
+  }
+}
+```
+
+### Shared Template Helpers
+
+```javascript
+// templates/helpers/filter-helper.mjs
+export function generateFilterClause(columns, dialectType) {
+  return columns
+    .filter((col) => col.isFilterable)
+    .map((col, index) => {
+      const operator = getOperator(col.filterOperator, dialectType);
+      return {
+        condition: `${quoteIdent(col.columnName)} ${operator} $${index + 1}`,
+        parameter: col.columnName,
+      };
+    });
+}
+
+function getOperator(filterOp, dialect) {
+  const operators = {
+    eq: '=',
+    ne: '!=',
+    gt: '>',
+    gte: '>=',
+    lt: '<',
+    lte: '<=',
+    like: dialect === 'postgres' ? 'ILIKE' : 'LIKE',
+    in: 'IN',
+  };
+  return operators[filterOp] || '=';
+}
+
+export function quoteIdent(name, dialect = 'postgres') {
+  return dialect === 'postgres' ? `"${name}"` : `\`${name}\``;
+}
+```
+
+```javascript
+// templates/helpers/join-helper.mjs
+export function generateJoinClause(foreignKeys, quoteIdentifier) {
+  return foreignKeys
+    .map((fk) => {
+      const { columnName, refTable, refColumn, joinType = 'LEFT' } = fk;
+
+      return `
+  // GENERATED_METHOD_START: find-with-${refTable}
+  async findWith${pascalCase(refTable)}(filters?: FilterDto) {
+    const query = \`
+      SELECT 
+        ${quoteIdentifier('t')}.*,
+        ${quoteIdentifier('r')}.*
+      FROM ${quoteIdentifier(tableName)} ${quoteIdentifier('t')}
+      ${joinType} JOIN ${quoteIdentifier(refTable)} ${quoteIdentifier('r')}
+        ON ${quoteIdentifier('t')}.${quoteIdentifier(columnName)} = 
+           ${quoteIdentifier('r')}.${quoteIdentifier(refColumn)}
+      WHERE ${quoteIdentifier('t')}.deleted_at IS NULL
+    \`;
+    
+    const result = await this.pool.query(query);
+    return result.rows;
+  }
+  // GENERATED_METHOD_END: find-with-${refTable}
+    `.trim();
+    })
+    .join('\n\n');
+}
+
+function pascalCase(str) {
+  return str
+    .split('_')
+    .map((w) => w[0].toUpperCase() + w.slice(1))
+    .join('');
+}
+```
+
+### Template Selection Strategy
+
+```typescript
+// generator.service.ts
+@Injectable()
+export class GeneratorService {
+  constructor(
+    private templateLoader: TemplateLoaderService,
+    private config: ConfigService,
+  ) {}
+
+  async generateFile(type: string, metadata: any): Promise<string> {
+    // Config can specify preferred template format
+    const preferredFormat = this.config.get('templateFormat'); // 'mjs' or 'hbs'
+
+    let templateName = type;
+    if (preferredFormat === 'mjs') {
+      templateName = `${type}`;
+      // Will try .mjs first, fallback to .hbs
+    }
+
+    const content = await this.templateLoader.renderTemplate(templateName, {
+      ...metadata,
+      // Helper functions available in templates
+      pascalCase: this.pascalCase,
+      camelCase: this.camelCase,
+      snakeCase: this.snakeCase,
+    });
+
+    return content;
+  }
+
+  private pascalCase(str: string): string {
+    return str
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join('');
+  }
+
+  private camelCase(str: string): string {
+    const pascal = this.pascalCase(str);
+    return pascal.charAt(0).toLowerCase() + pascal.slice(1);
+  }
+
+  private snakeCase(str: string): string {
+    return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+  }
+}
+```
+
+### Configuration
+
+```typescript
+// nest-generator.config.ts
+export default {
+  // Template format: 'mjs' (preferred) or 'hbs' (fallback)
+  templateFormat: 'mjs',
+
+  // Custom template directory
+  customTemplatesDir: './custom-templates',
+
+  // Template precedence: custom > mjs > hbs
+  templatePrecedence: ['custom', 'mjs', 'hbs'],
+
+  // Enable template caching
+  cacheTemplates: true,
+};
+```
+
+### Benefits Summary
+
+| Feature        | Handlebars (.hbs)  | ES Module (.mjs)       |
+| -------------- | ------------------ | ---------------------- |
+| Syntax         | Mustache/HTML-like | Pure JavaScript        |
+| Logic          | Limited (helpers)  | Full JS power          |
+| Type Safety    | ❌ No              | ✅ Yes (with JSDoc/TS) |
+| Code Reuse     | Via helpers        | Via imports            |
+| IDE Support    | Basic              | Full autocomplete      |
+| Learning Curve | Low                | Medium                 |
+| Performance    | Fast (compiled)    | Fast (native JS)       |
+| Debugging      | Difficult          | Easy (standard JS)     |
+
+**Recommendation:** Use `.mjs` templates for complex logic, `.hbs` for simple templates.
 
 ---
 

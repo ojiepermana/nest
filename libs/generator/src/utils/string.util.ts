@@ -26,6 +26,33 @@ export function toCamelCase(str: string): string {
 }
 
 /**
+ * Convert to snake_case
+ */
+export function toSnakeCase(str: string): string {
+  return str
+    .replace(/([A-Z])/g, '_$1')
+    .toLowerCase()
+    .replace(/^_/, '');
+}
+
+/**
+ * Convert to kebab-case
+ */
+export function toKebabCase(str: string): string {
+  return str
+    .replace(/([A-Z])/g, '-$1')
+    .toLowerCase()
+    .replace(/^-/, '')
+    .replace(/_/g, '-');
+}
+
+// Aliases for convenience
+export const pascalCase = toPascalCase;
+export const camelCase = toCamelCase;
+export const snakeCase = toSnakeCase;
+export const kebabCase = toKebabCase;
+
+/**
  * Pluralize a word (simple implementation)
  */
 export function pluralize(word: string): string {

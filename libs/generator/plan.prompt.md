@@ -8277,113 +8277,7 @@ nest-generator generate user.users --plugin=recap --plugin=graphql
 
 ---
 
-## Multi-Tenancy Support
-
-**Schema-based and row-level tenant isolation.**
-
-### Schema-per-Tenant
-
-```typescript
-// GENERATED_SCHEMA_PER_TENANT_START
-@Injectable()
-export class TenantService {
-  private tenantSchemas = new Map<string, string>();
-
-  async getTenantSchema(tenantId: string): string {
-    if (!this.tenantSchemas.has(tenantId)) {
-      const result = await this.pool.query(
-        `SELECT schema_name FROM tenants WHERE id = $1`,
-        [tenantId],
-      );
-      if (!result.rows[0]) {
-        throw new NotFoundException('Tenant not found');
-      }
-      this.tenantSchemas.set(tenantId, result.rows[0].schema_name);
-    }
-    return this.tenantSchemas.get(tenantId);
-  }
-
-  async createTenantSchema(tenantId: string, schemaName: string) {
-    await this.pool.query(`CREATE SCHEMA IF NOT EXISTS "${schemaName}"`);
-    await this.pool.query(
-      `INSERT INTO tenants (id, schema_name) VALUES ($1, $2)`,
-      [tenantId, schemaName],
-    );
-
-    // Copy structure from template schema
-    await this.copySchemaStructure('template', schemaName);
-  }
-}
-
-@Injectable()
-export class TenantInterceptor implements NestInterceptor {
-  constructor(private tenantService: TenantService) {}
-
-  async intercept(context: ExecutionContext, next: CallHandler) {
-    const request = context.switchToHttp().getRequest();
-    const tenantId = request.headers['x-tenant-id'];
-
-    if (!tenantId) {
-      throw new BadRequestException('Tenant ID required');
-    }
-
-    const schema = await this.tenantService.getTenantSchema(tenantId);
-    request['tenantSchema'] = schema;
-
-    return next.handle();
-  }
-}
-
-// Usage in repository
-async findAll(filters: UserFilterDto, tenantSchema: string) {
-  const query = `
-    SELECT * FROM ${this.dialect.quoteIdentifier(`${tenantSchema}.users`)}
-    WHERE deleted_at IS NULL
-  `;
-  const result = await this.pool.query(query);
-  return result.rows;
-}
-// GENERATED_SCHEMA_PER_TENANT_END
-```
-
-### Row-Level Security (RLS)
-
-```typescript
-// GENERATED_RLS_START
--- Enable RLS on table
-ALTER TABLE user.users ENABLE ROW LEVEL SECURITY;
-
--- Create policy
-CREATE POLICY tenant_isolation_policy ON user.users
-  USING (tenant_id = current_setting('app.tenant_id')::uuid);
-
--- Set tenant context before each query
-@Injectable()
-export class RLSInterceptor implements NestInterceptor {
-  async intercept(context: ExecutionContext, next: CallHandler) {
-    const request = context.switchToHttp().getRequest();
-    const tenantId = request.headers['x-tenant-id'];
-
-    if (tenantId) {
-      await this.pool.query(`SET app.tenant_id = '${tenantId}'`);
-    }
-
-    return next.handle().pipe(
-      finalize(() => {
-        // Reset after query
-        this.pool.query(`RESET app.tenant_id`).catch(() => {});
-      }),
-    );
-  }
-}
-// GENERATED_RLS_END
-```
-
----
-
-## Performance Optimizations
-
-**Production-scale performance patterns.**
+## Performance Optimizations**Production-scale performance patterns.**
 
 ### Read/Write Split
 
@@ -8631,12 +8525,6 @@ Critical architecture patterns added to support production-scale applications.
   - [x] Snapshot testing for templates
   - [x] Plugin system for extensibility
 
-- [x] **Multi-Tenancy Support** ✅ DOCUMENTED
-  - [x] Schema-per-tenant pattern
-  - [x] Row-level security (RLS) with PostgreSQL policies
-  - [x] Tenant isolation guards and interceptors
-  - [x] Automatic tenant context injection
-
 - [x] **Performance Optimizations** ✅ DOCUMENTED
   - [x] Read/write connection split
   - [x] Connection pooling best practices
@@ -8794,7 +8682,6 @@ Critical architecture patterns added to support production-scale applications.
 - [ ] Import functionality (CSV/Excel to database)
 - [ ] GraphQL resolver generation
 - [ ] WebSocket/Real-time support
-- [ ] Multi-tenancy support
 - [ ] Webhook generator
 
 ### Phase 12: Polish & Release
@@ -8815,39 +8702,55 @@ Critical architecture patterns added to support production-scale applications.
 ```json
 {
   "dependencies": {
-    "@nestjs/common": "^10.0.0",
-    "@nestjs/core": "^10.0.0",
-    "@nestjs/microservices": "^10.0.0",
-    "@nestjs/swagger": "^7.1.0",
-    "@nestjs/throttler": "^5.0.0",
-    "@nestjs/cache-manager": "^2.1.0",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.0",
+    "@nestjs/microservices": "^11.0.0",
+    "@nestjs/swagger": "^8.0.0",
+    "@nestjs/throttler": "^6.0.0",
+    "@nestjs/cache-manager": "^2.2.0",
     "@nestjs/elasticsearch": "^10.0.0",
-    "@nestjs/event-emitter": "^2.0.0",
-    "class-validator": "^0.14.0",
+    "@nestjs/event-emitter": "^2.1.0",
+    "@nestjs/terminus": "^10.2.0",
+    "class-validator": "^0.14.1",
     "class-transformer": "^0.5.1",
-    "pg": "^8.11.0",
-    "mysql2": "^3.6.0",
-    "commander": "^11.0.0",
-    "inquirer": "^9.2.0",
+    "pg": "^8.13.0",
+    "mysql2": "^3.11.0",
+    "commander": "^12.1.0",
+    "inquirer": "^10.2.0",
     "handlebars": "^4.7.8",
     "chalk": "^5.3.0",
-    "ora": "^7.0.1",
-    "cache-manager": "^5.2.0",
-    "cache-manager-redis-store": "^3.0.0",
+    "ora": "^8.1.0",
+    "cache-manager": "^5.7.0",
+    "cache-manager-redis-store": "^3.0.1",
     "json2csv": "^6.0.0",
-    "exceljs": "^4.3.0",
-    "pdfkit": "^0.13.0",
-    "nodemailer": "^6.9.0",
-    "twilio": "^4.18.0",
-    "aws-sdk": "^2.1479.0",
-    "multer": "^1.4.5-lts.1"
+    "exceljs": "^4.4.0",
+    "pdfkit": "^0.15.0",
+    "nodemailer": "^6.9.15",
+    "twilio": "^5.3.0",
+    "@aws-sdk/client-s3": "^3.665.0",
+    "multer": "^1.4.5-lts.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "@opentelemetry/sdk-node": "^0.53.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.50.0",
+    "@opentelemetry/exporter-jaeger": "^1.26.0",
+    "@opentelemetry/exporter-prometheus": "^0.53.0",
+    "@willsoto/nestjs-prometheus": "^6.0.1",
+    "nestjs-pino": "^4.1.0",
+    "pino-http": "^10.3.0",
+    "pino-pretty": "^11.2.2",
+    "prettier": "^3.3.3"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/pg": "^8.10.0",
-    "@types/multer": "^1.4.9",
-    "@types/nodemailer": "^6.4.13",
-    "typescript": "^5.0.0"
+    "@types/node": "^22.7.0",
+    "@types/pg": "^8.11.10",
+    "@types/multer": "^1.4.12",
+    "@types/nodemailer": "^6.4.16",
+    "typescript": "^5.6.0",
+    "eslint": "^9.12.0",
+    "@typescript-eslint/eslint-plugin": "^8.8.0",
+    "@typescript-eslint/parser": "^8.8.0"
   }
 }
 ```
@@ -9132,7 +9035,6 @@ describe('Module Generation', () => {
 - [ ] Migration generator from metadata changes
 - [ ] GraphQL resolver generation (separate module)
 - [ ] Real-time subscriptions (WebSocket/SSE)
-- [ ] Multi-tenancy support (tenant isolation)
 - [ ] Webhook outgoing events
 - [ ] API versioning support
 - [ ] Data masking for sensitive fields

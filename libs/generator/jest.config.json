@@ -1,0 +1,29 @@
+{
+    "displayName": "generator",
+    "preset": "../../jest.config.js",
+    "testEnvironment": "node",
+    "roots": [
+        "<rootDir>/src",
+        "<rootDir>/test"
+    ],
+    "testMatch": [
+        "**/*.spec.ts"
+    ],
+    "transform": {
+        "^.+\\.ts$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+        "ts",
+        "js",
+        "json"
+    ],
+    "coverageDirectory": "../../coverage/libs/generator",
+    "collectCoverageFrom": [
+        "src/**/*.ts",
+        "!src/**/*.spec.ts",
+        "!src/**/index.ts"
+    ],
+    "moduleNameMapper": {
+        "^@/(.*)$": "<rootDir>/src/$1"
+    }
+}

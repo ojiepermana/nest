@@ -1,0 +1,489 @@
+/**
+ * Generate Command
+ *
+ * Orchestrates all generators to create a complete CRUD module:
+ * 1. Fetches table metadata from database
+ * 2. Generates Entity (TypeORM model)
+ * 3. Generates DTOs (Create, Update, Filter)
+ * 4. Generates Repository (data access layer)
+ * 5. Generates Service (business logic)
+ * 6. Generates Controller (REST API)
+ * 7. Generates Module (wires everything together)
+ * 8. Creates directory structure and writes files
+ */
+
+import inquirer from 'inquirer';
+import { writeFileSync, existsSync, mkdirSync, readFileSync } from 'fs';
+import { join } from 'path';
+import { Logger } from '../../utils/logger.util';
+import { DatabaseConnectionManager } from '../../database/connection.manager';
+import { MetadataRepository } from '../../metadata/metadata.repository';
+import { DialectFactory } from '../../database/dialects';
+import { EntityGenerator } from '../../generators/entity/entity.generator';
+import { CreateDtoGenerator } from '../../generators/dto/create-dto.generator';
+import { UpdateDtoGenerator } from '../../generators/dto/update-dto.generator';
+import { FilterDtoGenerator } from '../../generators/dto/filter-dto.generator';
+import { RepositoryGenerator } from '../../generators/repository/repository.generator';
+import { ServiceGenerator } from '../../generators/service/service.generator';
+import { ControllerGenerator } from '../../generators/controller/controller.generator';
+import { ModuleGenerator } from '../../generators/module/module.generator';
+import { toPascalCase } from '../../utils/string.util';
+import type {
+  GeneratorConfig,
+  TableMetadata,
+  ColumnMetadata,
+} from '../../interfaces/generator.interface';
+
+export interface GenerateCommandOptions {
+  tableName?: string;
+  outputPath?: string;
+  features?: {
+    swagger?: boolean;
+    caching?: boolean;
+    validation?: boolean;
+    pagination?: boolean;
+    auditLog?: boolean;
+    softDelete?: boolean;
+  };
+  skipPrompts?: boolean;
+}
+
+export class GenerateCommand {
+  private config?: GeneratorConfig;
+  private dbManager?: DatabaseConnectionManager;
+  private metadataRepo?: MetadataRepository;
+
+  async execute(options: GenerateCommandOptions = {}): Promise<void> {
+    Logger.section('🏗️  NestJS CRUD Generator');
+
+    // Step 1: Load configuration
+    this.loadConfig();
+
+    // Step 2: Connect to database
+    await this.connectDatabase();
+
+    // Step 3: Prompt for table or use provided
+    const tableName = await this.promptTableName(options.tableName);
+
+    // Step 4: Fetch metadata
+    const { tableMetadata, columns } = await this.fetchMetadata(tableName);
+
+    // Step 5: Prompt for features or use provided
+    const features = await this.promptFeatures(
+      options.features,
+      options.skipPrompts,
+    );
+
+    // Step 6: Prompt for output path or use provided
+    const outputPath = await this.promptOutputPath(
+      options.outputPath,
+      options.skipPrompts,
+    );
+
+    // Step 7: Generate all files
+    this.generateFiles(tableMetadata, columns, features, outputPath);
+
+    // Step 8: Summary
+    Logger.success('\n✅ Generation complete!');
+    Logger.info(`\n📁 Files created in: ${outputPath}`);
+    Logger.info('\n📝 Next steps:');
+    Logger.info('   1. Import the module in your app.module.ts');
+    Logger.info('   2. Run migrations if needed');
+    Logger.info('   3. Start your application');
+
+    await this.cleanup();
+  }
+
+  /**
+   * Load generator configuration
+   */
+  private loadConfig(): void {
+    const configPath = join(process.cwd(), 'generator.config.json');
+
+    if (!existsSync(configPath)) {
+      Logger.error('❌ generator.config.json not found!');
+      Logger.info('💡 Run `npx nest-generator init` first to initialize.');
+      process.exit(1);
+    }
+
+    const configContent = readFileSync(configPath, 'utf-8');
+    this.config = JSON.parse(configContent) as GeneratorConfig;
+    Logger.info('✓ Configuration loaded');
+  }
+
+  /**
+   * Connect to database
+   */
+  private async connectDatabase(): Promise<void> {
+    if (!this.config?.database) {
+      throw new Error('Database configuration not found');
+    }
+
+    this.dbManager = new DatabaseConnectionManager(this.config.database);
+    await this.dbManager.connect();
+
+    const dialect = DialectFactory.create(this.config.database.type);
+    this.metadataRepo = new MetadataRepository(this.dbManager, dialect);
+    Logger.info('✓ Database connected');
+  }
+
+  /**
+   * Prompt for table name
+   */
+  private async promptTableName(providedTableName?: string): Promise<string> {
+    if (providedTableName) {
+      return providedTableName;
+    }
+
+    if (!this.metadataRepo) {
+      throw new Error('Metadata repository not initialized');
+    }
+
+    // Fetch all tables
+    const tables = await this.metadataRepo.getAllTableMetadata();
+    const tableNames = tables.map((t) => t.table_name);
+
+    if (tableNames.length === 0) {
+      Logger.error('❌ No tables found in database');
+      process.exit(1);
+    }
+
+    const { tableName } = await inquirer.prompt<{ tableName: string }>([
+      {
+        type: 'list',
+        name: 'tableName',
+        message: 'Select table to generate CRUD module for:',
+        choices: tableNames,
+      },
+    ]);
+
+    return tableName;
+  }
+
+  /**
+   * Fetch table metadata and columns
+   */
+  private async fetchMetadata(
+    tableName: string,
+  ): Promise<{ tableMetadata: TableMetadata; columns: ColumnMetadata[] }> {
+    if (!this.metadataRepo || !this.config) {
+      throw new Error('Metadata repository not initialized');
+    }
+
+    const schema = this.config.database.schema || 'public';
+
+    Logger.info(`\n📊 Fetching metadata for table: ${tableName}`);
+
+    const tableMetadata = await this.metadataRepo.getTableMetadata(
+      schema,
+      tableName,
+    );
+    if (!tableMetadata) {
+      Logger.error(`❌ Table metadata not found for: ${tableName}`);
+      process.exit(1);
+    }
+
+    const columns = await this.metadataRepo.getColumnsByTableId(
+      tableMetadata.id,
+    );
+    if (columns.length === 0) {
+      Logger.error(`❌ No columns found for table: ${tableName}`);
+      process.exit(1);
+    }
+
+    Logger.info(`   ✓ Found ${columns.length} columns`);
+    Logger.info(`   ✓ Primary key: ${tableMetadata.primary_key_column}`);
+
+    return { tableMetadata, columns };
+  }
+
+  /**
+   * Prompt for features
+   */
+  private async promptFeatures(
+    providedFeatures?: GenerateCommandOptions['features'],
+    skipPrompts?: boolean,
+  ): Promise<Required<NonNullable<GenerateCommandOptions['features']>>> {
+    if (skipPrompts && providedFeatures) {
+      return {
+        swagger: providedFeatures.swagger ?? true,
+        caching: providedFeatures.caching ?? false,
+        validation: providedFeatures.validation ?? true,
+        pagination: providedFeatures.pagination ?? true,
+        auditLog: providedFeatures.auditLog ?? false,
+        softDelete: providedFeatures.softDelete ?? false,
+      };
+    }
+
+    const answers = await inquirer.prompt<
+      Required<NonNullable<GenerateCommandOptions['features']>>
+    >([
+      {
+        type: 'confirm',
+        name: 'swagger',
+        message: 'Enable Swagger/OpenAPI documentation?',
+        default: this.config?.features?.swagger ?? true,
+      },
+      {
+        type: 'confirm',
+        name: 'validation',
+        message: 'Enable DTO validation?',
+        default: true,
+      },
+      {
+        type: 'confirm',
+        name: 'pagination',
+        message: 'Enable pagination support?',
+        default: true,
+      },
+      {
+        type: 'confirm',
+        name: 'caching',
+        message: 'Enable caching?',
+        default: this.config?.features?.caching ?? false,
+      },
+      {
+        type: 'confirm',
+        name: 'auditLog',
+        message: 'Enable audit logging?',
+        default: this.config?.features?.audit ?? false,
+      },
+      {
+        type: 'confirm',
+        name: 'softDelete',
+        message: 'Enable soft delete?',
+        default: false,
+      },
+    ]);
+
+    return answers;
+  }
+
+  /**
+   * Prompt for output path
+   */
+  private async promptOutputPath(
+    providedPath?: string,
+    skipPrompts?: boolean,
+  ): Promise<string> {
+    if (providedPath) {
+      return providedPath;
+    }
+
+    if (skipPrompts) {
+      return join(process.cwd(), 'src');
+    }
+
+    const { outputPath } = await inquirer.prompt<{ outputPath: string }>([
+      {
+        type: 'input',
+        name: 'outputPath',
+        message: 'Output directory:',
+        default: 'src',
+      },
+    ]);
+
+    return join(process.cwd(), outputPath);
+  }
+
+  /**
+   * Generate all files
+   */
+  private generateFiles(
+    tableMetadata: TableMetadata,
+    columns: ColumnMetadata[],
+    features: Required<NonNullable<GenerateCommandOptions['features']>>,
+    outputPath: string,
+  ): void {
+    const tableName = tableMetadata.table_name;
+    const entityName = toPascalCase(tableName);
+    const moduleName = this.toKebabCase(tableName);
+
+    Logger.info('\n🔨 Generating files...');
+
+    // Create directory structure
+    const moduleDir = join(outputPath, moduleName);
+    this.ensureDirectory(moduleDir);
+    this.ensureDirectory(join(moduleDir, 'entities'));
+    this.ensureDirectory(join(moduleDir, 'dto'));
+    this.ensureDirectory(join(moduleDir, 'repositories'));
+    this.ensureDirectory(join(moduleDir, 'services'));
+    this.ensureDirectory(join(moduleDir, 'controllers'));
+
+    // 1. Generate Entity
+    Logger.info('   ⏳ Generating entity...');
+    const entityGenerator = new EntityGenerator(tableMetadata, columns, {
+      tableName,
+      entityName,
+      schema: this.config?.database.schema,
+      enableSoftDelete: features.softDelete,
+    });
+    const entityCode = entityGenerator.generate();
+    this.writeFile(
+      join(moduleDir, 'entities', `${moduleName}.entity.ts`),
+      entityCode,
+    );
+    Logger.info('   ✓ Entity generated');
+
+    // 2. Generate DTOs
+    Logger.info('   ⏳ Generating DTOs...');
+    const createDtoGenerator = new CreateDtoGenerator({
+      includeSwagger: features.swagger,
+      includeComments: true,
+    });
+    const createDtoResult = createDtoGenerator.generate(tableMetadata, columns);
+    this.writeFile(
+      join(moduleDir, 'dto', `create-${moduleName}.dto.ts`),
+      createDtoResult.code,
+    );
+
+    const updateDtoGenerator = new UpdateDtoGenerator({
+      includeSwagger: features.swagger,
+      includeComments: true,
+    });
+    const updateDtoResult = updateDtoGenerator.generate(tableMetadata, columns);
+    this.writeFile(
+      join(moduleDir, 'dto', `update-${moduleName}.dto.ts`),
+      updateDtoResult.code,
+    );
+
+    const filterDtoGenerator = new FilterDtoGenerator({
+      includeSwagger: features.swagger,
+      includeComments: true,
+    });
+    const filterDtoResult = filterDtoGenerator.generate(tableMetadata, columns);
+    this.writeFile(
+      join(moduleDir, 'dto', `${moduleName}-filter.dto.ts`),
+      filterDtoResult.code,
+    );
+    Logger.info('   ✓ DTOs generated (Create, Update, Filter)');
+
+    // 3. Generate Repository
+    Logger.info('   ⏳ Generating repository...');
+    const repositoryGenerator = new RepositoryGenerator(
+      tableMetadata,
+      columns,
+      {
+        tableName,
+        entityName,
+      },
+    );
+    const repositoryCode = repositoryGenerator.generate();
+    this.writeFile(
+      join(moduleDir, 'repositories', `${moduleName}.repository.ts`),
+      repositoryCode,
+    );
+    Logger.info('   ✓ Repository generated');
+
+    // 4. Generate Service
+    Logger.info('   ⏳ Generating service...');
+    const serviceGenerator = new ServiceGenerator(tableMetadata, columns, {
+      tableName,
+      entityName,
+      enableCaching: features.caching,
+      enableValidation: features.validation,
+      enableAuditLog: features.auditLog,
+      enableTransactions: true,
+    });
+    const serviceCode = serviceGenerator.generate();
+    this.writeFile(
+      join(moduleDir, 'services', `${moduleName}.service.ts`),
+      serviceCode,
+    );
+    Logger.info('   ✓ Service generated');
+
+    // 5. Generate Controller
+    Logger.info('   ⏳ Generating controller...');
+    const controllerGenerator = new ControllerGenerator(
+      tableMetadata,
+      columns,
+      {
+        tableName,
+        entityName,
+        enableSwagger: features.swagger,
+        enableValidation: features.validation,
+        enablePagination: features.pagination,
+      },
+    );
+    const controllerCode = controllerGenerator.generate();
+    this.writeFile(
+      join(moduleDir, 'controllers', `${moduleName}.controller.ts`),
+      controllerCode,
+    );
+    Logger.info('   ✓ Controller generated');
+
+    // 6. Generate Module
+    Logger.info('   ⏳ Generating module...');
+    const moduleGenerator = new ModuleGenerator(tableMetadata, columns, {
+      tableName,
+      entityName,
+      enableCaching: features.caching,
+      enableAuditLog: features.auditLog,
+    });
+    const moduleCode = moduleGenerator.generate();
+    this.writeFile(join(moduleDir, `${moduleName}.module.ts`), moduleCode);
+    Logger.info('   ✓ Module generated');
+
+    // 7. Generate barrel export (index.ts)
+    Logger.info('   ⏳ Generating barrel exports...');
+    const indexCode = this.generateIndexFile(entityName, moduleName);
+    this.writeFile(join(moduleDir, 'index.ts'), indexCode);
+    Logger.info('   ✓ Index file generated');
+  }
+
+  /**
+   * Generate index.ts barrel export
+   */
+  private generateIndexFile(entityName: string, moduleName: string): string {
+    return `/**
+ * ${entityName} Module
+ * 
+ * Auto-generated barrel export
+ */
+
+export * from './${moduleName}.module';
+export * from './entities/${moduleName}.entity';
+export * from './dto/create-${moduleName}.dto';
+export * from './dto/update-${moduleName}.dto';
+export * from './dto/${moduleName}-filter.dto';
+export * from './repositories/${moduleName}.repository';
+export * from './services/${moduleName}.service';
+export * from './controllers/${moduleName}.controller';
+`;
+  }
+
+  /**
+   * Ensure directory exists
+   */
+  private ensureDirectory(dir: string): void {
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
+  }
+
+  /**
+   * Write file with logging
+   */
+  private writeFile(filePath: string, content: string): void {
+    writeFileSync(filePath, content, 'utf-8');
+  }
+
+  /**
+   * Cleanup resources
+   */
+  private async cleanup(): Promise<void> {
+    if (this.dbManager) {
+      await this.dbManager.disconnect();
+    }
+  }
+
+  /**
+   * Convert string to kebab-case
+   */
+  private toKebabCase(str: string): string {
+    return str
+      .replace(/([a-z])([A-Z])/g, '$1-$2')
+      .replace(/[\s_]+/g, '-')
+      .toLowerCase();
+  }
+}

@@ -1,4 +1,4 @@
-# NestJS Generator Library - Development Plan
+# NestJS Generator Library - Development
 
 ## Project Overview
 

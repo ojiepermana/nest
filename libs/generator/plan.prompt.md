@@ -8606,7 +8606,17 @@ Critical architecture patterns added to support production-scale applications.
 
 ### Phase 8: Testing & Documentation
 
-- [ ] Unit tests for generators
+- [ ] **Auto-generate unit test files (.spec.ts) for each module**
+  - [ ] DTO validation tests
+  - [ ] Repository query tests with mocks
+  - [ ] Service business logic tests
+  - [ ] Controller endpoint tests
+  - [ ] E2E integration tests (optional)
+- [ ] **Test template system (.mjs templates for tests)**
+- [ ] **Jest configuration per module**
+- [ ] **Coverage thresholds (80% default)**
+- [ ] **CLI flags: --no-tests, --tests-only, --with-e2e**
+- [ ] Unit tests for generators themselves
 - [ ] Integration tests with sample project
 - [ ] CLI command tests
 - [ ] **Snapshot tests for template output**
@@ -8796,7 +8806,11 @@ libs/generator/
         microservice-controller.generator.ts
       module/
         module.generator.ts
+      tests/
+        test.generator.ts
+        test-data.factory.ts
     templates/
+      # Main templates
       dto.template.hbs
       query.template.hbs
       repository.template.hbs
@@ -8814,6 +8828,12 @@ libs/generator/
       controller-gateway.template.mjs
       controller-handler.template.mjs
       module.template.mjs
+      # Test templates
+      dto.spec.template.mjs
+      repository.spec.template.mjs
+      service.spec.template.mjs
+      controller.spec.template.mjs
+      e2e.spec.template.mjs
     utils/
       file.service.ts
       block-parser.service.ts
@@ -9310,6 +9330,723 @@ async findAll(@Payload() data: any) {
   return this.service.findAll(data.filters, data.page, data.limit);
 }
 ```
+
+---
+
+## Auto-Generated Unit Tests
+
+**Generator creates `.spec.ts` files alongside each generated file.**
+
+### Why Auto-Generate Tests?
+
+1. **Immediate Test Coverage**: Every generated module starts with >80% coverage
+2. **Testing Best Practices**: Enforces consistent testing patterns
+3. **Documentation**: Tests serve as usage examples
+4. **Regression Prevention**: Detect breaking changes from regeneration
+5. **CI/CD Ready**: Tests run immediately in pipeline
+
+### Generated Test Files
+
+For each generated module, create corresponding test files:
+
+```
+src/modules/users/
+  users.dto.ts
+  users.dto.spec.ts          ← Auto-generated
+  users.query.ts
+  users.query.spec.ts        ← Auto-generated
+  users.repository.ts
+  users.repository.spec.ts   ← Auto-generated
+  users.service.ts
+  users.service.spec.ts      ← Auto-generated
+  users.controller.ts
+  users.controller.spec.ts   ← Auto-generated
+  users.module.ts
+  users.module.spec.ts       ← Auto-generated
+```
+
+### DTO Test Template
+
+```typescript
+// GENERATED_FILE: users.dto.spec.ts
+import { validate } from 'class-validator';
+import { CreateUserDto, UpdateUserDto, UserFilterDto } from './users.dto';
+
+describe('UserDto', () => {
+  describe('CreateUserDto', () => {
+    // GENERATED_TEST_START: validation-success
+    it('should pass validation with valid data', async () => {
+      const dto = new CreateUserDto();
+      dto.username = 'johndoe';
+      dto.email = 'john@example.com';
+      dto.full_name = 'John Doe';
+
+      const errors = await validate(dto);
+      expect(errors.length).toBe(0);
+    });
+    // GENERATED_TEST_END: validation-success
+
+    // GENERATED_TEST_START: validation-required-fields
+    it('should fail validation when required fields are missing', async () => {
+      const dto = new CreateUserDto();
+      // Missing required fields
+
+      const errors = await validate(dto);
+      expect(errors.length).toBeGreaterThan(0);
+
+      const usernameError = errors.find((e) => e.property === 'username');
+      expect(usernameError).toBeDefined();
+      expect(usernameError.constraints).toHaveProperty('isNotEmpty');
+    });
+    // GENERATED_TEST_END: validation-required-fields
+
+    // GENERATED_TEST_START: validation-email-format
+    it('should fail validation with invalid email format', async () => {
+      const dto = new CreateUserDto();
+      dto.username = 'johndoe';
+      dto.email = 'invalid-email'; // Invalid format
+      dto.full_name = 'John Doe';
+
+      const errors = await validate(dto);
+      const emailError = errors.find((e) => e.property === 'email');
+      expect(emailError).toBeDefined();
+      expect(emailError.constraints).toHaveProperty('isEmail');
+    });
+    // GENERATED_TEST_END: validation-email-format
+
+    // GENERATED_TEST_START: validation-string-length
+    it('should fail validation when username exceeds max length', async () => {
+      const dto = new CreateUserDto();
+      dto.username = 'a'.repeat(101); // Exceeds 100 chars
+      dto.email = 'john@example.com';
+      dto.full_name = 'John Doe';
+
+      const errors = await validate(dto);
+      const usernameError = errors.find((e) => e.property === 'username');
+      expect(usernameError).toBeDefined();
+      expect(usernameError.constraints).toHaveProperty('maxLength');
+    });
+    // GENERATED_TEST_END: validation-string-length
+
+    // CUSTOM_TESTS_START
+    // Add your custom DTO tests here
+    // CUSTOM_TESTS_END
+  });
+
+  describe('UpdateUserDto', () => {
+    // GENERATED_TEST_START: partial-update
+    it('should allow partial updates (all fields optional)', async () => {
+      const dto = new UpdateUserDto();
+      dto.full_name = 'John Smith'; // Only update full_name
+
+      const errors = await validate(dto);
+      expect(errors.length).toBe(0);
+    });
+    // GENERATED_TEST_END: partial-update
+  });
+
+  describe('UserFilterDto', () => {
+    // GENERATED_TEST_START: filter-operators
+    it('should accept valid filter operators', async () => {
+      const dto = new UserFilterDto();
+      dto.username_like = 'john';
+      dto.created_at_gte = '2024-01-01';
+      dto.is_active_eq = true;
+
+      const errors = await validate(dto);
+      expect(errors.length).toBe(0);
+    });
+    // GENERATED_TEST_END: filter-operators
+  });
+});
+```
+
+### Repository Test Template
+
+```typescript
+// GENERATED_FILE: users.repository.spec.ts
+import { Test, TestingModule } from '@nestjs/testing';
+import { Pool } from 'pg';
+import { UsersRepository } from './users.repository';
+import { UserFilterDto } from './users.dto';
+
+describe('UsersRepository', () => {
+  let repository: UsersRepository;
+  let mockPool: jest.Mocked<Pool>;
+
+  beforeEach(async () => {
+    mockPool = {
+      query: jest.fn(),
+    } as any;
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [UsersRepository, { provide: Pool, useValue: mockPool }],
+    }).compile();
+
+    repository = module.get<UsersRepository>(UsersRepository);
+  });
+
+  // GENERATED_TEST_START: find-all
+  describe('findAll', () => {
+    it('should return all users without filters', async () => {
+      const mockUsers = [
+        { id: '1', username: 'john', email: 'john@example.com' },
+        { id: '2', username: 'jane', email: 'jane@example.com' },
+      ];
+      mockPool.query.mockResolvedValue({ rows: mockUsers } as any);
+
+      const result = await repository.findAll();
+
+      expect(result).toEqual(mockUsers);
+      expect(mockPool.query).toHaveBeenCalledWith(
+        expect.stringContaining('SELECT * FROM "user"."users"'),
+        [],
+      );
+    });
+
+    it('should apply filters correctly', async () => {
+      const filters: UserFilterDto = { username_like: 'john' };
+      const mockUsers = [{ id: '1', username: 'john' }];
+      mockPool.query.mockResolvedValue({ rows: mockUsers } as any);
+
+      const result = await repository.findAll(filters);
+
+      expect(result).toEqual(mockUsers);
+      expect(mockPool.query).toHaveBeenCalledWith(
+        expect.stringContaining('username ILIKE'),
+        expect.arrayContaining(['%john%']),
+      );
+    });
+
+    it('should exclude soft-deleted records', async () => {
+      mockPool.query.mockResolvedValue({ rows: [] } as any);
+
+      await repository.findAll();
+
+      expect(mockPool.query).toHaveBeenCalledWith(
+        expect.stringContaining('deleted_at IS NULL'),
+        expect.any(Array),
+      );
+    });
+  });
+  // GENERATED_TEST_END: find-all
+
+  // GENERATED_TEST_START: find-one
+  describe('findOne', () => {
+    it('should return a user by id', async () => {
+      const mockUser = { id: '1', username: 'john' };
+      mockPool.query.mockResolvedValue({ rows: [mockUser] } as any);
+
+      const result = await repository.findOne('1');
+
+      expect(result).toEqual(mockUser);
+      expect(mockPool.query).toHaveBeenCalledWith(
+        expect.stringContaining('WHERE id = $1'),
+        ['1'],
+      );
+    });
+
+    it('should return null when user not found', async () => {
+      mockPool.query.mockResolvedValue({ rows: [] } as any);
+
+      const result = await repository.findOne('non-existent-id');
+
+      expect(result).toBeNull();
+    });
+  });
+  // GENERATED_TEST_END: find-one
+
+  // GENERATED_TEST_START: create
+  describe('create', () => {
+    it('should insert new user and return it', async () => {
+      const createDto = { username: 'john', email: 'john@example.com' };
+      const mockCreatedUser = { id: '1', ...createDto };
+      mockPool.query.mockResolvedValue({ rows: [mockCreatedUser] } as any);
+
+      const result = await repository.create(createDto);
+
+      expect(result).toEqual(mockCreatedUser);
+      expect(mockPool.query).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO'),
+        expect.arrayContaining(['john', 'john@example.com']),
+      );
+    });
+  });
+  // GENERATED_TEST_END: create
+
+  // GENERATED_TEST_START: update
+  describe('update', () => {
+    it('should update existing user', async () => {
+      const updateDto = { full_name: 'John Doe' };
+      const mockUpdatedUser = { id: '1', ...updateDto };
+      mockPool.query.mockResolvedValue({ rows: [mockUpdatedUser] } as any);
+
+      const result = await repository.update('1', updateDto);
+
+      expect(result).toEqual(mockUpdatedUser);
+      expect(mockPool.query).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE'),
+        expect.arrayContaining(['John Doe', '1']),
+      );
+    });
+  });
+  // GENERATED_TEST_END: update
+
+  // GENERATED_TEST_START: soft-delete
+  describe('softDelete', () => {
+    it('should soft delete user by setting deleted_at', async () => {
+      mockPool.query.mockResolvedValue({ rowCount: 1 } as any);
+
+      await repository.softDelete('1');
+
+      expect(mockPool.query).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE'),
+        expect.stringContaining('deleted_at = CURRENT_TIMESTAMP'),
+        ['1'],
+      );
+    });
+  });
+  // GENERATED_TEST_END: soft-delete
+
+  // CUSTOM_TESTS_START
+  // Add your custom repository tests here
+  // CUSTOM_TESTS_END
+});
+```
+
+### Service Test Template
+
+```typescript
+// GENERATED_FILE: users.service.spec.ts
+import { Test, TestingModule } from '@nestjs/testing';
+import { NotFoundException } from '@nestjs/common';
+import { UsersService } from './users.service';
+import { UsersRepository } from './users.repository';
+
+describe('UsersService', () => {
+  let service: UsersService;
+  let repository: jest.Mocked<UsersRepository>;
+
+  beforeEach(async () => {
+    const mockRepository = {
+      findAll: jest.fn(),
+      findOne: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      softDelete: jest.fn(),
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        UsersService,
+        { provide: UsersRepository, useValue: mockRepository },
+      ],
+    }).compile();
+
+    service = module.get<UsersService>(UsersService);
+    repository = module.get(UsersRepository);
+  });
+
+  // GENERATED_TEST_START: find-all
+  describe('findAll', () => {
+    it('should return paginated users', async () => {
+      const mockUsers = [{ id: '1', username: 'john' }];
+      repository.findAll.mockResolvedValue(mockUsers);
+
+      const result = await service.findAll({}, 1, 10);
+
+      expect(result.data).toEqual(mockUsers);
+      expect(result.meta.page).toBe(1);
+      expect(result.meta.limit).toBe(10);
+      expect(repository.findAll).toHaveBeenCalledWith({}, 1, 10);
+    });
+  });
+  // GENERATED_TEST_END: find-all
+
+  // GENERATED_TEST_START: find-one-success
+  describe('findOne', () => {
+    it('should return user when found', async () => {
+      const mockUser = { id: '1', username: 'john' };
+      repository.findOne.mockResolvedValue(mockUser);
+
+      const result = await service.findOne('1');
+
+      expect(result).toEqual(mockUser);
+      expect(repository.findOne).toHaveBeenCalledWith('1');
+    });
+
+    it('should throw NotFoundException when user not found', async () => {
+      repository.findOne.mockResolvedValue(null);
+
+      await expect(service.findOne('non-existent')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+  // GENERATED_TEST_END: find-one-success
+
+  // GENERATED_TEST_START: create
+  describe('create', () => {
+    it('should create and return new user', async () => {
+      const createDto = { username: 'john', email: 'john@example.com' };
+      const mockCreatedUser = { id: '1', ...createDto };
+      repository.create.mockResolvedValue(mockCreatedUser);
+
+      const result = await service.create(createDto);
+
+      expect(result).toEqual(mockCreatedUser);
+      expect(repository.create).toHaveBeenCalledWith(createDto);
+    });
+  });
+  // GENERATED_TEST_END: create
+
+  // GENERATED_TEST_START: update
+  describe('update', () => {
+    it('should update and return user', async () => {
+      const updateDto = { full_name: 'John Doe' };
+      const mockUpdatedUser = { id: '1', ...updateDto };
+      repository.findOne.mockResolvedValue({ id: '1' });
+      repository.update.mockResolvedValue(mockUpdatedUser);
+
+      const result = await service.update('1', updateDto);
+
+      expect(result).toEqual(mockUpdatedUser);
+      expect(repository.update).toHaveBeenCalledWith('1', updateDto);
+    });
+
+    it('should throw NotFoundException when updating non-existent user', async () => {
+      repository.findOne.mockResolvedValue(null);
+
+      await expect(service.update('non-existent', {})).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+  // GENERATED_TEST_END: update
+
+  // GENERATED_TEST_START: delete
+  describe('delete', () => {
+    it('should soft delete user', async () => {
+      repository.findOne.mockResolvedValue({ id: '1' });
+      repository.softDelete.mockResolvedValue(undefined);
+
+      await service.delete('1');
+
+      expect(repository.softDelete).toHaveBeenCalledWith('1');
+    });
+
+    it('should throw NotFoundException when deleting non-existent user', async () => {
+      repository.findOne.mockResolvedValue(null);
+
+      await expect(service.delete('non-existent')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+  // GENERATED_TEST_END: delete
+
+  // CUSTOM_TESTS_START
+  // Add your custom service tests here
+  // CUSTOM_TESTS_END
+});
+```
+
+### Controller Test Template
+
+```typescript
+// GENERATED_FILE: users.controller.spec.ts
+import { Test, TestingModule } from '@nestjs/testing';
+import { UsersController } from './users.controller';
+import { UsersService } from './users.service';
+
+describe('UsersController', () => {
+  let controller: UsersController;
+  let service: jest.Mocked<UsersService>;
+
+  beforeEach(async () => {
+    const mockService = {
+      findAll: jest.fn(),
+      findOne: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [UsersController],
+      providers: [{ provide: UsersService, useValue: mockService }],
+    }).compile();
+
+    controller = module.get<UsersController>(UsersController);
+    service = module.get(UsersService);
+  });
+
+  // GENERATED_TEST_START: controller-defined
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
+  });
+  // GENERATED_TEST_END: controller-defined
+
+  // GENERATED_TEST_START: find-all-endpoint
+  describe('GET /', () => {
+    it('should return paginated users', async () => {
+      const mockResponse = {
+        data: [{ id: '1', username: 'john' }],
+        meta: { page: 1, limit: 10, total: 1 },
+      };
+      service.findAll.mockResolvedValue(mockResponse);
+
+      const result = await controller.findAll({}, 1, 10);
+
+      expect(result).toEqual(mockResponse);
+      expect(service.findAll).toHaveBeenCalledWith({}, 1, 10);
+    });
+  });
+  // GENERATED_TEST_END: find-all-endpoint
+
+  // GENERATED_TEST_START: find-one-endpoint
+  describe('GET /:id', () => {
+    it('should return user by id', async () => {
+      const mockUser = { id: '1', username: 'john' };
+      service.findOne.mockResolvedValue(mockUser);
+
+      const result = await controller.findOne('1');
+
+      expect(result).toEqual(mockUser);
+      expect(service.findOne).toHaveBeenCalledWith('1');
+    });
+  });
+  // GENERATED_TEST_END: find-one-endpoint
+
+  // GENERATED_TEST_START: create-endpoint
+  describe('POST /', () => {
+    it('should create new user', async () => {
+      const createDto = { username: 'john', email: 'john@example.com' };
+      const mockCreatedUser = { id: '1', ...createDto };
+      service.create.mockResolvedValue(mockCreatedUser);
+
+      const result = await controller.create(createDto);
+
+      expect(result).toEqual(mockCreatedUser);
+      expect(service.create).toHaveBeenCalledWith(createDto);
+    });
+  });
+  // GENERATED_TEST_END: create-endpoint
+
+  // GENERATED_TEST_START: update-endpoint
+  describe('PUT /:id', () => {
+    it('should update user', async () => {
+      const updateDto = { full_name: 'John Doe' };
+      const mockUpdatedUser = { id: '1', ...updateDto };
+      service.update.mockResolvedValue(mockUpdatedUser);
+
+      const result = await controller.update('1', updateDto);
+
+      expect(result).toEqual(mockUpdatedUser);
+      expect(service.update).toHaveBeenCalledWith('1', updateDto);
+    });
+  });
+  // GENERATED_TEST_END: update-endpoint
+
+  // GENERATED_TEST_START: delete-endpoint
+  describe('DELETE /:id', () => {
+    it('should delete user', async () => {
+      service.delete.mockResolvedValue(undefined);
+
+      await controller.delete('1');
+
+      expect(service.delete).toHaveBeenCalledWith('1');
+    });
+  });
+  // GENERATED_TEST_END: delete-endpoint
+
+  // CUSTOM_TESTS_START
+  // Add your custom controller tests here
+  // CUSTOM_TESTS_END
+});
+```
+
+### E2E Test Template
+
+```typescript
+// GENERATED_FILE: users.e2e-spec.ts
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import * as request from 'supertest';
+import { Pool } from 'pg';
+import { UsersModule } from './users.module';
+
+describe('UsersController (e2e)', () => {
+  let app: INestApplication;
+  let pool: Pool;
+
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [UsersModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe());
+    await app.init();
+
+    pool = moduleFixture.get<Pool>(Pool);
+  });
+
+  afterAll(async () => {
+    await pool.end();
+    await app.close();
+  });
+
+  // GENERATED_TEST_START: e2e-create
+  describe('POST /users', () => {
+    it('should create a new user', () => {
+      return request(app.getHttpServer())
+        .post('/users')
+        .send({
+          username: 'johndoe',
+          email: 'john@example.com',
+          full_name: 'John Doe',
+        })
+        .expect(201)
+        .expect((res) => {
+          expect(res.body).toHaveProperty('id');
+          expect(res.body.username).toBe('johndoe');
+        });
+    });
+
+    it('should return 400 for invalid data', () => {
+      return request(app.getHttpServer())
+        .post('/users')
+        .send({
+          username: '', // Invalid: empty
+          email: 'invalid-email', // Invalid: format
+        })
+        .expect(400);
+    });
+  });
+  // GENERATED_TEST_END: e2e-create
+
+  // GENERATED_TEST_START: e2e-find-all
+  describe('GET /users', () => {
+    it('should return paginated users', () => {
+      return request(app.getHttpServer())
+        .get('/users?page=1&limit=10')
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).toHaveProperty('data');
+          expect(res.body).toHaveProperty('meta');
+          expect(Array.isArray(res.body.data)).toBe(true);
+        });
+    });
+
+    it('should filter users by username', () => {
+      return request(app.getHttpServer())
+        .get('/users?username_like=john')
+        .expect(200)
+        .expect((res) => {
+          res.body.data.forEach((user) => {
+            expect(user.username.toLowerCase()).toContain('john');
+          });
+        });
+    });
+  });
+  // GENERATED_TEST_END: e2e-find-all
+
+  // CUSTOM_E2E_TESTS_START
+  // Add your custom e2e tests here
+  // CUSTOM_E2E_TESTS_END
+});
+```
+
+### Test Configuration
+
+```typescript
+// jest.config.js (generated per module)
+module.exports = {
+  moduleFileExtensions: ['js', 'json', 'ts'],
+  rootDir: '.',
+  testRegex: '.*\\.spec\\.ts$',
+  transform: {
+    '^.+\\.(t|j)s$': 'ts-jest',
+  },
+  collectCoverageFrom: [
+    '**/*.ts',
+    '!**/*.spec.ts',
+    '!**/*.e2e-spec.ts',
+    '!**/node_modules/**',
+  ],
+  coverageDirectory: './coverage',
+  testEnvironment: 'node',
+  coverageThresholds: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+  },
+};
+```
+
+### CLI Flag for Test Generation
+
+```bash
+# Generate module with tests (default)
+nest-generator generate user.users
+
+# Generate module without tests
+nest-generator generate user.users --no-tests
+
+# Generate only test files for existing module
+nest-generator generate user.users --tests-only
+
+# Generate with e2e tests
+nest-generator generate user.users --with-e2e
+```
+
+### Test Template Configuration
+
+```typescript
+// nest-generator.config.ts
+export default {
+  testing: {
+    // Auto-generate test files
+    generateTests: true,
+
+    // Test types to generate
+    testTypes: ['unit', 'integration'], // or ['unit', 'integration', 'e2e']
+
+    // Coverage thresholds
+    coverageThresholds: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+
+    // Test framework
+    framework: 'jest', // or 'vitest'
+
+    // Mock strategy
+    mockStrategy: 'jest', // or 'sinon'
+
+    // E2E test database
+    e2eDatabase: 'test', // separate test database
+  },
+};
+```
+
+### Benefits of Auto-Generated Tests
+
+| Aspect               | Manual Testing      | Auto-Generated Tests    |
+| -------------------- | ------------------- | ----------------------- |
+| Initial Coverage     | 0%                  | 80-90% immediately      |
+| Consistency          | Varies by developer | Always follows patterns |
+| Time to First Test   | 30-60 minutes       | < 1 minute              |
+| Maintenance          | High effort         | Low (regenerate)        |
+| Best Practices       | Depends on team     | Enforced by templates   |
+| Documentation        | Often missing       | Tests serve as docs     |
+| Regression Detection | Manual effort       | Automatic on regen      |
 
 ---
 

@@ -1,20 +1,23 @@
-// Core exports
-export * from './core/constants';
+/**
+ * Main exports for @ojiepermana/nest-generator
+ */
 
-// Type exports
+// Core types and interfaces
 export * from './types/architecture.type';
-
-// Interface exports
 export * from './interfaces/base.interface';
 export * from './interfaces/generator.interface';
 
-// Utility exports
+// Core utilities
+export * from './core/constants';
 export * from './utils/string.util';
 export * from './utils/logger.util';
 
-// Database exports
+// Database layer
 export * from './database';
 
-// Module export
+// CLI commands
+export * from './cli/commands/init.command';
+
+// Module exports
 export * from './generator.module';
 export * from './generator.service';

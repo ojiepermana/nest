@@ -115,25 +115,42 @@ export class DatabaseConnectionManager {
   /**
    * Test database connection
    */
-  async testConnection(): Promise<boolean> {
+  async testConnection(): Promise<{
+    type: string;
+    version: string;
+    pool: {
+      total: number;
+      idle: number;
+      waiting: number;
+    };
+  }> {
     try {
+      let version = 'Unknown';
+
       if (this.config.type === 'postgresql') {
         const result = await this.query<{ version: string }>(
           'SELECT version() as version',
         );
-        Logger.info(
-          `PostgreSQL version: ${result.rows?.[0]?.version || 'Unknown'}`,
-        );
+        version = result.rows?.[0]?.version || 'Unknown';
+        Logger.info(`PostgreSQL version: ${version}`);
       } else if (this.config.type === 'mysql') {
         const result = await this.query<{ version: string }>(
           'SELECT version() as version',
         );
-        Logger.info(`MySQL version: ${result.rows?.[0]?.version || 'Unknown'}`);
+        version = result.rows?.[0]?.version || 'Unknown';
+        Logger.info(`MySQL version: ${version}`);
       }
-      return true;
+
+      const poolStats = this.getPoolStats();
+
+      return {
+        type: this.config.type.toUpperCase(),
+        version,
+        pool: poolStats,
+      };
     } catch (error) {
       Logger.error('Connection test failed', error as Error);
-      return false;
+      throw error;
     }
   }
 
@@ -294,23 +311,23 @@ export class DatabaseConnectionManager {
    * Get pool statistics
    */
   getPoolStats(): {
-    totalCount: number;
-    idleCount: number;
-    waitingCount: number;
+    total: number;
+    idle: number;
+    waiting: number;
   } {
     if (this.config.type === 'postgresql' && this.pgPool) {
       return {
-        totalCount: this.pgPool.totalCount,
-        idleCount: this.pgPool.idleCount,
-        waitingCount: this.pgPool.waitingCount,
+        total: this.pgPool.totalCount,
+        idle: this.pgPool.idleCount,
+        waiting: this.pgPool.waitingCount,
       };
     }
 
     // MySQL doesn't expose pool stats directly
     return {
-      totalCount: 0,
-      idleCount: 0,
-      waitingCount: 0,
+      total: 0,
+      idle: 0,
+      waiting: 0,
     };
   }
 

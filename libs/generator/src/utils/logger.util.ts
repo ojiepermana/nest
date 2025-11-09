@@ -65,9 +65,20 @@ export class Logger {
     console.log('='.repeat(60) + '\n');
   }
 
-  static step(step: number, total: number, message: string): void {
-    // eslint-disable-next-line no-console
-    console.log(`[${step}/${total}] ${message}`);
+  static step(step: number, total: number, message: string): void;
+  static step(message: string): void;
+  static step(
+    stepOrMessage: number | string,
+    total?: number,
+    message?: string,
+  ): void {
+    if (typeof stepOrMessage === 'string') {
+      // eslint-disable-next-line no-console
+      console.log(`⏩ ${stepOrMessage}`);
+    } else {
+      // eslint-disable-next-line no-console
+      console.log(`[${stepOrMessage}/${total}] ${message}`);
+    }
   }
 
   static progress(message: string): void {
@@ -99,8 +110,12 @@ export class Logger {
     console.table(data);
   }
 
-  static box(message: string): void {
-    const lines = message.split('\n');
+  static box(message: string): void;
+  static box(lines: string[]): void;
+  static box(messageOrLines: string | string[]): void {
+    const lines = Array.isArray(messageOrLines)
+      ? messageOrLines
+      : messageOrLines.split('\n');
     const maxLength = Math.max(...lines.map((l) => l.length));
     const border = '─'.repeat(maxLength + 2);
 

@@ -7,6 +7,16 @@ import {
   MetadataStatus,
 } from '../types/architecture.type';
 
+// Re-export types for convenience
+export type {
+  ArchitectureType,
+  DatabaseType,
+  TransportType,
+  GeneratedFileType,
+  TableType,
+  MetadataStatus,
+};
+
 /**
  * Database connection configuration
  */
@@ -21,6 +31,12 @@ export interface DatabaseConfig {
   ssl?: boolean;
   connectionTimeoutMillis?: number;
   maxConnections?: number;
+  pool?: {
+    min?: number;
+    max?: number;
+    idleTimeoutMillis?: number;
+    connectionTimeoutMillis?: number;
+  };
 }
 
 /**
@@ -38,13 +54,8 @@ export interface MicroserviceConfig {
  * Generator configuration file structure
  */
 export interface GeneratorConfig {
-  version: string;
   architecture: ArchitectureType;
   database: DatabaseConfig;
-  metadataSchema: string;
-  outputPath?: string;
-  gateway?: string; // For microservices architecture
-  services?: MicroserviceConfig[]; // For microservices architecture
   features?: {
     swagger?: boolean;
     caching?: boolean;
@@ -54,6 +65,10 @@ export interface GeneratorConfig {
     search?: boolean;
     notifications?: boolean;
     export?: boolean;
+  };
+  microservices?: {
+    gatewayApp?: string;
+    services: MicroserviceConfig[];
   };
 }
 

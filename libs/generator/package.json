@@ -4,6 +4,9 @@
     "description": "NestJS Code Generator Library - Generate CRUD modules from database metadata",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
+    "bin": {
+        "nest-generator": "dist/cli/index.js"
+    },
     "author": "Ojie Permana",
     "license": "MIT",
     "repository": {

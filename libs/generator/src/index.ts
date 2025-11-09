@@ -12,6 +12,9 @@ export * from './interfaces/generator.interface';
 export * from './utils/string.util';
 export * from './utils/logger.util';
 
+// Database exports
+export * from './database';
+
 // Module export
 export * from './generator.module';
 export * from './generator.service';

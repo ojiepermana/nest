@@ -124,6 +124,7 @@ export interface ColumnMetadata {
   // Query features
   is_filterable: boolean;
   is_searchable: boolean;
+  is_sortable?: boolean;
   // Validation
   validation_rules?: Record<string, any>;
   is_required: boolean;
@@ -160,10 +161,11 @@ export interface GeneratedFile {
   id: string;
   table_metadata_id: string;
   file_path: string;
+  file_name: string;
   file_type: GeneratedFileType;
   checksum: string;
   last_generated_at: Date;
-  has_custom_code: boolean;
+  has_custom_code?: boolean;
   created_at: Date;
   updated_at: Date;
 }

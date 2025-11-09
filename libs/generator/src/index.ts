@@ -15,6 +15,9 @@ export * from './utils/logger.util';
 // Database layer
 export * from './database';
 
+// Metadata layer
+export * from './metadata';
+
 // CLI commands
 export * from './cli/commands/init.command';
 

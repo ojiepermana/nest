@@ -6,7 +6,7 @@ import {
   singularize,
   isUUID,
   isValidIdentifier,
-} from '../utils/string.util';
+} from '../src/utils/string.util';
 
 describe('String Utilities', () => {
   describe('calculateChecksum', () => {

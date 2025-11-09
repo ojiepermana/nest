@@ -18,6 +18,9 @@ export * from './database';
 // Metadata layer
 export * from './metadata';
 
+// Code generators
+export * from './generators';
+
 // CLI commands
 export * from './cli/commands/init.command';
 

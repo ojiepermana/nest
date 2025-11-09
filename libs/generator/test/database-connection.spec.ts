@@ -1,5 +1,5 @@
-import { DatabaseConnectionManager } from '../database/connection.manager';
-import { DatabaseConfig } from '../interfaces/generator.interface';
+import { DatabaseConnectionManager } from '../src/database/connection.manager';
+import { DatabaseConfig } from '../src/interfaces/generator.interface';
 
 describe('DatabaseConnectionManager', () => {
   describe('constructor', () => {
@@ -94,9 +94,9 @@ describe('DatabaseConnectionManager', () => {
       const stats = manager.getPoolStats();
 
       expect(stats).toEqual({
-        totalCount: 0,
-        idleCount: 0,
-        waitingCount: 0,
+        total: 0,
+        idle: 0,
+        waiting: 0,
       });
     });
   });

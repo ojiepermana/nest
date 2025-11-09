@@ -1,0 +1,464 @@
+/**
+ * Controller Generator
+ *
+ * Generates NestJS REST controllers with Swagger documentation
+ */
+
+import { toPascalCase, toCamelCase } from '../../utils/string.util';
+import type {
+  TableMetadata,
+  ColumnMetadata,
+} from '../../interfaces/generator.interface';
+
+export interface ControllerGeneratorOptions {
+  tableName: string;
+  entityName?: string;
+  basePath?: string;
+  enableSwagger?: boolean;
+  enableValidation?: boolean;
+  enablePagination?: boolean;
+  customEndpoints?: string[];
+}
+
+export class ControllerGenerator {
+  constructor(
+    private tableMetadata: TableMetadata,
+    private columns: ColumnMetadata[],
+    private options: ControllerGeneratorOptions,
+  ) {}
+
+  /**
+   * Generate controller class
+   */
+  generate(): string {
+    const entityName =
+      this.options.entityName || toPascalCase(this.options.tableName);
+    const controllerName = `${entityName}Controller`;
+    const serviceName = `${entityName}Service`;
+    const basePath = this.options.basePath || this.toKebabCase(entityName);
+
+    const imports = this.generateImports(entityName, serviceName);
+    const classDeclaration = this.generateClassDeclaration(
+      controllerName,
+      basePath,
+    );
+    const constructor = this.generateConstructor(serviceName);
+    const crudEndpoints = this.generateCRUDEndpoints(entityName, serviceName);
+
+    return `${imports}
+
+${classDeclaration}
+${constructor}
+${crudEndpoints}
+}
+`;
+  }
+
+  /**
+   * Generate imports
+   */
+  private generateImports(entityName: string, serviceName: string): string {
+    // Build NestJS common imports dynamically
+    const pkColumn = this.getPrimaryKeyColumn();
+    const pkType = this.getTypeScriptType(pkColumn?.data_type || 'integer');
+    const needsParseIntPipe = pkType === 'number';
+
+    const commonImports = [
+      'Controller',
+      'Get',
+      'Post',
+      'Put',
+      'Delete',
+      'Body',
+      'Param',
+      'Query',
+      'HttpStatus',
+      'HttpCode',
+    ];
+
+    if (needsParseIntPipe) {
+      commonImports.push('ParseIntPipe');
+    }
+
+    if (this.options.enableValidation) {
+      commonImports.push('ValidationPipe');
+    }
+
+    commonImports.push('NotFoundException');
+
+    const imports = [
+      `import { ${commonImports.join(', ')} } from '@nestjs/common';`,
+      `import { ${serviceName} } from '../services/${this.toKebabCase(entityName)}.service';`,
+      `import { ${entityName} } from '../entities/${this.toKebabCase(entityName)}.entity';`,
+      `import { Create${entityName}Dto } from '../dto/create-${this.toKebabCase(entityName)}.dto';`,
+      `import { Update${entityName}Dto } from '../dto/update-${this.toKebabCase(entityName)}.dto';`,
+      `import { ${entityName}FilterDto } from '../dto/${this.toKebabCase(entityName)}-filter.dto';`,
+    ];
+
+    if (this.options.enableSwagger) {
+      imports.push(
+        "import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';",
+      );
+    }
+
+    return imports.join('\n');
+  }
+
+  /**
+   * Generate class declaration
+   */
+  private generateClassDeclaration(
+    controllerName: string,
+    basePath: string,
+  ): string {
+    const decorators = [`@Controller('${basePath}')`];
+
+    if (this.options.enableSwagger) {
+      decorators.unshift(`@ApiTags('${basePath}')`);
+    }
+
+    return `${decorators.join('\n')}
+export class ${controllerName} {`;
+  }
+
+  /**
+   * Generate constructor
+   */
+  private generateConstructor(serviceName: string): string {
+    return `  constructor(private readonly service: ${serviceName}) {}
+`;
+  }
+
+  /**
+   * Generate CRUD endpoints
+   */
+  private generateCRUDEndpoints(
+    entityName: string,
+    serviceName: string,
+  ): string {
+    const camelName = toCamelCase(entityName);
+    const pkColumn = this.getPrimaryKeyColumn();
+    const pkType = this.getTypeScriptType(pkColumn?.data_type || 'integer');
+
+    let endpoints = '';
+
+    // CREATE endpoint
+    endpoints += this.generateCreateEndpoint(entityName, camelName);
+
+    // FIND ALL endpoint
+    endpoints += this.generateFindAllEndpoint(entityName, camelName);
+
+    // FIND WITH FILTERS endpoint
+    if (this.options.enablePagination) {
+      endpoints += this.generateFindWithFiltersEndpoint(entityName, camelName);
+    }
+
+    // FIND ONE endpoint
+    endpoints += this.generateFindOneEndpoint(entityName, camelName, pkType);
+
+    // UPDATE endpoint
+    endpoints += this.generateUpdateEndpoint(entityName, camelName, pkType);
+
+    // DELETE endpoint
+    endpoints += this.generateDeleteEndpoint(entityName, camelName, pkType);
+
+    return endpoints;
+  }
+
+  /**
+   * Generate CREATE endpoint
+   */
+  private generateCreateEndpoint(
+    entityName: string,
+    camelName: string,
+  ): string {
+    let endpoint = '';
+
+    if (this.options.enableSwagger) {
+      endpoint += `
+  @ApiOperation({ summary: 'Create a new ${camelName}' })
+  @ApiResponse({ status: 201, description: 'The ${camelName} has been successfully created.', type: ${entityName} })
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
+  @ApiBody({ type: Create${entityName}Dto })`;
+    }
+
+    endpoint += `
+  @Post()
+  @HttpCode(HttpStatus.CREATED)`;
+
+    if (this.options.enableValidation) {
+      endpoint += `
+  async create(@Body(ValidationPipe) createDto: Create${entityName}Dto): Promise<${entityName}> {`;
+    } else {
+      endpoint += `
+  async create(@Body() createDto: Create${entityName}Dto): Promise<${entityName}> {`;
+    }
+
+    endpoint += `
+    return this.service.create(createDto);
+  }
+`;
+
+    return endpoint;
+  }
+
+  /**
+   * Generate FIND ALL endpoint
+   */
+  private generateFindAllEndpoint(
+    entityName: string,
+    camelName: string,
+  ): string {
+    let endpoint = '';
+
+    if (this.options.enableSwagger) {
+      endpoint += `
+  @ApiOperation({ summary: 'Get all ${camelName}s' })
+  @ApiResponse({ status: 200, description: 'Return all ${camelName}s.', type: [${entityName}] })`;
+    }
+
+    endpoint += `
+  @Get()
+  async findAll(): Promise<${entityName}[]> {
+    return this.service.findAll();
+  }
+`;
+
+    return endpoint;
+  }
+
+  /**
+   * Generate FIND WITH FILTERS endpoint
+   */
+  private generateFindWithFiltersEndpoint(
+    entityName: string,
+    camelName: string,
+  ): string {
+    let endpoint = '';
+
+    if (this.options.enableSwagger) {
+      endpoint += `
+  @ApiOperation({ summary: 'Get ${camelName}s with filters and pagination' })
+  @ApiResponse({ status: 200, description: 'Return filtered ${camelName}s with pagination.' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 20, max: 100)' })
+  @ApiQuery({ name: 'sort', required: false, type: String, description: 'Sort field and order (e.g., name:ASC)' })`;
+    }
+
+    endpoint += `
+  @Get('filter')
+  async findWithFilters(
+    @Query() filterDto: ${entityName}FilterDto,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('sort') sort?: string,
+  ): Promise<{ data: ${entityName}[]; total: number; page: number; limit: number }> {
+    const sortOptions = sort
+      ? sort.split(',').map((s) => {
+          const [field, order] = s.split(':');
+          return { field, order: (order?.toUpperCase() || 'ASC') as 'ASC' | 'DESC' };
+        })
+      : undefined;
+
+    return this.service.findWithFilters(filterDto, {
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+      sort: sortOptions,
+    });
+  }
+`;
+
+    return endpoint;
+  }
+
+  /**
+   * Generate FIND ONE endpoint
+   */
+  private generateFindOneEndpoint(
+    entityName: string,
+    camelName: string,
+    pkType: string,
+  ): string {
+    let endpoint = '';
+
+    if (this.options.enableSwagger) {
+      endpoint += `
+  @ApiOperation({ summary: 'Get a ${camelName} by ID' })
+  @ApiResponse({ status: 200, description: 'Return the ${camelName}.', type: ${entityName} })
+  @ApiResponse({ status: 404, description: '${entityName} not found.' })
+  @ApiParam({ name: 'id', type: ${pkType === 'number' ? 'Number' : 'String'}, description: '${entityName} ID' })`;
+    }
+
+    endpoint += `
+  @Get(':id')`;
+
+    if (pkType === 'number') {
+      endpoint += `
+  async findOne(@Param('id', ParseIntPipe) id: ${pkType}): Promise<${entityName}> {`;
+    } else {
+      endpoint += `
+  async findOne(@Param('id') id: ${pkType}): Promise<${entityName}> {`;
+    }
+
+    endpoint += `
+    const ${camelName} = await this.service.findOne(id);
+    if (!${camelName}) {
+      throw new NotFoundException(\`${entityName} with ID \${id} not found\`);
+    }
+    return ${camelName};
+  }
+`;
+
+    return endpoint;
+  }
+
+  /**
+   * Generate UPDATE endpoint
+   */
+  private generateUpdateEndpoint(
+    entityName: string,
+    camelName: string,
+    pkType: string,
+  ): string {
+    let endpoint = '';
+
+    if (this.options.enableSwagger) {
+      endpoint += `
+  @ApiOperation({ summary: 'Update a ${camelName}' })
+  @ApiResponse({ status: 200, description: 'The ${camelName} has been successfully updated.', type: ${entityName} })
+  @ApiResponse({ status: 404, description: '${entityName} not found.' })
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
+  @ApiParam({ name: 'id', type: ${pkType === 'number' ? 'Number' : 'String'}, description: '${entityName} ID' })
+  @ApiBody({ type: Update${entityName}Dto })`;
+    }
+
+    endpoint += `
+  @Put(':id')`;
+
+    if (pkType === 'number') {
+      if (this.options.enableValidation) {
+        endpoint += `
+  async update(
+    @Param('id', ParseIntPipe) id: ${pkType},
+    @Body(ValidationPipe) updateDto: Update${entityName}Dto,
+  ): Promise<${entityName}> {`;
+      } else {
+        endpoint += `
+  async update(
+    @Param('id', ParseIntPipe) id: ${pkType},
+    @Body() updateDto: Update${entityName}Dto,
+  ): Promise<${entityName}> {`;
+      }
+    } else {
+      if (this.options.enableValidation) {
+        endpoint += `
+  async update(
+    @Param('id') id: ${pkType},
+    @Body(ValidationPipe) updateDto: Update${entityName}Dto,
+  ): Promise<${entityName}> {`;
+      } else {
+        endpoint += `
+  async update(
+    @Param('id') id: ${pkType},
+    @Body() updateDto: Update${entityName}Dto,
+  ): Promise<${entityName}> {`;
+      }
+    }
+
+    endpoint += `
+    return this.service.update(id, updateDto);
+  }
+`;
+
+    return endpoint;
+  }
+
+  /**
+   * Generate DELETE endpoint
+   */
+  private generateDeleteEndpoint(
+    entityName: string,
+    camelName: string,
+    pkType: string,
+  ): string {
+    let endpoint = '';
+
+    if (this.options.enableSwagger) {
+      endpoint += `
+  @ApiOperation({ summary: 'Delete a ${camelName}' })
+  @ApiResponse({ status: 204, description: 'The ${camelName} has been successfully deleted.' })
+  @ApiResponse({ status: 404, description: '${entityName} not found.' })
+  @ApiParam({ name: 'id', type: ${pkType === 'number' ? 'Number' : 'String'}, description: '${entityName} ID' })`;
+    }
+
+    endpoint += `
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)`;
+
+    if (pkType === 'number') {
+      endpoint += `
+  async remove(@Param('id', ParseIntPipe) id: ${pkType}): Promise<void> {`;
+    } else {
+      endpoint += `
+  async remove(@Param('id') id: ${pkType}): Promise<void> {`;
+    }
+
+    endpoint += `
+    await this.service.remove(id);
+  }
+`;
+
+    return endpoint;
+  }
+
+  /**
+   * Get primary key column
+   */
+  private getPrimaryKeyColumn(): ColumnMetadata | undefined {
+    return this.columns.find((col) => col.is_primary_key);
+  }
+
+  /**
+   * Get TypeScript type from database type
+   */
+  private getTypeScriptType(dbType: string): string {
+    const lowerType = dbType.toLowerCase();
+
+    if (
+      lowerType.includes('int') ||
+      lowerType.includes('serial') ||
+      lowerType.includes('number')
+    ) {
+      return 'number';
+    }
+
+    if (
+      lowerType.includes('varchar') ||
+      lowerType.includes('text') ||
+      lowerType.includes('char') ||
+      lowerType.includes('uuid')
+    ) {
+      return 'string';
+    }
+
+    if (lowerType.includes('bool')) {
+      return 'boolean';
+    }
+
+    if (lowerType.includes('date') || lowerType.includes('time')) {
+      return 'Date';
+    }
+
+    return 'any';
+  }
+
+  /**
+   * Convert to kebab-case
+   */
+  private toKebabCase(str: string): string {
+    return str
+      .replace(/([a-z])([A-Z])/g, '$1-$2')
+      .replace(/[\s_]+/g, '-')
+      .toLowerCase();
+  }
+}

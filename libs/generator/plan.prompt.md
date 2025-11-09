@@ -3578,6 +3578,611 @@ ON meta.generated_files USING btree (file_type);
 
 ---
 
+## Database Dialect System
+
+**Multi-database compatibility layer for PostgreSQL and MySQL.**
+
+### Architecture
+
+```typescript
+// GENERATED_DIALECT_INTERFACE_START
+export interface DatabaseDialect {
+  // Identifier quoting (table.column)
+  quoteIdentifier(name: string): string;
+
+  // Case-insensitive LIKE
+  ilike(column: string, paramIndex: number): string;
+
+  // Date/time functions
+  extractYear(column: string, timezone?: string): string;
+  extractMonth(column: string, timezone?: string): string;
+  dateTrunc(
+    unit: 'day' | 'month' | 'year',
+    column: string,
+    timezone?: string,
+  ): string;
+
+  // JSON operations
+  jsonExtract(column: string, path: string): string;
+  jsonContains(column: string, value: string): string;
+
+  // Type casting
+  castToTimestamp(value: string): string;
+  castToUUID(value: string): string;
+
+  // Upsert support
+  buildUpsert(
+    table: string,
+    columns: string[],
+    conflictColumns: string[],
+  ): string;
+
+  // Limit/offset
+  buildPagination(limit: number, offset: number): string;
+
+  // Array operations
+  arrayContains(column: string, value: string): string;
+}
+// GENERATED_DIALECT_INTERFACE_END
+```
+
+### PostgreSQL Dialect
+
+```typescript
+// GENERATED_POSTGRES_DIALECT_START
+export class PostgresDialect implements DatabaseDialect {
+  quoteIdentifier(name: string): string {
+    // Split schema.table.column and quote each part
+    return name
+      .split('.')
+      .map((part) => `"${part.replace(/"/g, '""')}"`)
+      .join('.');
+  }
+
+  ilike(column: string, paramIndex: number): string {
+    return `${this.quoteIdentifier(column)} ILIKE $${paramIndex}`;
+  }
+
+  extractYear(column: string, timezone = 'UTC'): string {
+    return `EXTRACT(YEAR FROM ${this.quoteIdentifier(column)} AT TIME ZONE '${timezone}')`;
+  }
+
+  extractMonth(column: string, timezone = 'UTC'): string {
+    return `EXTRACT(MONTH FROM ${this.quoteIdentifier(column)} AT TIME ZONE '${timezone}')`;
+  }
+
+  dateTrunc(unit: string, column: string, timezone = 'UTC'): string {
+    return `DATE_TRUNC('${unit}', ${this.quoteIdentifier(column)} AT TIME ZONE '${timezone}')`;
+  }
+
+  jsonExtract(column: string, path: string): string {
+    return `${this.quoteIdentifier(column)}->>'${path}'`;
+  }
+
+  jsonContains(column: string, value: string): string {
+    return `${this.quoteIdentifier(column)} @> '${value}'::jsonb`;
+  }
+
+  castToTimestamp(value: string): string {
+    return `$${value}::timestamp`;
+  }
+
+  castToUUID(value: string): string {
+    return `$${value}::uuid`;
+  }
+
+  buildUpsert(
+    table: string,
+    columns: string[],
+    conflictColumns: string[],
+  ): string {
+    const quoted = columns.map((c) => this.quoteIdentifier(c));
+    const params = columns.map((_, i) => `$${i + 1}`);
+    const updates = columns
+      .filter((c) => !conflictColumns.includes(c))
+      .map(
+        (c) =>
+          `${this.quoteIdentifier(c)} = EXCLUDED.${this.quoteIdentifier(c)}`,
+      )
+      .join(', ');
+
+    return `
+      INSERT INTO ${this.quoteIdentifier(table)} (${quoted.join(', ')})
+      VALUES (${params.join(', ')})
+      ON CONFLICT (${conflictColumns.map((c) => this.quoteIdentifier(c)).join(', ')})
+      DO UPDATE SET ${updates}
+      RETURNING *
+    `;
+  }
+
+  buildPagination(limit: number, offset: number): string {
+    return `LIMIT $${limit} OFFSET $${offset}`;
+  }
+
+  arrayContains(column: string, value: string): string {
+    return `$${value} = ANY(${this.quoteIdentifier(column)})`;
+  }
+}
+// GENERATED_POSTGRES_DIALECT_END
+```
+
+### MySQL Dialect
+
+```typescript
+// GENERATED_MYSQL_DIALECT_START
+export class MySQLDialect implements DatabaseDialect {
+  quoteIdentifier(name: string): string {
+    return name
+      .split('.')
+      .map((part) => `\`${part.replace(/`/g, '``')}\``)
+      .join('.');
+  }
+
+  ilike(column: string, paramIndex: number): string {
+    // MySQL doesn't have ILIKE, use LOWER() workaround
+    return `LOWER(${this.quoteIdentifier(column)}) LIKE LOWER(?)`;
+  }
+
+  extractYear(column: string, timezone?: string): string {
+    // MySQL doesn't support AT TIME ZONE, assume app handles timezone
+    return `YEAR(${this.quoteIdentifier(column)})`;
+  }
+
+  extractMonth(column: string, timezone?: string): string {
+    return `MONTH(${this.quoteIdentifier(column)})`;
+  }
+
+  dateTrunc(unit: string, column: string, timezone?: string): string {
+    const formats = {
+      day: '%Y-%m-%d',
+      month: '%Y-%m-01',
+      year: '%Y-01-01',
+    };
+    return `DATE_FORMAT(${this.quoteIdentifier(column)}, '${formats[unit]}')`;
+  }
+
+  jsonExtract(column: string, path: string): string {
+    return `JSON_UNQUOTE(JSON_EXTRACT(${this.quoteIdentifier(column)}, '$.${path}'))`;
+  }
+
+  jsonContains(column: string, value: string): string {
+    return `JSON_CONTAINS(${this.quoteIdentifier(column)}, '${value}')`;
+  }
+
+  castToTimestamp(value: string): string {
+    return `CAST(? AS DATETIME)`; // MySQL uses ? for params
+  }
+
+  castToUUID(value: string): string {
+    return `CAST(? AS CHAR(36))`;
+  }
+
+  buildUpsert(
+    table: string,
+    columns: string[],
+    conflictColumns: string[],
+  ): string {
+    const quoted = columns.map((c) => this.quoteIdentifier(c));
+    const params = columns.map(() => '?');
+    const updates = columns
+      .filter((c) => !conflictColumns.includes(c))
+      .map(
+        (c) =>
+          `${this.quoteIdentifier(c)} = VALUES(${this.quoteIdentifier(c)})`,
+      )
+      .join(', ');
+
+    return `
+      INSERT INTO ${this.quoteIdentifier(table)} (${quoted.join(', ')})
+      VALUES (${params.join(', ')})
+      ON DUPLICATE KEY UPDATE ${updates}
+    `;
+  }
+
+  buildPagination(limit: number, offset: number): string {
+    return `LIMIT ? OFFSET ?`;
+  }
+
+  arrayContains(column: string, value: string): string {
+    return `FIND_IN_SET(?, ${this.quoteIdentifier(column)})`;
+  }
+}
+// GENERATED_MYSQL_DIALECT_END
+```
+
+### Dialect Factory
+
+```typescript
+// GENERATED_DIALECT_FACTORY_START
+export class DialectFactory {
+  static create(databaseType: 'postgresql' | 'mysql'): DatabaseDialect {
+    switch (databaseType) {
+      case 'postgresql':
+        return new PostgresDialect();
+      case 'mysql':
+        return new MySQLDialect();
+      default:
+        throw new Error(`Unsupported database type: ${databaseType}`);
+    }
+  }
+}
+// GENERATED_DIALECT_FACTORY_END
+```
+
+### Usage in Generated Code
+
+```typescript
+// GENERATED_REPOSITORY_WITH_DIALECT_START
+@Injectable()
+export class UsersRepository {
+  private dialect: DatabaseDialect;
+
+  constructor(
+    private readonly pool: Pool,
+    @Inject('DATABASE_TYPE') databaseType: 'postgresql' | 'mysql',
+  ) {
+    this.dialect = DialectFactory.create(databaseType);
+  }
+
+  async findByUsername(username: string) {
+    const query = `
+      SELECT * FROM ${this.dialect.quoteIdentifier('user.users')}
+      WHERE ${this.dialect.ilike('username', 1)}
+        AND deleted_at IS NULL
+    `;
+
+    const result = await this.pool.query(query, [`%${username}%`]);
+    return result.rows || result[0]; // Handle both PG and MySQL
+  }
+}
+// GENERATED_REPOSITORY_WITH_DIALECT_END
+```
+
+---
+
+## Generic Filter Compiler
+
+**Auto-generate filter logic from column metadata.**
+
+### Filter Compiler Architecture
+
+```typescript
+// GENERATED_FILTER_COMPILER_START
+export interface FilterOperator {
+  operator: string; // eq, ne, gt, like, in, between, etc.
+  sqlTemplate: (
+    dialect: DatabaseDialect,
+    column: string,
+    paramIndex: number,
+  ) => string;
+  paramCount: number; // 1 for most, 2 for between
+  validator: (value: any) => boolean;
+}
+
+export class FilterCompiler {
+  private operators: Map<string, FilterOperator>;
+
+  constructor(private dialect: DatabaseDialect) {
+    this.operators = new Map([
+      [
+        'eq',
+        {
+          operator: 'eq',
+          sqlTemplate: (d, col, idx) => `${d.quoteIdentifier(col)} = $${idx}`,
+          paramCount: 1,
+          validator: (v) => v !== undefined && v !== null,
+        },
+      ],
+      [
+        'ne',
+        {
+          operator: 'ne',
+          sqlTemplate: (d, col, idx) => `${d.quoteIdentifier(col)} != $${idx}`,
+          paramCount: 1,
+          validator: (v) => v !== undefined && v !== null,
+        },
+      ],
+      [
+        'gt',
+        {
+          operator: 'gt',
+          sqlTemplate: (d, col, idx) => `${d.quoteIdentifier(col)} > $${idx}`,
+          paramCount: 1,
+          validator: (v) => v !== undefined && v !== null,
+        },
+      ],
+      [
+        'gte',
+        {
+          operator: 'gte',
+          sqlTemplate: (d, col, idx) => `${d.quoteIdentifier(col)} >= $${idx}`,
+          paramCount: 1,
+          validator: (v) => v !== undefined && v !== null,
+        },
+      ],
+      [
+        'lt',
+        {
+          operator: 'lt',
+          sqlTemplate: (d, col, idx) => `${d.quoteIdentifier(col)} < $${idx}`,
+          paramCount: 1,
+          validator: (v) => v !== undefined && v !== null,
+        },
+      ],
+      [
+        'lte',
+        {
+          operator: 'lte',
+          sqlTemplate: (d, col, idx) => `${d.quoteIdentifier(col)} <= $${idx}`,
+          paramCount: 1,
+          validator: (v) => v !== undefined && v !== null,
+        },
+      ],
+      [
+        'like',
+        {
+          operator: 'like',
+          sqlTemplate: (d, col, idx) => d.ilike(col, idx),
+          paramCount: 1,
+          validator: (v) => typeof v === 'string',
+        },
+      ],
+      [
+        'in',
+        {
+          operator: 'in',
+          sqlTemplate: (d, col, idx) =>
+            `${d.quoteIdentifier(col)} = ANY($${idx})`,
+          paramCount: 1,
+          validator: (v) => Array.isArray(v) && v.length > 0,
+        },
+      ],
+      [
+        'nin',
+        {
+          operator: 'nin',
+          sqlTemplate: (d, col, idx) =>
+            `${d.quoteIdentifier(col)} != ALL($${idx})`,
+          paramCount: 1,
+          validator: (v) => Array.isArray(v) && v.length > 0,
+        },
+      ],
+      [
+        'between',
+        {
+          operator: 'between',
+          sqlTemplate: (d, col, idx) =>
+            `${d.quoteIdentifier(col)} BETWEEN $${idx} AND $${idx + 1}`,
+          paramCount: 2,
+          validator: (v) => Array.isArray(v) && v.length === 2,
+        },
+      ],
+      [
+        'null',
+        {
+          operator: 'null',
+          sqlTemplate: (d, col) => `${d.quoteIdentifier(col)} IS NULL`,
+          paramCount: 0,
+          validator: (v) => v === true || v === 'true',
+        },
+      ],
+      [
+        'nnull',
+        {
+          operator: 'nnull',
+          sqlTemplate: (d, col) => `${d.quoteIdentifier(col)} IS NOT NULL`,
+          paramCount: 0,
+          validator: (v) => v === true || v === 'true',
+        },
+      ],
+    ]);
+  }
+
+  compile(
+    filterDto: any,
+    columns: ColumnMetadata[],
+    startParamIndex = 1,
+  ): { clauses: string[]; params: any[]; nextParamIndex: number } {
+    const clauses: string[] = [];
+    const params: any[] = [];
+    let paramIndex = startParamIndex;
+
+    const filterableColumns = columns.filter((c) => c.is_filterable);
+
+    for (const column of filterableColumns) {
+      const allowedOps = this.getAllowedOperators(column.data_type);
+
+      for (const opName of allowedOps) {
+        const filterKey = `${column.column_name}_${opName}`;
+        const value = filterDto[filterKey];
+
+        if (value === undefined || value === null) continue;
+
+        const op = this.operators.get(opName);
+        if (!op || !op.validator(value)) continue;
+
+        const clause = op.sqlTemplate(
+          this.dialect,
+          column.column_name,
+          paramIndex,
+        );
+        clauses.push(clause);
+
+        if (op.paramCount === 1) {
+          // Handle array values for IN/NIN
+          if (opName === 'in' || opName === 'nin') {
+            params.push(Array.isArray(value) ? value : value.split(','));
+          } else if (opName === 'like') {
+            params.push(`%${value}%`);
+          } else {
+            params.push(value);
+          }
+          paramIndex++;
+        } else if (op.paramCount === 2) {
+          // BETWEEN
+          const [min, max] = Array.isArray(value) ? value : value.split(',');
+          params.push(min, max);
+          paramIndex += 2;
+        }
+        // op.paramCount === 0 means no params (NULL/NOT NULL)
+      }
+    }
+
+    return { clauses, params, nextParamIndex: paramIndex };
+  }
+
+  private getAllowedOperators(dataType: string): string[] {
+    const type = dataType.toLowerCase();
+
+    if (
+      type.includes('int') ||
+      type.includes('numeric') ||
+      type.includes('decimal')
+    ) {
+      return [
+        'eq',
+        'ne',
+        'gt',
+        'gte',
+        'lt',
+        'lte',
+        'in',
+        'nin',
+        'between',
+        'null',
+        'nnull',
+      ];
+    }
+
+    if (type.includes('char') || type.includes('text') || type === 'string') {
+      return ['eq', 'ne', 'like', 'in', 'nin', 'null', 'nnull'];
+    }
+
+    if (type.includes('bool')) {
+      return ['eq', 'ne'];
+    }
+
+    if (
+      type.includes('date') ||
+      type.includes('timestamp') ||
+      type.includes('time')
+    ) {
+      return ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'between', 'null', 'nnull'];
+    }
+
+    if (type.includes('uuid')) {
+      return ['eq', 'ne', 'in', 'nin', 'null', 'nnull'];
+    }
+
+    // Default
+    return ['eq', 'ne', 'null', 'nnull'];
+  }
+}
+// GENERATED_FILTER_COMPILER_END
+```
+
+### Usage in Repository
+
+```typescript
+// GENERATED_REPOSITORY_WITH_FILTER_COMPILER_START
+@Injectable()
+export class UsersRepository {
+  private filterCompiler: FilterCompiler;
+
+  constructor(
+    private readonly pool: Pool,
+    private readonly dialect: DatabaseDialect,
+    private readonly metadataService: MetadataService,
+  ) {
+    this.filterCompiler = new FilterCompiler(dialect);
+  }
+
+  async findAll(filters: UserFilterDto, page = 1, limit = 10) {
+    const columns = await this.metadataService.getColumns('users');
+
+    let query = `
+      SELECT ${this.buildSelectClause(columns)}
+      FROM ${this.dialect.quoteIdentifier('user.users')}
+      WHERE deleted_at IS NULL
+    `;
+
+    const compiled = this.filterCompiler.compile(filters, columns, 1);
+
+    if (compiled.clauses.length > 0) {
+      query += ` AND ${compiled.clauses.join(' AND ')}`;
+    }
+
+    query += ` ORDER BY created_at DESC`;
+    query += ` ${this.dialect.buildPagination(compiled.nextParamIndex, compiled.nextParamIndex + 1)}`;
+
+    const params = [...compiled.params, limit, (page - 1) * limit];
+
+    const result = await this.pool.query(query, params);
+    return result.rows || result[0];
+  }
+
+  private buildSelectClause(columns: ColumnMetadata[]): string {
+    return columns
+      .filter((c) => c.display_in_list)
+      .map((c) => this.dialect.quoteIdentifier(c.column_name))
+      .join(', ');
+  }
+}
+// GENERATED_REPOSITORY_WITH_FILTER_COMPILER_END
+```
+
+### Filter DTO Generator with Validation
+
+```typescript
+// GENERATED_FILTER_DTO_WITH_VALIDATION_START
+export class UserFilterDto {
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ example: 'john' })
+  username_eq?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ example: 'john' })
+  username_like?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => value.split(','))
+  @IsArray()
+  @IsString({ each: true })
+  @ApiPropertyOptional({ example: 'admin,user' })
+  role_in?: string[];
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  @ApiPropertyOptional({ example: 18 })
+  age_gte?: number;
+
+  @IsOptional()
+  @IsBooleanString()
+  @ApiPropertyOptional({ example: 'true' })
+  is_active_eq?: string;
+
+  @IsOptional()
+  @IsDateString()
+  @ApiPropertyOptional({ example: '2024-01-01' })
+  created_at_gte?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => value.split(','))
+  @IsArray()
+  @IsDateString({ each: true })
+  @ArrayMinSize(2)
+  @ArrayMaxSize(2)
+  @ApiPropertyOptional({ example: '2024-01-01,2024-12-31' })
+  created_at_between?: string[];
+}
+// GENERATED_FILTER_DTO_WITH_VALIDATION_END
+```
+
+---
+
 ## Filter Operators
 
 Dynamic URL query parameters for advanced filtering.
@@ -3663,6 +4268,338 @@ function getOperatorsForType(dataType: string): string[] {
 
   return ['eq', 'ne'];
 }
+```
+
+---
+
+## Security Best Practices
+
+**SQL injection prevention and secure query building.**
+
+### Identifier Validation & Whitelisting
+
+```typescript
+// GENERATED_SECURITY_VALIDATOR_START
+export class SecurityValidator {
+  private static readonly IDENTIFIER_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+  private static readonly MAX_IDENTIFIER_LENGTH = 63; // PostgreSQL limit
+
+  /**
+   * Validate identifier against allowed list
+   * Prevents SQL injection through dynamic identifiers
+   */
+  static validateIdentifier(
+    identifier: string,
+    allowedIdentifiers: string[],
+    context: string,
+  ): string {
+    if (!identifier) {
+      throw new BadRequestException(`${context}: identifier is required`);
+    }
+
+    if (!this.IDENTIFIER_PATTERN.test(identifier)) {
+      throw new BadRequestException(
+        `${context}: identifier contains invalid characters`,
+      );
+    }
+
+    if (identifier.length > this.MAX_IDENTIFIER_LENGTH) {
+      throw new BadRequestException(
+        `${context}: identifier exceeds maximum length`,
+      );
+    }
+
+    if (!allowedIdentifiers.includes(identifier)) {
+      throw new BadRequestException(
+        `${context}: '${identifier}' is not an allowed field`,
+      );
+    }
+
+    return identifier;
+  }
+
+  /**
+   * Validate multiple identifiers (e.g., for group_by)
+   */
+  static validateIdentifiers(
+    identifiers: string[],
+    allowedIdentifiers: string[],
+    context: string,
+    maxCount = 2,
+  ): string[] {
+    if (!Array.isArray(identifiers) || identifiers.length === 0) {
+      throw new BadRequestException(
+        `${context}: at least one identifier required`,
+      );
+    }
+
+    if (identifiers.length > maxCount) {
+      throw new BadRequestException(
+        `${context}: maximum ${maxCount} identifiers allowed`,
+      );
+    }
+
+    return identifiers.map((id) =>
+      this.validateIdentifier(id, allowedIdentifiers, context),
+    );
+  }
+
+  /**
+   * Sanitize input to prevent injection attacks
+   */
+  static sanitizeValue(value: any, dataType: string): any {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    switch (dataType.toLowerCase()) {
+      case 'integer':
+      case 'bigint':
+      case 'smallint':
+        const intVal = parseInt(value, 10);
+        if (isNaN(intVal)) {
+          throw new BadRequestException(`Invalid integer value: ${value}`);
+        }
+        return intVal;
+
+      case 'numeric':
+      case 'decimal':
+      case 'real':
+      case 'double':
+        const numVal = parseFloat(value);
+        if (isNaN(numVal)) {
+          throw new BadRequestException(`Invalid numeric value: ${value}`);
+        }
+        return numVal;
+
+      case 'boolean':
+        if (typeof value === 'boolean') return value;
+        if (value === 'true' || value === '1') return true;
+        if (value === 'false' || value === '0') return false;
+        throw new BadRequestException(`Invalid boolean value: ${value}`);
+
+      case 'uuid':
+        const uuidPattern =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!uuidPattern.test(value)) {
+          throw new BadRequestException(`Invalid UUID value: ${value}`);
+        }
+        return value;
+
+      case 'date':
+      case 'timestamp':
+        const date = new Date(value);
+        if (isNaN(date.getTime())) {
+          throw new BadRequestException(`Invalid date value: ${value}`);
+        }
+        return value; // Return as string, let database handle parsing
+
+      default:
+        // String types - trim and limit length
+        if (typeof value !== 'string') {
+          value = String(value);
+        }
+        return value.trim().substring(0, 10000); // Max 10KB string
+    }
+  }
+}
+// GENERATED_SECURITY_VALIDATOR_END
+```
+
+### Secure Recap Implementation
+
+```typescript
+// GENERATED_SECURE_RECAP_START
+async recap(dto: UserRecapDto): Promise<RecapResult[]> {
+  const columns = await this.metadataService.getColumns('users');
+
+  // Get allowed fields for grouping (only filterable columns)
+  const allowedFields = columns
+    .filter(c => c.is_filterable)
+    .map(c => c.column_name);
+
+  // Validate and sanitize group_by fields
+  const groupByFields = dto.group_by
+    ? SecurityValidator.validateIdentifiers(
+        dto.group_by.split(','),
+        allowedFields,
+        'group_by',
+        2, // Max 2 fields
+      )
+    : ['department']; // Default
+
+  // Validate year
+  const year = parseInt(dto.year, 10);
+  if (isNaN(year) || year < 2000 || year > 2100) {
+    throw new BadRequestException('Invalid year');
+  }
+
+  // Validate timezone (prevent injection)
+  const timezone = dto.timezone || 'UTC';
+  if (!/^[A-Za-z/_]+$/.test(timezone)) {
+    throw new BadRequestException('Invalid timezone');
+  }
+
+  // Build query with validated identifiers
+  const field1 = this.dialect.quoteIdentifier(groupByFields[0]);
+  const field2 = groupByFields[1] ? this.dialect.quoteIdentifier(groupByFields[1]) : null;
+
+  // Compile additional filters securely
+  const compiled = this.filterCompiler.compile(dto, columns, 1);
+
+  let query: string;
+  if (groupByFields.length === 1) {
+    query = `
+      SELECT
+        ${field1} AS main,
+        COUNT(*) FILTER (WHERE ${this.dialect.extractMonth('created_at', timezone)} = 1) AS jan,
+        COUNT(*) FILTER (WHERE ${this.dialect.extractMonth('created_at', timezone)} = 2) AS feb,
+        -- ... rest of months
+        COUNT(*) AS total
+      FROM ${this.dialect.quoteIdentifier('user.users')}
+      WHERE ${this.dialect.extractYear('created_at', timezone)} = $${compiled.nextParamIndex}
+        AND deleted_at IS NULL
+        ${compiled.clauses.length > 0 ? 'AND ' + compiled.clauses.join(' AND ') : ''}
+      GROUP BY ${field1}
+      ORDER BY total DESC, main ASC
+    `;
+  } else {
+    query = `
+      SELECT
+        ${field1} AS main,
+        ${field2} AS sub,
+        COUNT(*) FILTER (WHERE ${this.dialect.extractMonth('created_at', timezone)} = 1) AS jan,
+        -- ... rest
+        COUNT(*) AS total
+      FROM ${this.dialect.quoteIdentifier('user.users')}
+      WHERE ${this.dialect.extractYear('created_at', timezone)} = $${compiled.nextParamIndex}
+        AND deleted_at IS NULL
+        ${compiled.clauses.length > 0 ? 'AND ' + compiled.clauses.join(' AND ') : ''}
+      GROUP BY ${field1}, ${field2}
+      ORDER BY main ASC, total DESC
+    `;
+  }
+
+  const params = [...compiled.params, year];
+  const result = await this.pool.query(query, params);
+
+  return result.rows || result[0];
+}
+// GENERATED_SECURE_RECAP_END
+```
+
+### Parameterization Rules
+
+**Always use parameterized queries for values:**
+
+```typescript
+// ✅ CORRECT - Parameterized
+const query = `SELECT * FROM users WHERE username = $1 AND age > $2`;
+const params = [username, minAge];
+
+// ❌ WRONG - String interpolation
+const query = `SELECT * FROM users WHERE username = '${username}'`;
+
+// ✅ CORRECT - Identifier from whitelist + quoting
+const allowedFields = ['username', 'email', 'age'];
+const field = SecurityValidator.validateIdentifier(
+  userInput,
+  allowedFields,
+  'sort',
+);
+const query = `SELECT * FROM users ORDER BY ${dialect.quoteIdentifier(field)}`;
+
+// ❌ WRONG - Raw identifier
+const query = `SELECT * FROM users ORDER BY ${userInput}`;
+```
+
+### Rate Limiting by IP
+
+```typescript
+// GENERATED_IP_THROTTLE_START
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class IpThrottlerGuard extends ThrottlerGuard {
+  protected async getTracker(req: Record<string, any>): Promise<string> {
+    // Get real IP from headers (behind proxy)
+    return req.ips.length > 0
+      ? req.ips[0]
+      : req.ip || req.connection.remoteAddress;
+  }
+
+  protected async handleRequest(
+    context: ExecutionContext,
+    limit: number,
+    ttl: number,
+  ): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const tracker = await this.getTracker(request);
+
+    // Log throttle attempts
+    const key = this.generateKey(context, tracker);
+    const { totalHits } = await this.storageService.increment(key, ttl);
+
+    if (totalHits > limit) {
+      this.logger.warn(`Rate limit exceeded for IP: ${tracker}`);
+      throw new ThrottlerException();
+    }
+
+    return true;
+  }
+}
+// GENERATED_IP_THROTTLE_END
+```
+
+### Input Validation Layer
+
+```typescript
+// GENERATED_INPUT_VALIDATION_START
+import {
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+  ValidationArguments,
+} from 'class-validator';
+
+@ValidatorConstraint({ name: 'isSafeString', async: false })
+export class IsSafeStringConstraint implements ValidatorConstraintInterface {
+  validate(text: string, args: ValidationArguments) {
+    if (!text) return true; // @IsOptional handles this
+
+    // Check for SQL injection patterns
+    const sqlPatterns = [
+      /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE)\b)/i,
+      /(--|;|\/\*|\*\/)/,
+      /('|")\s*(OR|AND)\s*('|")\s*=\s*('|")/i,
+    ];
+
+    for (const pattern of sqlPatterns) {
+      if (pattern.test(text)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  defaultMessage(args: ValidationArguments) {
+    return 'Input contains potentially unsafe characters';
+  }
+}
+
+export function IsSafeString(validationOptions?: ValidationOptions) {
+  return function (object: Object, propertyName: string) {
+    registerDecorator({
+      target: object.constructor,
+      propertyName: propertyName,
+      options: validationOptions,
+      constraints: [],
+      validator: IsSafeStringConstraint,
+    });
+  };
+}
+// GENERATED_INPUT_VALIDATION_END
 ```
 
 ---
@@ -6140,7 +7077,1572 @@ async update(id: string, dto: UpdateUserDto) {
 
 ---
 
+## Advanced Pagination Strategies
+
+**Support both offset and cursor-based pagination for scalability.**
+
+### Cursor/Keyset Pagination
+
+```typescript
+// GENERATED_CURSOR_PAGINATION_START
+export class CursorPaginationDto {
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({
+    description: 'Cursor for next page (base64 encoded)',
+    example: 'eyJjcmVhdGVkX2F0IjoiMjAyNC0wMS0wMVQwMDowMDowMFoiLCJpZCI6IjEyMyJ9',
+  })
+  cursor?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  @Type(() => Number)
+  @ApiPropertyOptional({ description: 'Page size', default: 20 })
+  limit?: number = 20;
+
+  @IsOptional()
+  @IsEnum(['asc', 'desc'])
+  @ApiPropertyOptional({ description: 'Sort direction', default: 'desc' })
+  direction?: 'asc' | 'desc' = 'desc';
+}
+
+interface DecodedCursor {
+  created_at: string;
+  id: string;
+}
+
+export class PaginationHelper {
+  /**
+   * Encode cursor from last record
+   */
+  static encodeCursor(record: { created_at: Date; id: string }): string {
+    const cursor: DecodedCursor = {
+      created_at: record.created_at.toISOString(),
+      id: record.id,
+    };
+    return Buffer.from(JSON.stringify(cursor)).toString('base64');
+  }
+
+  /**
+   * Decode cursor to get position
+   */
+  static decodeCursor(cursor: string): DecodedCursor | null {
+    try {
+      const decoded = Buffer.from(cursor, 'base64').toString('utf-8');
+      return JSON.parse(decoded);
+    } catch {
+      throw new BadRequestException('Invalid cursor');
+    }
+  }
+
+  /**
+   * Build keyset WHERE clause
+   */
+  static buildKeysetClause(
+    cursor: DecodedCursor | null,
+    direction: 'asc' | 'desc',
+    dialect: DatabaseDialect,
+  ): { clause: string; params: any[] } {
+    if (!cursor) {
+      return { clause: '', params: [] };
+    }
+
+    const op = direction === 'desc' ? '<' : '>';
+    const createdAt = dialect.quoteIdentifier('created_at');
+    const id = dialect.quoteIdentifier('id');
+
+    // Use tuple comparison for proper pagination
+    const clause = `(${createdAt}, ${id}) ${op} ($1, $2)`;
+    const params = [cursor.created_at, cursor.id];
+
+    return { clause, params };
+  }
+}
+
+// Usage in repository
+async findAllCursor(
+  filters: UserFilterDto,
+  pagination: CursorPaginationDto,
+): Promise<{ data: User[]; nextCursor: string | null; hasMore: boolean }> {
+  const columns = await this.metadataService.getColumns('users');
+  const { limit, direction, cursor } = pagination;
+
+  // Compile filters
+  const compiled = this.filterCompiler.compile(filters, columns, 1);
+
+  // Decode cursor
+  const decodedCursor = cursor ? PaginationHelper.decodeCursor(cursor) : null;
+  const keysetClause = PaginationHelper.buildKeysetClause(
+    decodedCursor,
+    direction,
+    this.dialect,
+  );
+
+  // Build query
+  let query = `
+    SELECT ${this.buildSelectClause(columns)}
+    FROM ${this.dialect.quoteIdentifier('user.users')}
+    WHERE deleted_at IS NULL
+  `;
+
+  let paramIndex = 1;
+  const params: any[] = [];
+
+  // Add keyset clause
+  if (keysetClause.clause) {
+    query += ` AND ${keysetClause.clause}`;
+    params.push(...keysetClause.params);
+    paramIndex += keysetClause.params.length;
+  }
+
+  // Add filters
+  if (compiled.clauses.length > 0) {
+    // Adjust param indices in compiled clauses
+    const adjustedClauses = compiled.clauses.map(clause =>
+      clause.replace(/\$(\d+)/g, (_, num) => `$${parseInt(num) + paramIndex - 1}`),
+    );
+    query += ` AND ${adjustedClauses.join(' AND ')}`;
+    params.push(...compiled.params);
+    paramIndex += compiled.params.length;
+  }
+
+  // Order and limit (fetch +1 to check hasMore)
+  query += `
+    ORDER BY ${this.dialect.quoteIdentifier('created_at')} ${direction.toUpperCase()},
+             ${this.dialect.quoteIdentifier('id')} ${direction.toUpperCase()}
+    LIMIT $${paramIndex}
+  `;
+  params.push(limit + 1);
+
+  const result = await this.pool.query(query, params);
+  const rows = result.rows || result[0];
+
+  const hasMore = rows.length > limit;
+  const data = hasMore ? rows.slice(0, limit) : rows;
+  const nextCursor = hasMore && data.length > 0
+    ? PaginationHelper.encodeCursor(data[data.length - 1])
+    : null;
+
+  return { data, nextCursor, hasMore };
+}
+// GENERATED_CURSOR_PAGINATION_END
+```
+
+### Offset Pagination (Backward Compatible)
+
+```typescript
+// GENERATED_OFFSET_PAGINATION_START
+export class OffsetPaginationDto {
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  @ApiPropertyOptional({ default: 1 })
+  page?: number = 1;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  @Type(() => Number)
+  @ApiPropertyOptional({ default: 20 })
+  limit?: number = 20;
+}
+
+async findAllOffset(
+  filters: UserFilterDto,
+  pagination: OffsetPaginationDto,
+): Promise<{ data: User[]; total: number; page: number; pageCount: number }> {
+  const { page, limit } = pagination;
+  const offset = (page - 1) * limit;
+
+  // Get total count
+  const countQuery = `
+    SELECT COUNT(*) as total
+    FROM ${this.dialect.quoteIdentifier('user.users')}
+    WHERE deleted_at IS NULL
+  `;
+  const countResult = await this.pool.query(countQuery);
+  const total = parseInt(countResult.rows[0]?.total || countResult[0][0]?.total || 0);
+
+  // Get data
+  const compiled = this.filterCompiler.compile(filters, columns, 1);
+
+  let query = `
+    SELECT ${this.buildSelectClause(columns)}
+    FROM ${this.dialect.quoteIdentifier('user.users')}
+    WHERE deleted_at IS NULL
+  `;
+
+  if (compiled.clauses.length > 0) {
+    query += ` AND ${compiled.clauses.join(' AND ')}`;
+  }
+
+  query += ` ORDER BY created_at DESC`;
+  query += ` LIMIT $${compiled.nextParamIndex} OFFSET $${compiled.nextParamIndex + 1}`;
+
+  const params = [...compiled.params, limit, offset];
+  const result = await this.pool.query(query, params);
+
+  return {
+    data: result.rows || result[0],
+    total,
+    page,
+    pageCount: Math.ceil(total / limit),
+  };
+}
+// GENERATED_OFFSET_PAGINATION_END
+```
+
+### Hybrid Pagination Endpoint
+
+```typescript
+// GENERATED_HYBRID_PAGINATION_ENDPOINT_START
+@Get()
+@ApiOperation({ summary: 'Get all users with pagination' })
+@ApiQuery({ name: 'cursor', required: false, description: 'Use cursor pagination' })
+@ApiQuery({ name: 'page', required: false, description: 'Use offset pagination' })
+async findAll(
+  @Query() filters: UserFilterDto,
+  @Query() cursorPagination: CursorPaginationDto,
+  @Query() offsetPagination: OffsetPaginationDto,
+) {
+  // Use cursor if provided, otherwise offset
+  if (cursorPagination.cursor !== undefined || offsetPagination.page === undefined) {
+    return this.service.findAllCursor(filters, cursorPagination);
+  } else {
+    return this.service.findAllOffset(filters, offsetPagination);
+  }
+}
+// GENERATED_HYBRID_PAGINATION_ENDPOINT_END
+```
+
+---
+
+## Timezone Support for Aggregations
+
+**Handle timezone-aware date aggregations.**
+
+### Metadata Extension
+
+```sql
+-- Add timezone config to table_metadata
+ALTER TABLE meta.table_metadata
+ADD COLUMN default_timezone VARCHAR(50) DEFAULT 'UTC',
+ADD COLUMN date_aggregation_field VARCHAR(100) DEFAULT 'created_at';
+
+-- Example
+UPDATE meta.table_metadata
+SET default_timezone = 'Asia/Jakarta',
+    date_aggregation_field = 'created_at'
+WHERE table_name = 'users';
+```
+
+### Timezone-Aware Recap
+
+```typescript
+// GENERATED_TIMEZONE_RECAP_START
+export class RecapQueryDto {
+  @IsInt()
+  @Min(2000)
+  @Max(2100)
+  @Type(() => Number)
+  @ApiProperty({ example: 2024 })
+  year: number;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^[A-Za-z/_]+$/, { message: 'Invalid timezone format' })
+  @ApiPropertyOptional({
+    example: 'Asia/Jakarta',
+    description: 'IANA timezone name',
+    default: 'UTC',
+  })
+  timezone?: string = 'UTC';
+
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({
+    example: 'department,role',
+    description: 'Comma-separated fields to group by (max 2)',
+  })
+  group_by?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({
+    example: 'created_at',
+    description: 'Date field for aggregation',
+    default: 'created_at',
+  })
+  date_field?: string = 'created_at';
+}
+
+async recap(dto: RecapQueryDto): Promise<RecapResult[]> {
+  const metadata = await this.metadataService.getTableMetadata('users');
+  const columns = await this.metadataService.getColumns('users');
+
+  // Validate timezone
+  const timezone = dto.timezone || metadata.default_timezone || 'UTC';
+  if (!/^[A-Za-z/_]+$/.test(timezone)) {
+    throw new BadRequestException('Invalid timezone');
+  }
+
+  // Validate date field
+  const dateField = dto.date_field || metadata.date_aggregation_field || 'created_at';
+  const dateColumn = columns.find(c => c.column_name === dateField);
+  if (!dateColumn || !['timestamp', 'date', 'timestamptz'].includes(dateColumn.data_type)) {
+    throw new BadRequestException('Invalid date field');
+  }
+
+  // Validate and sanitize group_by
+  const groupByFields = dto.group_by
+    ? SecurityValidator.validateIdentifiers(
+        dto.group_by.split(','),
+        columns.filter(c => c.is_filterable).map(c => c.column_name),
+        'group_by',
+        2,
+      )
+    : ['department'];
+
+  // Build timezone-aware query
+  const field1 = this.dialect.quoteIdentifier(groupByFields[0]);
+  const field2 = groupByFields[1] ? this.dialect.quoteIdentifier(groupByFields[1]) : null;
+  const dateCol = this.dialect.quoteIdentifier(dateField);
+
+  let query: string;
+  if (groupByFields.length === 1) {
+    query = `
+      SELECT
+        ${field1} AS main,
+        COUNT(*) FILTER (WHERE ${this.dialect.extractMonth(dateCol, timezone)} = 1) AS jan,
+        COUNT(*) FILTER (WHERE ${this.dialect.extractMonth(dateCol, timezone)} = 2) AS feb,
+        COUNT(*) FILTER (WHERE ${this.dialect.extractMonth(dateCol, timezone)} = 3) AS mar,
+        COUNT(*) FILTER (WHERE ${this.dialect.extractMonth(dateCol, timezone)} = 4) AS apr,
+        COUNT(*) FILTER (WHERE ${this.dialect.extractMonth(dateCol, timezone)} = 5) AS may,
+        COUNT(*) FILTER (WHERE ${this.dialect.extractMonth(dateCol, timezone)} = 6) AS jun,
+        COUNT(*) FILTER (WHERE ${this.dialect.extractMonth(dateCol, timezone)} = 7) AS jul,
+        COUNT(*) FILTER (WHERE ${this.dialect.extractMonth(dateCol, timezone)} = 8) AS aug,
+        COUNT(*) FILTER (WHERE ${this.dialect.extractMonth(dateCol, timezone)} = 9) AS sep,
+        COUNT(*) FILTER (WHERE ${this.dialect.extractMonth(dateCol, timezone)} = 10) AS oct,
+        COUNT(*) FILTER (WHERE ${this.dialect.extractMonth(dateCol, timezone)} = 11) AS nov,
+        COUNT(*) FILTER (WHERE ${this.dialect.extractMonth(dateCol, timezone)} = 12) AS dec,
+        COUNT(*) AS total
+      FROM ${this.dialect.quoteIdentifier('user.users')}
+      WHERE ${this.dialect.extractYear(dateCol, timezone)} = $1
+        AND deleted_at IS NULL
+      GROUP BY ${field1}
+      ORDER BY total DESC, main ASC
+    `;
+  } else {
+    query = `
+      SELECT
+        ${field1} AS main,
+        ${field2} AS sub,
+        COUNT(*) FILTER (WHERE ${this.dialect.extractMonth(dateCol, timezone)} = 1) AS jan,
+        -- ... other months
+        COUNT(*) AS total
+      FROM ${this.dialect.quoteIdentifier('user.users')}
+      WHERE ${this.dialect.extractYear(dateCol, timezone)} = $1
+        AND deleted_at IS NULL
+      GROUP BY ${field1}, ${field2}
+      ORDER BY main ASC, total DESC
+    `;
+  }
+
+  const result = await this.pool.query(query, [dto.year]);
+  return result.rows || result[0];
+}
+// GENERATED_TIMEZONE_RECAP_END
+```
+
+### MySQL Timezone Handling
+
+```typescript
+// MySQL doesn't support AT TIME ZONE, use CONVERT_TZ
+extractMonth(column: string, timezone = 'UTC'): string {
+  // Convert from UTC to target timezone
+  return `MONTH(CONVERT_TZ(${this.quoteIdentifier(column)}, 'UTC', '${timezone}'))`;
+}
+
+extractYear(column: string, timezone = 'UTC'): string {
+  return `YEAR(CONVERT_TZ(${this.quoteIdentifier(column)}, 'UTC', '${timezone}'))`;
+}
+```
+
+---
+
+## API Contract Extensions
+
+**Modern HTTP patterns for robust APIs.**
+
+### PATCH - Partial Update Support
+
+```typescript
+// GENERATED_PATCH_ENDPOINT_START
+export class PatchUserDto extends PartialType(UpdateUserDto) {}
+
+@Patch(':id')
+@ApiBearerAuth()
+@ApiOperation({ summary: 'Partially update user' })
+@ApiResponse({ status: 200, description: 'User updated', type: CreateUserDto })
+@ApiResponse({ status: 404, description: 'User not found' })
+async partialUpdate(
+  @Param('id') id: string,
+  @Body() dto: PatchUserDto,
+  @Request() req,
+) {
+  // Only update provided fields
+  const existingUser = await this.service.findOne(id);
+  const merged = { ...existingUser, ...dto };
+  return this.service.update(id, merged);
+}
+// GENERATED_PATCH_ENDPOINT_END
+```
+
+### Bulk Operations
+
+```typescript
+// GENERATED_BULK_OPERATIONS_START
+export class BulkCreateDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateUserDto)
+  @ArrayMinSize(1)
+  @ArrayMaxSize(1000) // Limit to prevent abuse
+  @ApiProperty({ type: [CreateUserDto] })
+  items: CreateUserDto[];
+}
+
+@Post('bulk')
+@ApiBearerAuth()
+@ApiOperation({ summary: 'Bulk create users' })
+@Throttle({ default: { limit: 5, ttl: 60000 } }) // Stricter limit
+async bulkCreate(@Body() dto: BulkCreateDto, @Request() req) {
+  return this.service.bulkCreate(dto.items, req.user.id);
+}
+
+@Put('bulk')
+@ApiBearerAuth()
+@ApiOperation({ summary: 'Bulk update users' })
+async bulkUpdate(@Body() dto: BulkUpdateDto, @Request() req) {
+  return this.service.bulkUpdate(dto.items, req.user.id);
+}
+
+@Delete('bulk')
+@ApiBearerAuth()
+@ApiOperation({ summary: 'Bulk delete users' })
+async bulkDelete(@Body() dto: BulkDeleteDto, @Request() req) {
+  return this.service.bulkDelete(dto.ids, req.user.id);
+}
+
+// Service implementation with transaction
+async bulkCreate(items: CreateUserDto[], userId: string) {
+  const client = await this.pool.connect();
+  try {
+    await client.query('BEGIN');
+    const results = [];
+    for (const item of items) {
+      const result = await client.query(UsersQueries.create, [
+        item.username,
+        item.email,
+        userId,
+      ]);
+      results.push(result.rows[0]);
+    }
+    await client.query('COMMIT');
+    return results;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+// GENERATED_BULK_OPERATIONS_END
+```
+
+### Idempotency Keys
+
+```typescript
+// GENERATED_IDEMPOTENCY_START
+@Injectable()
+export class IdempotencyService {
+  constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
+
+  async checkIdempotency(
+    key: string,
+    operation: () => Promise<any>,
+    ttl = 86400, // 24 hours
+  ): Promise<any> {
+    // Check if result exists
+    const cached = await this.cacheManager.get(`idempotency:${key}`);
+    if (cached) {
+      return cached;
+    }
+
+    // Execute operation
+    const result = await operation();
+
+    // Cache result
+    await this.cacheManager.set(`idempotency:${key}`, result, ttl * 1000);
+
+    return result;
+  }
+}
+
+// Usage in controller
+@Post()
+@ApiBearerAuth()
+@ApiOperation({ summary: 'Create user (idempotent)' })
+@ApiHeader({ name: 'Idempotency-Key', required: false })
+async create(
+  @Body() dto: CreateUserDto,
+  @Headers('idempotency-key') idempotencyKey?: string,
+  @Request() req?,
+) {
+  if (idempotencyKey) {
+    return this.idempotencyService.checkIdempotency(
+      idempotencyKey,
+      () => this.service.create(dto, req.user.id),
+    );
+  }
+  return this.service.create(dto, req.user.id);
+}
+// GENERATED_IDEMPOTENCY_END
+```
+
+### ETag & Conditional Requests
+
+```typescript
+// GENERATED_ETAG_SUPPORT_START
+@Injectable()
+export class ETagService {
+  generateETag(data: any): string {
+    const hash = createHash('sha256');
+    hash.update(JSON.stringify(data));
+    return `"${hash.digest('hex').substring(0, 16)}"`;
+  }
+
+  matches(etag: string, ifNoneMatch?: string): boolean {
+    if (!ifNoneMatch) return false;
+    return ifNoneMatch === etag || ifNoneMatch === '*';
+  }
+}
+
+@Get(':id')
+@ApiOperation({ summary: 'Get user with ETag support' })
+@ApiHeader({ name: 'If-None-Match', required: false })
+async findOne(
+  @Param('id') id: string,
+  @Headers('if-none-match') ifNoneMatch?: string,
+  @Res({ passthrough: true }) res?: Response,
+) {
+  const user = await this.service.findOne(id);
+  const etag = this.etagService.generateETag(user);
+
+  if (this.etagService.matches(etag, ifNoneMatch)) {
+    res.status(304); // Not Modified
+    return;
+  }
+
+  res.setHeader('ETag', etag);
+  res.setHeader('Cache-Control', 'max-age=60, must-revalidate');
+  return user;
+}
+
+@Put(':id')
+@ApiHeader({ name: 'If-Match', required: false })
+async update(
+  @Param('id') id: string,
+  @Body() dto: UpdateUserDto,
+  @Headers('if-match') ifMatch?: string,
+) {
+  const existing = await this.service.findOne(id);
+  const currentETag = this.etagService.generateETag(existing);
+
+  if (ifMatch && !this.etagService.matches(currentETag, ifMatch)) {
+    throw new PreconditionFailedException('Resource has been modified');
+  }
+
+  return this.service.update(id, dto);
+}
+// GENERATED_ETAG_SUPPORT_END
+```
+
+---
+
+## Microservices Reliability Patterns
+
+**Enterprise-grade microservices patterns.**
+
+### Outbox Pattern for Transactional Events
+
+```typescript
+// GENERATED_OUTBOX_PATTERN_START
+// Schema
+CREATE TABLE IF NOT EXISTS event.outbox (
+  id uuid PRIMARY KEY DEFAULT uuidv7(),
+  aggregate_type varchar(100) NOT NULL,
+  aggregate_id uuid NOT NULL,
+  event_type varchar(100) NOT NULL,
+  payload jsonb NOT NULL,
+  published boolean DEFAULT false,
+  published_at timestamp,
+  created_at timestamp DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_outbox_published (published, created_at)
+);
+
+// Service
+@Injectable()
+export class OutboxService {
+  constructor(private readonly pool: Pool) {}
+
+  async createWithEvent(
+    dto: CreateUserDto,
+    userId: string,
+  ): Promise<User> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // 1. Create user
+      const userResult = await client.query(UsersQueries.create, [
+        dto.username,
+        dto.email,
+        userId,
+      ]);
+      const user = userResult.rows[0];
+
+      // 2. Insert outbox event
+      await client.query(
+        `INSERT INTO event.outbox
+         (aggregate_type, aggregate_id, event_type, payload)
+         VALUES ($1, $2, $3, $4)`,
+        [
+          'User',
+          user.id,
+          'UserCreated',
+          JSON.stringify({ user, metadata: { createdBy: userId } }),
+        ],
+      );
+
+      await client.query('COMMIT');
+      return user;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+}
+
+// Outbox Publisher (runs in background)
+@Injectable()
+export class OutboxPublisher {
+  constructor(
+    private readonly pool: Pool,
+    @Inject('EVENT_BUS') private readonly eventBus: ClientProxy,
+  ) {}
+
+  @Cron('*/10 * * * * *') // Every 10 seconds
+  async publishPendingEvents() {
+    const result = await this.pool.query(
+      `SELECT * FROM event.outbox
+       WHERE published = false
+       ORDER BY created_at ASC
+       LIMIT 100`,
+    );
+
+    for (const event of result.rows) {
+      try {
+        await this.eventBus.emit(event.event_type, event.payload).toPromise();
+
+        await this.pool.query(
+          `UPDATE event.outbox
+           SET published = true, published_at = CURRENT_TIMESTAMP
+           WHERE id = $1`,
+          [event.id],
+        );
+      } catch (error) {
+        this.logger.error(`Failed to publish event ${event.id}`, error);
+      }
+    }
+  }
+}
+// GENERATED_OUTBOX_PATTERN_END
+```
+
+### SAGA Pattern for Distributed Transactions
+
+```typescript
+// GENERATED_SAGA_PATTERN_START
+export enum SagaStatus {
+  PENDING = 'pending',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  COMPENSATING = 'compensating',
+  COMPENSATED = 'compensated',
+}
+
+CREATE TABLE IF NOT EXISTS saga.instances (
+  id uuid PRIMARY KEY DEFAULT uuidv7(),
+  saga_type varchar(100) NOT NULL,
+  status varchar(20) NOT NULL DEFAULT 'pending',
+  current_step integer DEFAULT 0,
+  data jsonb NOT NULL,
+  error text,
+  created_at timestamp DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS saga.steps (
+  id uuid PRIMARY KEY DEFAULT uuidv7(),
+  saga_id uuid REFERENCES saga.instances(id),
+  step_number integer NOT NULL,
+  step_name varchar(100) NOT NULL,
+  status varchar(20) NOT NULL,
+  request jsonb,
+  response jsonb,
+  error text,
+  started_at timestamp,
+  completed_at timestamp
+);
+
+@Injectable()
+export class SagaOrchestrator {
+  async executeOrderSaga(orderId: string, customerId: string, productId: string, amount: number) {
+    const sagaId = uuidv7();
+
+    // Create saga instance
+    await this.createSaga(sagaId, 'CreateOrder', {
+      orderId,
+      customerId,
+      productId,
+      amount,
+    });
+
+    try {
+      // Step 1: Reserve inventory
+      await this.executeStep(sagaId, 1, 'ReserveInventory', async () => {
+        return this.inventoryService.reserve(productId, 1);
+      });
+
+      // Step 2: Charge customer
+      await this.executeStep(sagaId, 2, 'ChargeCustomer', async () => {
+        return this.paymentService.charge(customerId, amount);
+      });
+
+      // Step 3: Create order
+      await this.executeStep(sagaId, 3, 'CreateOrder', async () => {
+        return this.orderService.create(orderId, customerId, productId);
+      });
+
+      await this.completeSaga(sagaId);
+    } catch (error) {
+      await this.compensateSaga(sagaId);
+      throw error;
+    }
+  }
+
+  private async compensateSaga(sagaId: string) {
+    await this.updateSagaStatus(sagaId, SagaStatus.COMPENSATING);
+
+    const steps = await this.getCompletedSteps(sagaId);
+
+    // Compensate in reverse order
+    for (const step of steps.reverse()) {
+      try {
+        await this.compensateStep(step);
+      } catch (error) {
+        this.logger.error(`Compensation failed for step ${step.step_name}`, error);
+      }
+    }
+
+    await this.updateSagaStatus(sagaId, SagaStatus.COMPENSATED);
+  }
+
+  private async compensateStep(step: any) {
+    switch (step.step_name) {
+      case 'ReserveInventory':
+        await this.inventoryService.release(step.request.productId);
+        break;
+      case 'ChargeCustomer':
+        await this.paymentService.refund(step.response.transactionId);
+        break;
+      case 'CreateOrder':
+        await this.orderService.cancel(step.request.orderId);
+        break;
+    }
+  }
+}
+// GENERATED_SAGA_PATTERN_END
+```
+
+### Correlation ID & Distributed Tracing
+
+```typescript
+// GENERATED_CORRELATION_ID_START
+@Injectable()
+export class CorrelationIdMiddleware implements NestMiddleware {
+  use(req: Request, res: Response, next: NextFunction) {
+    const correlationId = req.headers['x-correlation-id'] as string || uuidv4();
+    req['correlationId'] = correlationId;
+    res.setHeader('X-Correlation-ID', correlationId);
+    next();
+  }
+}
+
+// Inject correlation ID into all microservice calls
+@Injectable()
+export class CorrelationIdInterceptor implements NestInterceptor {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const request = context.switchToHttp().getRequest();
+    const correlationId = request.correlationId;
+
+    // Add to RPC metadata
+    if (context.getType() === 'rpc') {
+      const data = context.switchToRpc().getData();
+      data.metadata = { ...data.metadata, correlationId };
+    }
+
+    return next.handle();
+  }
+}
+
+// Usage in microservice
+@MessagePattern('users.create')
+async handleCreate(@Payload() data: any, @Ctx() context: RmqContext) {
+  const correlationId = data.metadata?.correlationId;
+
+  this.logger.log({
+    message: 'Creating user',
+    correlationId,
+    data: data.payload,
+  });
+
+  const result = await this.service.create(data.payload);
+
+  // Emit event with correlation ID
+  this.eventBus.emit('users.created', {
+    ...result,
+    metadata: { correlationId },
+  });
+
+  return result;
+}
+// GENERATED_CORRELATION_ID_END
+```
+
+---
+
+## Observability & Monitoring
+
+**Production-ready observability stack.**
+
+### OpenTelemetry Integration
+
+```typescript
+// GENERATED_OPENTELEMETRY_START
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { JaegerExporter } from '@opentelemetry/exporter-jaeger';
+import { PrometheusExporter } from '@opentelemetry/exporter-prometheus';
+
+const sdk = new NodeSDK({
+  traceExporter: new JaegerExporter({
+    endpoint:
+      process.env.JAEGER_ENDPOINT || 'http://localhost:14268/api/traces',
+  }),
+  metricReader: new PrometheusExporter({ port: 9464 }),
+  instrumentations: [getNodeAutoInstrumentations()],
+});
+
+sdk.start();
+
+// Auto-instrumented traces for HTTP, gRPC, DB calls
+// GENERATED_OPENTELEMETRY_END
+```
+
+### Health & Readiness Endpoints
+
+```typescript
+// GENERATED_HEALTH_ENDPOINTS_START
+import {
+  HealthCheckService,
+  HttpHealthIndicator,
+  TypeOrmHealthIndicator,
+} from '@nestjs/terminus';
+
+@Controller('health')
+export class HealthController {
+  constructor(
+    private health: HealthCheckService,
+    private http: HttpHealthIndicator,
+    private db: TypeOrmHealthIndicator,
+  ) {}
+
+  @Get()
+  @HealthCheck()
+  check() {
+    return this.health.check([
+      () => this.db.pingCheck('database'),
+      () => this.http.pingCheck('external-api', 'https://api.example.com'),
+    ]);
+  }
+
+  @Get('ready')
+  @HealthCheck()
+  ready() {
+    return this.health.check([
+      () => this.db.pingCheck('database'),
+      // Add other critical dependencies
+    ]);
+  }
+
+  @Get('live')
+  liveness() {
+    return { status: 'ok', timestamp: new Date().toISOString() };
+  }
+}
+// GENERATED_HEALTH_ENDPOINTS_END
+```
+
+### Prometheus Metrics
+
+```typescript
+// GENERATED_PROMETHEUS_METRICS_START
+import {
+  makeCounterProvider,
+  makeHistogramProvider,
+} from '@willsoto/nestjs-prometheus';
+
+@Module({
+  providers: [
+    makeCounterProvider({
+      name: 'http_requests_total',
+      help: 'Total HTTP requests',
+      labelNames: ['method', 'path', 'status'],
+    }),
+    makeHistogramProvider({
+      name: 'http_request_duration_seconds',
+      help: 'HTTP request duration',
+      labelNames: ['method', 'path'],
+    }),
+  ],
+})
+export class MetricsModule {}
+
+@Injectable()
+export class MetricsInterceptor implements NestInterceptor {
+  constructor(
+    @InjectMetric('http_requests_total') private counter: Counter,
+    @InjectMetric('http_request_duration_seconds') private histogram: Histogram,
+  ) {}
+
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const start = Date.now();
+    const request = context.switchToHttp().getRequest();
+    const { method, path } = request;
+
+    return next.handle().pipe(
+      tap(() => {
+        const duration = (Date.now() - start) / 1000;
+        const response = context.switchToHttp().getResponse();
+
+        this.counter.inc({ method, path, status: response.statusCode });
+        this.histogram.observe({ method, path }, duration);
+      }),
+    );
+  }
+}
+// GENERATED_PROMETHEUS_METRICS_END
+```
+
+### Structured Logging with Pino
+
+```typescript
+// GENERATED_PINO_LOGGER_START
+import { Logger } from 'nestjs-pino';
+
+@Module({
+  imports: [
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: process.env.LOG_LEVEL || 'info',
+        transport: process.env.NODE_ENV !== 'production'
+          ? { target: 'pino-pretty' }
+          : undefined,
+        customProps: (req, res) => ({
+          correlationId: req.correlationId,
+          userId: req.user?.id,
+        }),
+        serializers: {
+          req: (req) => ({
+            id: req.id,
+            method: req.method,
+            url: req.url,
+            correlationId: req.correlationId,
+          }),
+        },
+      },
+    }),
+  ],
+})
+
+// Usage
+this.logger.log({
+  msg: 'User created',
+  userId: user.id,
+  correlationId,
+  duration: Date.now() - start,
+});
+// GENERATED_PINO_LOGGER_END
+```
+
+---
+
+## Developer Experience (DX) Enhancements
+
+**Tools to improve generator usability.**
+
+### Dry-Run Mode
+
+```typescript
+// GENERATED_DRY_RUN_START
+nest-generator generate user.users --dry-run
+
+// Output:
+✓ Analyzing metadata for user.users
+✓ Generating files (dry-run mode)
+
+Files to be created/updated:
+  CREATE   src/modules/users/users.dto.ts
+  CREATE   src/modules/users/users.query.ts
+  UPDATE   src/modules/users/users.repository.ts (custom code detected)
+  CREATE   src/modules/users/users.service.ts
+  CREATE   src/modules/users/users.controller.ts
+  CREATE   src/modules/users/users.module.ts
+
+Changes preview:
+  + 245 lines added
+  - 12 lines removed
+  ~ 8 lines modified
+
+Run without --dry-run to apply changes.
+// GENERATED_DRY_RUN_END
+```
+
+### Diff Preview
+
+```typescript
+// GENERATED_DIFF_PREVIEW_START
+nest-generator generate user.users --diff
+
+// Shows git-style diff
+diff --git a/src/modules/users/users.repository.ts b/src/modules/users/users.repository.ts
+index 1234567..abcdefg 100644
+--- a/src/modules/users/users.repository.ts
++++ b/src/modules/users/users.repository.ts
+@@ -10,6 +10,12 @@ export class UsersRepository {
+   // GENERATED_METHOD_START: find-all
+   async findAll(filters?: UserFilterDto, page = 1, limit = 10) {
++    const compiled = this.filterCompiler.compile(filters, columns, 1);
++
+     let query = `SELECT * FROM users WHERE deleted_at IS NULL`;
++    if (compiled.clauses.length > 0) {
++      query += ` AND ${compiled.clauses.join(' AND ')}`;
++    }
+   }
+   // GENERATED_METHOD_END: find-all
+// GENERATED_DIFF_PREVIEW_END
+```
+
+### Auto-Formatter Integration
+
+```typescript
+// GENERATED_AUTO_FORMAT_START
+// generator.service.ts
+import * as prettier from 'prettier';
+
+async generateFile(template: string, data: any, outputPath: string) {
+  let content = this.renderTemplate(template, data);
+
+  // Auto-format with Prettier
+  const prettierConfig = await prettier.resolveConfig(process.cwd());
+  content = prettier.format(content, {
+    ...prettierConfig,
+    parser: 'typescript',
+  });
+
+  // Lint with ESLint (auto-fix)
+  const { ESLint } = require('eslint');
+  const eslint = new ESLint({ fix: true });
+  const results = await eslint.lintText(content, { filePath: outputPath });
+  content = results[0].output || content;
+
+  await fs.writeFile(outputPath, content);
+}
+// GENERATED_AUTO_FORMAT_END
+```
+
+### Snapshot Testing for Templates
+
+```typescript
+// GENERATED_SNAPSHOT_TESTS_START
+// tests/templates/dto.template.spec.ts
+describe('DTO Template Generator', () => {
+  it('should generate correct DTO with filters', () => {
+    const metadata = {
+      tableName: 'users',
+      columns: [
+        { name: 'username', type: 'string', isFilterable: true },
+        { name: 'age', type: 'number', isFilterable: true },
+      ],
+    };
+
+    const result = dtoGenerator.generate(metadata);
+
+    expect(result).toMatchSnapshot();
+  });
+
+  it('should preserve custom code blocks', () => {
+    const existing = `
+      export class UserDto {
+        // GENERATED_START
+        username: string;
+        // GENERATED_END
+
+        // CUSTOM_START
+        get fullName() { return this.username; }
+        // CUSTOM_END
+      }
+    `;
+
+    const result = dtoGenerator.regenerate(metadata, existing);
+
+    expect(result).toContain('get fullName()');
+    expect(result).toMatchSnapshot();
+  });
+});
+// GENERATED_SNAPSHOT_TESTS_END
+```
+
+### Plugin System
+
+```typescript
+// GENERATED_PLUGIN_SYSTEM_START
+export interface GeneratorPlugin {
+  name: string;
+  version: string;
+  hooks: {
+    beforeGenerate?: (context: GeneratorContext) => Promise<void>;
+    afterGenerate?: (context: GeneratorContext, files: GeneratedFile[]) => Promise<void>;
+    transformTemplate?: (template: string, data: any) => string;
+    customEndpoints?: (metadata: TableMetadata) => EndpointDefinition[];
+  };
+}
+
+// Example plugin
+export class RecapPlugin implements GeneratorPlugin {
+  name = 'recap-plugin';
+  version = '1.0.0';
+
+  hooks = {
+    customEndpoints: (metadata: TableMetadata) => {
+      if (!metadata.has_created_at) return [];
+
+      return [
+        {
+          method: 'GET',
+          path: '/recap',
+          handler: 'recap',
+          dto: 'RecapQueryDto',
+        },
+      ];
+    },
+  };
+}
+
+// Usage
+nest-generator generate user.users --plugin=recap --plugin=graphql
+// GENERATED_PLUGIN_SYSTEM_END
+```
+
+---
+
+## Multi-Tenancy Support
+
+**Schema-based and row-level tenant isolation.**
+
+### Schema-per-Tenant
+
+```typescript
+// GENERATED_SCHEMA_PER_TENANT_START
+@Injectable()
+export class TenantService {
+  private tenantSchemas = new Map<string, string>();
+
+  async getTenantSchema(tenantId: string): string {
+    if (!this.tenantSchemas.has(tenantId)) {
+      const result = await this.pool.query(
+        `SELECT schema_name FROM tenants WHERE id = $1`,
+        [tenantId],
+      );
+      if (!result.rows[0]) {
+        throw new NotFoundException('Tenant not found');
+      }
+      this.tenantSchemas.set(tenantId, result.rows[0].schema_name);
+    }
+    return this.tenantSchemas.get(tenantId);
+  }
+
+  async createTenantSchema(tenantId: string, schemaName: string) {
+    await this.pool.query(`CREATE SCHEMA IF NOT EXISTS "${schemaName}"`);
+    await this.pool.query(
+      `INSERT INTO tenants (id, schema_name) VALUES ($1, $2)`,
+      [tenantId, schemaName],
+    );
+
+    // Copy structure from template schema
+    await this.copySchemaStructure('template', schemaName);
+  }
+}
+
+@Injectable()
+export class TenantInterceptor implements NestInterceptor {
+  constructor(private tenantService: TenantService) {}
+
+  async intercept(context: ExecutionContext, next: CallHandler) {
+    const request = context.switchToHttp().getRequest();
+    const tenantId = request.headers['x-tenant-id'];
+
+    if (!tenantId) {
+      throw new BadRequestException('Tenant ID required');
+    }
+
+    const schema = await this.tenantService.getTenantSchema(tenantId);
+    request['tenantSchema'] = schema;
+
+    return next.handle();
+  }
+}
+
+// Usage in repository
+async findAll(filters: UserFilterDto, tenantSchema: string) {
+  const query = `
+    SELECT * FROM ${this.dialect.quoteIdentifier(`${tenantSchema}.users`)}
+    WHERE deleted_at IS NULL
+  `;
+  const result = await this.pool.query(query);
+  return result.rows;
+}
+// GENERATED_SCHEMA_PER_TENANT_END
+```
+
+### Row-Level Security (RLS)
+
+```typescript
+// GENERATED_RLS_START
+-- Enable RLS on table
+ALTER TABLE user.users ENABLE ROW LEVEL SECURITY;
+
+-- Create policy
+CREATE POLICY tenant_isolation_policy ON user.users
+  USING (tenant_id = current_setting('app.tenant_id')::uuid);
+
+-- Set tenant context before each query
+@Injectable()
+export class RLSInterceptor implements NestInterceptor {
+  async intercept(context: ExecutionContext, next: CallHandler) {
+    const request = context.switchToHttp().getRequest();
+    const tenantId = request.headers['x-tenant-id'];
+
+    if (tenantId) {
+      await this.pool.query(`SET app.tenant_id = '${tenantId}'`);
+    }
+
+    return next.handle().pipe(
+      finalize(() => {
+        // Reset after query
+        this.pool.query(`RESET app.tenant_id`).catch(() => {});
+      }),
+    );
+  }
+}
+// GENERATED_RLS_END
+```
+
+---
+
+## Performance Optimizations
+
+**Production-scale performance patterns.**
+
+### Read/Write Split
+
+```typescript
+// GENERATED_READ_WRITE_SPLIT_START
+@Injectable()
+export class DatabaseService {
+  private writePool: Pool;
+  private readPools: Pool[];
+  private readPoolIndex = 0;
+
+  constructor() {
+    this.writePool = new Pool({
+      host: process.env.DB_WRITE_HOST,
+      port: parseInt(process.env.DB_WRITE_PORT),
+      // ... primary config
+    });
+
+    this.readPools = [
+      new Pool({
+        host: process.env.DB_READ_HOST_1,
+        port: parseInt(process.env.DB_READ_PORT_1),
+        // ... replica 1 config
+      }),
+      new Pool({
+        host: process.env.DB_READ_HOST_2,
+        port: parseInt(process.env.DB_READ_PORT_2),
+        // ... replica 2 config
+      }),
+    ];
+  }
+
+  getWritePool(): Pool {
+    return this.writePool;
+  }
+
+  getReadPool(): Pool {
+    // Round-robin load balancing
+    const pool = this.readPools[this.readPoolIndex];
+    this.readPoolIndex = (this.readPoolIndex + 1) % this.readPools.length;
+    return pool;
+  }
+}
+
+// Usage
+async findAll(filters: UserFilterDto) {
+  const pool = this.dbService.getReadPool(); // Use replica
+  const result = await pool.query(query, params);
+  return result.rows;
+}
+
+async create(dto: CreateUserDto) {
+  const pool = this.dbService.getWritePool(); // Use primary
+  const result = await pool.query(query, params);
+  return result.rows[0];
+}
+// GENERATED_READ_WRITE_SPLIT_END
+```
+
+### Connection Pooling Best Practices
+
+```typescript
+// GENERATED_CONNECTION_POOLING_START
+const pool = new Pool({
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT),
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+
+  // Connection pool settings
+  min: 5, // Minimum connections
+  max: 20, // Maximum connections
+  idleTimeoutMillis: 30000, // Close idle connections after 30s
+  connectionTimeoutMillis: 2000, // Timeout for new connections
+
+  // Keep-alive
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000,
+});
+
+// Monitor pool
+pool.on('connect', () => {
+  this.logger.log('New database connection established');
+});
+
+pool.on('remove', () => {
+  this.logger.log('Database connection removed from pool');
+});
+
+pool.on('error', (err) => {
+  this.logger.error('Unexpected pool error', err);
+});
+// GENERATED_CONNECTION_POOLING_END
+```
+
+### Query Optimization & Index Recommendations
+
+```typescript
+// GENERATED_INDEX_RECOMMENDATIONS_START
+export class IndexAnalyzer {
+  /**
+   * Analyze queries and suggest indexes
+   */
+  async analyzeAndSuggest(tableName: string): Promise<string[]> {
+    const metadata = await this.metadataService.getTableMetadata(tableName);
+    const columns = await this.metadataService.getColumns(tableName);
+
+    const suggestions: string[] = [];
+
+    // 1. Filterable columns
+    const filterableColumns = columns.filter(c => c.is_filterable);
+    for (const col of filterableColumns) {
+      suggestions.push(
+        `CREATE INDEX IF NOT EXISTS idx_${tableName}_${col.column_name}
+         ON ${metadata.schema_name}.${tableName} (${col.column_name});`
+      );
+    }
+
+    // 2. Foreign keys
+    const fkColumns = columns.filter(c => c.ref_table);
+    for (const col of fkColumns) {
+      suggestions.push(
+        `CREATE INDEX IF NOT EXISTS idx_${tableName}_${col.column_name}_fk
+         ON ${metadata.schema_name}.${tableName} (${col.column_name});`
+      );
+    }
+
+    // 3. Soft delete (partial index)
+    if (metadata.has_soft_delete) {
+      suggestions.push(
+        `CREATE INDEX IF NOT EXISTS idx_${tableName}_not_deleted
+         ON ${metadata.schema_name}.${tableName} (id)
+         WHERE deleted_at IS NULL;`
+      );
+    }
+
+    // 4. Composite indexes for common queries
+    if (metadata.date_aggregation_field) {
+      suggestions.push(
+        `CREATE INDEX IF NOT EXISTS idx_${tableName}_${metadata.date_aggregation_field}_agg
+         ON ${metadata.schema_name}.${tableName} (${metadata.date_aggregation_field})
+         WHERE deleted_at IS NULL;`
+      );
+    }
+
+    // 5. Recap queries (composite)
+    const recapFields = filterableColumns.slice(0, 2).map(c => c.column_name);
+    if (recapFields.length > 0 && metadata.date_aggregation_field) {
+      suggestions.push(
+        `CREATE INDEX IF NOT EXISTS idx_${tableName}_recap
+         ON ${metadata.schema_name}.${tableName} (${recapFields.join(', ')}, ${metadata.date_aggregation_field})
+         WHERE deleted_at IS NULL;`
+      );
+    }
+
+    return suggestions;
+  }
+}
+
+// CLI command
+nest-generator indexes user.users --apply
+
+// Output:
+✓ Analyzing query patterns for user.users
+✓ Generated 8 index recommendations
+
+Suggested indexes:
+  1. idx_users_username (filterable column)
+  2. idx_users_email (filterable column)
+  3. idx_users_department_id_fk (foreign key)
+  4. idx_users_not_deleted (soft delete optimization)
+  5. idx_users_created_at_agg (date aggregation)
+  6. idx_users_recap (recap query optimization)
+
+Apply these indexes? (y/N): y
+✓ Created 6 indexes
+// GENERATED_INDEX_RECOMMENDATIONS_END
+```
+
+---
+
 ## Implementation Roadmap
+
+**Progressive development plan from infrastructure to production deployment.**
+
+### Phase 0: Infrastructure & Enterprise Patterns (PRIORITY 1) ✅ COMPLETED
+
+Critical architecture patterns added to support production-scale applications.
+
+- [x] **Database Dialect System** ✅ DOCUMENTED
+  - [x] PostgreSQL dialect (ILIKE, EXTRACT, UUID, quoteIdentifier)
+  - [x] MySQL dialect (LIKE+LOWER, MONTH/DATE_FORMAT, backtick quoting)
+  - [x] DialectFactory pattern for runtime selection
+  - [x] SafeIdentifier utility for SQL injection prevention
+  - [x] Cross-database date function abstraction
+
+- [x] **Security Best Practices** ✅ DOCUMENTED
+  - [x] Parameterized query enforcement (never string concatenation)
+  - [x] Identifier whitelisting and validation
+  - [x] JSONB field validation for validation_rules
+  - [x] Input sanitization utilities
+  - [x] SQL injection prevention patterns
+
+- [x] **Generic Filter Compiler** ✅ DOCUMENTED
+  - [x] Metadata-driven filter generation
+  - [x] Type-aware operator mapping (12 operators)
+  - [x] Auto-generate FilterDto from column_metadata
+  - [x] Parameter binding with dialect support
+  - [x] Complex filter combinations (AND/OR)
+
+- [x] **Advanced Pagination Strategies** ✅ DOCUMENTED
+  - [x] Offset pagination (backward compatible)
+  - [x] Cursor/keyset pagination (scalable for large datasets)
+  - [x] Hybrid pagination DTO supporting both methods
+  - [x] PaginationHelper utilities (encode/decode cursor)
+  - [x] Tuple comparison for proper ordering
+
+- [x] **API Contract Extensions** ✅ DOCUMENTED
+  - [x] PATCH endpoints (partial updates with PartialType)
+  - [x] Bulk operations (create/update/delete with transactions)
+  - [x] Idempotency-Key support with Redis deduplication
+  - [x] ETag/If-Match/If-None-Match conditional requests
+  - [x] Proper error contracts (code, message, details, traceId)
+  - [x] File upload patterns (pre-signed URLs, antivirus, size limits)
+
+- [x] **Microservices Patterns** ✅ DOCUMENTED
+  - [x] Outbox pattern for transactional event publishing
+  - [x] SAGA orchestration with compensation logic
+  - [x] Correlation ID propagation across services
+  - [x] Distributed tracing integration
+  - [x] Message broker integration (RabbitMQ/Kafka)
+
+- [x] **Observability Stack** ✅ DOCUMENTED
+  - [x] OpenTelemetry integration (traces, metrics, logs)
+  - [x] Prometheus metrics exporter
+  - [x] Health/readiness/liveness endpoints
+  - [x] Structured logging with Pino
+  - [x] Correlation ID in all logs
+
+- [x] **DX Enhancements** ✅ DOCUMENTED
+  - [x] Dry-run mode (preview without applying)
+  - [x] Diff preview (git-style changes)
+  - [x] Auto-formatting (Prettier + ESLint)
+  - [x] Snapshot testing for templates
+  - [x] Plugin system for extensibility
+
+- [x] **Multi-Tenancy Support** ✅ DOCUMENTED
+  - [x] Schema-per-tenant pattern
+  - [x] Row-level security (RLS) with PostgreSQL policies
+  - [x] Tenant isolation guards and interceptors
+  - [x] Automatic tenant context injection
+
+- [x] **Performance Optimizations** ✅ DOCUMENTED
+  - [x] Read/write connection split
+  - [x] Connection pooling best practices
+  - [x] Index recommendations analyzer
+  - [x] Query optimization suggestions
+  - [x] Partial index for soft delete
 
 ### Phase 1: Core Foundation
 
@@ -6151,6 +8653,8 @@ async update(id: string, dto: UpdateUserDto) {
 - [ ] **Automated metadata schema creation scripts**
 - [ ] **Database setup service with SQL execution**
 - [ ] **Connection testing and validation**
+- [ ] **Implement database dialect classes (PostgresDialect, MySQLDialect)**
+- [ ] **Implement SafeIdentifier utility**
 
 ### Phase 2: Architecture Detection
 
@@ -6165,16 +8669,20 @@ async update(id: string, dto: UpdateUserDto) {
 - [ ] Query `table_metadata` and `column_metadata`
 - [ ] Build internal representation
 - [ ] Validate metadata integrity
+- [ ] **Load column_metadata for filter compilation**
 
 ### Phase 4: Code Generation Engine
 
 - [ ] Template engine setup (Handlebars/EJS)
 - [ ] DTO generator with class-validator
-- [ ] Query generator (SQL with parameter binding)
-- [ ] Repository generator
+- [ ] **Implement FilterCompiler for auto-generated filters**
+- [ ] **Query generator with dialect-aware SQL**
+- [ ] **Repository generator with parameterized queries**
 - [ ] Service generator
 - [ ] Controller generator (REST/MessagePattern)
 - [ ] Module generator
+- [ ] **Generate PATCH endpoints alongside POST/PUT**
+- [ ] **Generate bulk operation endpoints**
 
 ### Phase 5: Custom Code Preservation
 
@@ -6186,11 +8694,13 @@ async update(id: string, dto: UpdateUserDto) {
 
 ### Phase 6: Filter System
 
+- [ ] **Implement metadata-driven FilterCompiler**
 - [ ] Filter operator parser
-- [ ] Dynamic query builder
-- [ ] Filter DTO generator
+- [ ] Dynamic query builder with dialect support
+- [ ] Filter DTO auto-generation from column_metadata
 - [ ] URL parameter mapping
 - [ ] Type-specific operator selection
+- [ ] **JOIN query generation from foreign keys**
 
 ### Phase 7: CLI Commands
 
@@ -6200,15 +8710,21 @@ async update(id: string, dto: UpdateUserDto) {
 - [ ] `check` - Check for changes
 - [ ] `list` - List generated modules
 - [ ] `remove` - Remove module
+- [ ] **`indexes` - Analyze and suggest indexes**
+- [ ] **`--dry-run` flag support**
+- [ ] **`--diff` flag support**
 
 ### Phase 8: Testing & Documentation
 
 - [ ] Unit tests for generators
 - [ ] Integration tests with sample project
 - [ ] CLI command tests
+- [ ] **Snapshot tests for template output**
 - [ ] User documentation
 - [ ] API documentation
 - [ ] Migration guide
+- [ ] **Security best practices guide**
+- [ ] **Performance optimization guide**
 
 ### Phase 9: Advanced Features (Priority High)
 

@@ -6,3 +6,4 @@
 
 export * from './query-types';
 export * from './query-generator';
+export * from './query-builder';

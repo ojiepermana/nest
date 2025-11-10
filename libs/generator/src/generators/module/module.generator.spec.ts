@@ -115,7 +115,7 @@ describe('ModuleGenerator', () => {
       );
     });
 
-    it('should include AuditLogService import when audit enabled', () => {
+    it('should include AuditModule import when audit enabled', () => {
       const generator = new ModuleGenerator(mockTableMetadata, mockColumns, {
         tableName: 'users',
         enableAuditLog: true,
@@ -123,8 +123,9 @@ describe('ModuleGenerator', () => {
 
       const result = generator.generate();
 
+      // AuditModule is @Global(), so we import the module not the service
       expect(result).toContain(
-        "import { AuditLogService } from '../audit/audit-log.service';",
+        "import { AuditModule } from '../audit/audit.module';",
       );
     });
 
@@ -193,7 +194,7 @@ describe('ModuleGenerator', () => {
       expect(result).toContain('providers: [UsersService, UsersRepository');
     });
 
-    it('should include AuditLogService in providers when enabled', () => {
+    it('should include AuditModule in imports when enabled', () => {
       const generator = new ModuleGenerator(mockTableMetadata, mockColumns, {
         tableName: 'users',
         enableAuditLog: true,
@@ -201,7 +202,8 @@ describe('ModuleGenerator', () => {
 
       const result = generator.generate();
 
-      expect(result).toContain('AuditLogService');
+      // AuditModule is @Global(), so it's imported in imports array, not providers
+      expect(result).toContain('AuditModule');
     });
 
     it('should export service and repository', () => {
@@ -295,7 +297,7 @@ describe('ModuleGenerator', () => {
       expect(result).toContain(
         "import { CacheModule } from '@nestjs/cache-manager';",
       );
-      expect(result).toContain('AuditLogService');
+      expect(result).toContain('AuditModule'); // Changed from AuditLogService to AuditModule
 
       // Check module config
       expect(result).toContain('TypeOrmModule.forFeature([Users])');

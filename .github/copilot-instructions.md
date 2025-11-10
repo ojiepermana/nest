@@ -80,6 +80,115 @@ nest/
    - Best for: Distributed systems, scalable architecture
    - Pattern: Gateway → Microservices → Event Bus
 
+**Architecture Detection:**
+
+The generator automatically detects architecture type from metadata or prompts interactively:
+
+```bash
+# From metadata
+SELECT architecture_type FROM meta.table_metadata WHERE schema_name = 'users' AND table_name = 'profile';
+
+# Interactive prompt
+? Select architecture type: (Use arrow keys)
+  ❯ Standalone Application
+    Monorepo (Multiple apps)
+    Microservices (Distributed)
+```
+
+**Microservices Pattern:**
+
+When generating for microservices architecture:
+
+1. **Gateway Selection**: Generator prompts for gateway app or auto-detects from workspace
+2. **Service Creation**: Creates service in `apps/{service-name}/`
+3. **Gateway Integration**: Adds REST endpoints in gateway that proxy to service
+4. **Message Patterns**: Generates `@MessagePattern()` handlers in service
+5. **Transport Config**: Configures TCP/Redis/RabbitMQ/NATS based on settings
+
+**Generated Structure:**
+
+```
+apps/
+├── gateway/                           # API Gateway
+│   └── src/modules/users/
+│       ├── users.controller.ts        # REST endpoints
+│       └── users.module.ts            # ClientProxy config
+└── user-service/                      # Microservice
+    └── src/modules/users/
+        ├── users.controller.ts        # Message handlers
+        ├── users.service.ts           # Business logic
+        ├── users.repository.ts        # Database access
+        └── users.module.ts            # Service module
+```
+
+**Gateway Controller Example:**
+
+```typescript
+// apps/gateway/src/modules/users/users.controller.ts
+@Controller('users')
+export class UsersController {
+  constructor(@Inject('USER_SERVICE') private client: ClientProxy) {}
+
+  @Get()
+  async findAll(@Query() filters: FilterUserDto) {
+    return this.client.send('users.findAll', filters);
+  }
+
+  @Get('recap')
+  async getRecap(@Query() dto: UserRecapDto) {
+    return this.client.send('users.getRecap', dto);
+  }
+}
+```
+
+**Service Controller Example:**
+
+```typescript
+// apps/user-service/src/modules/users/users.controller.ts
+@Controller()
+export class UsersController {
+  constructor(private readonly service: UsersService) {}
+
+  @MessagePattern('users.findAll')
+  async findAll(@Payload() filters: FilterUserDto) {
+    return this.service.findAll(filters);
+  }
+
+  @MessagePattern('users.getRecap')
+  async getRecap(@Payload() dto: UserRecapDto) {
+    return this.service.getYearlyRecap(dto);
+  }
+}
+```
+
+**Transport Options:**
+
+```typescript
+// TCP (default)
+{
+  transport: Transport.TCP,
+  options: { host: 'localhost', port: 3001 }
+}
+
+// Redis
+{
+  transport: Transport.REDIS,
+  options: { host: 'localhost', port: 6379 }
+}
+
+// RabbitMQ
+{
+  transport: Transport.RMQ,
+  options: { urls: ['amqp://localhost:5672'], queue: 'users_queue' }
+}
+
+// NATS
+{
+  transport: Transport.NATS,
+  options: { servers: ['nats://localhost:4222'] }
+}
+```
+
 ### Generated Code Structure
 
 ```typescript
@@ -117,7 +226,13 @@ users-profile/
 - ✅ **JOINs**: Auto-detected from foreign keys
 - ✅ **Aggregations**: COUNT, SUM, AVG, MIN, MAX
 - ✅ **Recaps**: Group by with date ranges (daily/monthly/yearly)
+  - Single field grouping: Simple aggregation by one dimension
+  - Two fields grouping: Hierarchical grouping (main + sub)
+  - Monthly breakdown: Jan-Dec counts with yearly total
+  - Filter support: Apply additional filters to recap queries
 - ✅ **CTEs**: Common Table Expressions for complex queries
+- ✅ **Dynamic Filtering**: URL query parameters (`_eq`, `_like`, `_in`, `_between`, `_gt`, `_gte`, `_lt`, `_lte`)
+- ✅ **Pagination**: `page` and `limit` parameters with metadata
 
 #### 3. **Validation & Security** (100% Complete)
 
@@ -196,6 +311,90 @@ async deleteFile(@Param('filename') filename: string)
 - ✅ @ApiOperation descriptions
 - ✅ Request/Response examples
 - ✅ File upload documentation
+
+#### 9. **API Endpoints & Query Parameters** (100% Complete)
+
+**Standard CRUD Endpoints:**
+
+| Method | Endpoint        | Description                       | Request Body | Response         |
+| ------ | --------------- | --------------------------------- | ------------ | ---------------- |
+| GET    | `/entity`       | List with filtering & pagination  | Query params | `Entity[]`       |
+| GET    | `/entity/recap` | Yearly recap with grouping (NEW!) | Query params | `RecapResult[]`  |
+| GET    | `/entity/:id`   | Get single entity by ID           | -            | `Entity`         |
+| POST   | `/entity`       | Create new entity                 | `CreateDto`  | `Entity`         |
+| PUT    | `/entity/:id`   | Update existing entity            | `UpdateDto`  | `Entity`         |
+| DELETE | `/entity/:id`   | Soft delete entity                | -            | `{ id: string }` |
+
+**Query Parameters (Filtering):**
+
+All filterable columns support these operators:
+
+```bash
+# String fields
+?username_eq=john           # Exact match
+?username_like=john         # Pattern match (ILIKE)
+?email_in=john@test.com,jane@test.com  # In array
+
+# Numeric fields
+?age_gt=18                  # Greater than
+?age_gte=18                 # Greater than or equal
+?age_lt=65                  # Less than
+?age_lte=65                 # Less than or equal
+?age_between=18,65          # Between range
+
+# Boolean fields
+?is_active_eq=true          # Exact match
+
+# Date fields
+?created_at_gte=2024-01-01
+?created_at_between=2024-01-01,2024-12-31
+
+# Pagination
+?page=1
+?limit=20
+
+# Sorting (if enabled)
+?sort=created_at
+?order=DESC
+```
+
+**Recap Endpoint (Yearly Aggregation):**
+
+Generate aggregated data grouped by specified fields with monthly breakdown:
+
+```bash
+# Single field grouping (simple aggregation)
+GET /users/recap?year=2024&group_by=department
+
+# Two fields grouping (hierarchical aggregation)
+GET /users/recap?year=2024&group_by=department,role
+
+# With additional filters
+GET /users/recap?year=2024&group_by=department&is_active_eq=true
+```
+
+**Recap Response Format:**
+
+```typescript
+// Single field grouping
+[
+  {
+    main: 'Engineering',     // Group value
+    jan: 5, feb: 7, ...,     // Monthly counts
+    total: 102               // Yearly total
+  }
+]
+
+// Two fields grouping
+[
+  {
+    main: 'Engineering',     // Main group (field 1)
+    sub: 'Senior Developer', // Sub group (field 2)
+    jan: 2, feb: 3, ...,     // Monthly counts
+    total: 39                // Yearly total
+  }
+]
+```
 
 #### Pending Features (Optional)
 
@@ -456,7 +655,248 @@ async findWithUser(id: string): Promise<UsersProfile> {
 
 ---
 
+## � METADATA SCHEMA REFERENCE
+
+The generator uses metadata tables to define structure and behavior of generated modules.
+
+### Table: `meta.table_metadata`
+
+Stores configuration for each table to be generated.
+
+**Key Fields:**
+
+| Field                | Type         | Purpose                                                         |
+| -------------------- | ------------ | --------------------------------------------------------------- |
+| `id`                 | UUID         | Primary key, auto-generated using UUID v7                       |
+| `schema_name`        | VARCHAR(50)  | Database schema (e.g., 'user', 'product', 'master')             |
+| `table_name`         | VARCHAR(100) | Actual table name in database                                   |
+| `table_type`         | VARCHAR(50)  | Classification: 'master', 'transaction', 'log', etc.            |
+| `table_purpose`      | TEXT         | Human-readable description of table purpose                     |
+| `has_soft_delete`    | BOOLEAN      | Generate soft delete (deleted_at column) instead of hard delete |
+| `has_created_by`     | BOOLEAN      | Include created_by tracking in generated code                   |
+| `primary_key_column` | VARCHAR(50)  | Name of PK column (default: 'id')                               |
+| `primary_key_type`   | VARCHAR(50)  | PK data type: 'UUID', 'BIGINT', 'INTEGER'                       |
+| `cache_ttl`          | INTEGER      | Cache time-to-live in seconds (default: 300)                    |
+| `cache_enabled`      | BOOLEAN      | Enable/disable caching for this table                           |
+| `throttle_limit`     | INTEGER      | Max requests per window (default: 100)                          |
+| `throttle_ttl`       | INTEGER      | Throttle window in milliseconds (default: 60000)                |
+
+### Table: `meta.column_metadata`
+
+Defines columns with validation, display rules, and relationships.
+
+**Key Fields:**
+
+| Field                  | Type         | Purpose                                                        |
+| ---------------------- | ------------ | -------------------------------------------------------------- |
+| `id`                   | UUID         | Primary key, auto-generated                                    |
+| `table_metadata_id`    | UUID         | Foreign key to table_metadata                                  |
+| `column_name`          | VARCHAR(100) | Actual column name in database table                           |
+| `data_type`            | VARCHAR(50)  | Database type: 'varchar', 'integer', 'uuid', 'timestamp', etc. |
+| `is_nullable`          | BOOLEAN      | Whether NULL values are allowed                                |
+| `is_unique`            | BOOLEAN      | Enforce unique constraint                                      |
+| `is_primary_key`       | BOOLEAN      | Mark as primary key column                                     |
+| **Foreign Key Fields** |              |                                                                |
+| `ref_schema`           | VARCHAR(50)  | Referenced table schema for foreign keys                       |
+| `ref_table`            | VARCHAR(100) | Referenced table name (triggers JOIN generation)               |
+| `ref_column`           | VARCHAR(100) | Referenced column (usually 'id')                               |
+| **Query Features**     |              |                                                                |
+| `is_filterable`        | BOOLEAN      | Generate filter parameters (\_eq, \_like, \_in, etc.)          |
+| `is_searchable`        | BOOLEAN      | Include in global search functionality                         |
+| **Validation**         |              |                                                                |
+| `validation_rules`     | JSONB        | JSON object with validation rules                              |
+| `is_required`          | BOOLEAN      | Required field (generates `@IsNotEmpty()`)                     |
+| `max_length`           | INTEGER      | Maximum string length (generates `@MaxLength()`)               |
+| `min_value`            | NUMERIC      | Minimum numeric value (generates `@Min()`)                     |
+| `max_value`            | NUMERIC      | Maximum numeric value (generates `@Max()`)                     |
+| `enum_values`          | JSONB        | Array of allowed values (generates `@IsEnum()`)                |
+| **UI/Display**         |              |                                                                |
+| `input_type`           | VARCHAR(50)  | HTML input type: 'text', 'email', 'number', 'date', 'select'   |
+| `display_in_list`      | BOOLEAN      | Include in list/index queries (SELECT clause)                  |
+| `display_in_form`      | BOOLEAN      | Include in create/update forms (DTO)                           |
+| `display_in_detail`    | BOOLEAN      | Include in detail/show queries                                 |
+| `column_order`         | INTEGER      | Display order in forms/lists                                   |
+| **File Upload**        |              |                                                                |
+| `is_file_upload`       | BOOLEAN      | Mark as file upload field                                      |
+| `file_upload_config`   | JSONB        | Upload settings: `{ maxSize, mimeTypes, storage, bucket }`     |
+| **Swagger/API Docs**   |              |                                                                |
+| `swagger_example`      | TEXT         | Example value for API documentation                            |
+| `swagger_description`  | TEXT         | Field description in Swagger UI                                |
+| `swagger_hidden`       | BOOLEAN      | Hide from API documentation                                    |
+
+**Validation Rules JSONB Structure:**
+
+```json
+{
+  "pattern": "^[a-zA-Z0-9_]+$",
+  "min_length": 3,
+  "max_length": 50,
+  "email": true,
+  "phone": true,
+  "url": true,
+  "custom_validators": ["IsStrongPassword", "IsAlphanumeric"]
+}
+```
+
+**File Upload Config JSONB Structure:**
+
+```json
+{
+  "maxSize": 5242880,
+  "mimeTypes": ["image/jpeg", "image/png", "image/gif"],
+  "storage": "s3",
+  "bucket": "user-avatars",
+  "path": "uploads/avatars"
+}
+```
+
+**Example Metadata Setup:**
+
+```sql
+-- 1. Create table metadata
+INSERT INTO meta.table_metadata (
+  schema_name, table_name, table_purpose,
+  has_soft_delete, cache_enabled, cache_ttl
+) VALUES (
+  'user', 'profile', 'User profile management',
+  true, true, 3600
+) RETURNING id;
+
+-- 2. Add column metadata
+INSERT INTO meta.column_metadata (
+  table_metadata_id, column_name, data_type,
+  is_required, is_filterable, is_searchable,
+  display_in_list, column_order
+) VALUES
+  ('<table_id>', 'id', 'uuid', true, false, false, true, 1),
+  ('<table_id>', 'username', 'varchar', true, true, true, true, 2),
+  ('<table_id>', 'email', 'varchar', true, true, true, true, 3),
+  ('<table_id>', 'avatar', 'varchar', false, false, false, true, 4),
+  ('<table_id>', 'department_id', 'uuid', false, true, false, true, 5);
+
+-- 3. Add file upload column
+INSERT INTO meta.column_metadata (
+  table_metadata_id, column_name, data_type,
+  is_file_upload, file_upload_config
+) VALUES (
+  '<table_id>', 'profile_picture', 'varchar',
+  true, '{"maxSize": 5242880, "mimeTypes": ["image/jpeg", "image/png"], "storage": "s3"}'::jsonb
+);
+
+-- 4. Add foreign key relationship (auto-generates JOINs)
+INSERT INTO meta.column_metadata (
+  table_metadata_id, column_name, data_type,
+  ref_schema, ref_table, ref_column
+) VALUES (
+  '<table_id>', 'department_id', 'uuid',
+    'company', 'departments', 'id'
+);
+```
+
+---
+
+## 🛠️ CLI COMMANDS & USAGE
+
+### Initialization Command
+
+```bash
+# Initialize generator configuration and metadata schema
+nest-generator init
+
+# Interactive prompts:
+# - Architecture type: standalone | monorepo | microservices
+# - Database type: postgresql | mysql
+# - Database connection details
+# - For microservices: Select gateway app
+# - Metadata schema setup (auto-creates if not exists)
+```
+
+**Automated Setup Process:**
+
+1. **Configuration File Creation**: Creates `generator.config.json` with inputs
+2. **Database Connection Test**: Validates connection and database accessibility
+3. **Metadata Schema Setup**: Auto-creates `meta` schema with required tables:
+   - `meta.table_metadata` - Table configurations
+   - `meta.column_metadata` - Column definitions
+   - `meta.generated_files` - Checksum tracking for safe regeneration
+4. **Database Functions**: Creates `uuidv7()` and helper functions (PostgreSQL)
+5. **Verification**: Lists created objects and shows next steps
+
+### Generate Command
+
+```bash
+# Generate module from metadata
+nest-generator generate <schema>.<table>
+
+# Examples:
+nest-generator generate user.profile
+nest-generator generate product.categories
+
+# With features
+nest-generator generate user.profile \
+  --features.audit=true \
+  --features.fileUpload=true \
+  --storageProvider=s3
+
+# Interactive mode (prompts for options)
+nest-generator generate user.profile
+```
+
+**Generated Files by Architecture:**
+
+**Standalone/Monorepo:**
+
+```
+src/modules/users-profile/
+├── users-profile.dto.ts          # DTOs (Create, Update, Filter, Response)
+├── users-profile.query.ts        # SQL queries
+├── users-profile.repository.ts   # Database operations
+├── users-profile.service.ts      # Business logic
+├── users-profile.controller.ts   # REST endpoints
+└── users-profile.module.ts       # NestJS module
+```
+
+**Microservices:**
+
+```
+apps/gateway/src/modules/users-profile/
+├── users-profile.controller.ts   # REST endpoints (proxy)
+└── users-profile.module.ts       # Gateway module
+
+apps/user-service/src/modules/users-profile/
+├── users-profile.dto.ts          # DTOs
+├── users-profile.query.ts        # SQL queries
+├── users-profile.repository.ts   # Database operations
+├── users-profile.service.ts      # Business logic
+├── users-profile.controller.ts   # Message handlers
+└── users-profile.module.ts       # Service module
+```
+
+### Other Commands
+
+```bash
+# Check for metadata changes
+nest-generator check <schema>.<table>
+
+# Sync metadata changes
+nest-generator sync <schema>.<table>
+
+# Show help
+nest-generator --help
+nest-generator generate --help
+```
+
+---
+
 ## 📊 TESTING STRATEGY
+
+);
+
+````
+
+---
+
+## �📊 TESTING STRATEGY
 
 ### Test Coverage (579/585 = 99%)
 
@@ -511,7 +951,7 @@ describe('FileUploadGenerator', () => {
     });
   });
 });
-```
+````
 
 ### Running Tests
 
@@ -643,6 +1083,7 @@ Libraries do NOT have their own `node_modules/`. All dependencies are installed 
 When adding new features (like Audit Trail or File Upload were added):
 
 1. **Create Generator File**:
+
    ```bash
    # Example: libs/generator/src/generators/features/new-feature.generator.ts
    ```
@@ -686,6 +1127,7 @@ When adding new features (like Audit Trail or File Upload were added):
 ### Modifying Existing Generators
 
 **DO**:
+
 - ✅ Read existing tests to understand current behavior
 - ✅ Add tests for new functionality BEFORE implementing
 - ✅ Use Handlebars templates for complex code generation
@@ -693,6 +1135,7 @@ When adding new features (like Audit Trail or File Upload were added):
 - ✅ Update integration tests if changing CLI
 
 **DON'T**:
+
 - ❌ Modify templates without updating tests
 - ❌ Change public API without version bump
 - ❌ Add dependencies to library `package.json` (use root)
@@ -721,22 +1164,22 @@ npm test -- users-profile
 
 Current: **104.5/100** (Exceeds target!)
 
-| Feature | Score | Status | Notes |
-|---------|-------|--------|-------|
-| Core CRUD | 10/10 | ✅ Complete | All operations working |
-| Database Support | 10/10 | ✅ Complete | PostgreSQL + MySQL |
-| Metadata System | 10/10 | ✅ Complete | Full schema introspection |
-| Advanced Queries | 10/10 | ✅ Complete | JOINs, CTEs, Aggregations |
-| Caching | 10/10 | ✅ Complete | Redis integration |
-| Security | 10/10 | ✅ Complete | SQL injection prevention |
-| Validation | 10/10 | ✅ Complete | class-validator integration |
-| Export | 10/10 | ✅ Complete | CSV/Excel streaming |
-| Swagger | 10/10 | ✅ Complete | Full API documentation |
-| **Audit Trail** | **+6** | ✅ **Complete** | CLI integration done |
-| **File Upload** | **+6** | ✅ **Complete** | 4 storage providers |
-| RBAC | 0/8.5 | ⏳ Pending | Next priority |
-| Search | 0/1.5 | ⏳ Pending | Elasticsearch/Algolia |
-| Notifications | 0/1.5 | ⏳ Pending | Email/SMS/Push |
+| Feature          | Score  | Status          | Notes                       |
+| ---------------- | ------ | --------------- | --------------------------- |
+| Core CRUD        | 10/10  | ✅ Complete     | All operations working      |
+| Database Support | 10/10  | ✅ Complete     | PostgreSQL + MySQL          |
+| Metadata System  | 10/10  | ✅ Complete     | Full schema introspection   |
+| Advanced Queries | 10/10  | ✅ Complete     | JOINs, CTEs, Aggregations   |
+| Caching          | 10/10  | ✅ Complete     | Redis integration           |
+| Security         | 10/10  | ✅ Complete     | SQL injection prevention    |
+| Validation       | 10/10  | ✅ Complete     | class-validator integration |
+| Export           | 10/10  | ✅ Complete     | CSV/Excel streaming         |
+| Swagger          | 10/10  | ✅ Complete     | Full API documentation      |
+| **Audit Trail**  | **+6** | ✅ **Complete** | CLI integration done        |
+| **File Upload**  | **+6** | ✅ **Complete** | 4 storage providers         |
+| RBAC             | 0/8.5  | ⏳ Pending      | Next priority               |
+| Search           | 0/1.5  | ⏳ Pending      | Elasticsearch/Algolia       |
+| Notifications    | 0/1.5  | ⏳ Pending      | Email/SMS/Push              |
 
 **Next Milestone**: 113/100 (with RBAC)
 
@@ -767,6 +1210,7 @@ npm run build:all-libs            # Build before publish
 ### File Locations
 
 **Core Generators**:
+
 - Entity: `libs/generator/src/generators/entity/`
 - DTOs: `libs/generator/src/generators/dto/`
 - Repository: `libs/generator/src/generators/repository/`
@@ -775,6 +1219,7 @@ npm run build:all-libs            # Build before publish
 - Module: `libs/generator/src/generators/module/`
 
 **Feature Generators**:
+
 - Audit: `libs/generator/src/audit/`
 - File Upload: `libs/generator/src/generators/features/file-upload.generator.ts`
 - Storage: `libs/generator/src/generators/features/storage-service.generator.ts`
@@ -782,15 +1227,18 @@ npm run build:all-libs            # Build before publish
 - Swagger: `libs/generator/src/generators/features/swagger.generator.ts`
 
 **Templates**:
+
 - All Handlebars templates: `libs/generator/src/templates/`
 
 **Tests**:
+
 - Unit tests: `libs/generator/src/**/*.spec.ts`
 - Integration: `libs/generator/src/cli/commands/*.spec.ts`
 
 ### Environment Variables
 
 **Database**:
+
 ```env
 DB_TYPE=postgresql
 DB_HOST=localhost
@@ -801,6 +1249,7 @@ DB_DATABASE=myapp
 ```
 
 **Storage Providers**:
+
 ```env
 # Local (no config needed)
 
@@ -820,6 +1269,7 @@ AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;...
 ```
 
 **Cache**:
+
 ```env
 REDIS_HOST=localhost
 REDIS_PORT=6379
@@ -833,12 +1283,14 @@ REDIS_PASSWORD=optional
 ### Issue 1: Tests Failing (6/585)
 
 **Affected**:
+
 - Module Generator: AuditLogService import check (1 test)
 - Audit Log Service: Change tracking (5 tests)
 
 **Fix Priority**: Medium (99% pass rate acceptable)
 
 **To Fix**:
+
 ```bash
 # Module generator test
 libs/generator/src/generators/module/module.generator.spec.ts:298
@@ -854,6 +1306,7 @@ libs/generator/src/audit/audit-log.service.spec.ts:95
 **Symptom**: `libs/generator/node_modules/` exists
 
 **Fix**:
+
 ```bash
 rm -rf libs/generator/node_modules libs/generator/package-lock.json
 npm install  # Reinstall in root
@@ -866,11 +1319,13 @@ npm install  # Reinstall in root
 **Symptom**: TypeScript errors during build
 
 **Common Causes**:
+
 1. Missing dependencies in root `package.json`
 2. Incorrect import paths
 3. Template syntax errors
 
 **Fix**:
+
 ```bash
 # Check dependencies
 npm ls <package-name>
@@ -890,6 +1345,7 @@ grep -r "from '@ojiepermana" libs/generator/src/
 When working with this codebase:
 
 1. **Always check current test status** before making changes:
+
    ```bash
    npm test -- <affected-file>.spec.ts
    ```
@@ -916,12 +1372,14 @@ When working with this codebase:
 ## 📚 ADDITIONAL RESOURCES
 
 **Internal Documentation**:
+
 - `libs/generator/DEEP_ANALYSIS_SCORE.md` - Detailed feature analysis
 - `libs/generator/PROGRESS_REPORT.md` - Recent implementation summary
 - `libs/generator/AUDIT_CLI_INTEGRATION.md` - Audit trail guide
 - `libs/generator/prompt.md` - Original specifications
 
 **External References**:
+
 - NestJS Docs: https://docs.nestjs.com
 - class-validator: https://github.com/typestack/class-validator
 - Handlebars: https://handlebarsjs.com/

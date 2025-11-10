@@ -346,9 +346,9 @@ export class AuditLogService implements IAuditLogService {
       if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
         changes.push({
           field: key,
-          oldValue,
-          newValue,
-          dataType: typeof newValue,
+          old_value: oldValue,
+          new_value: newValue,
+          data_type: typeof newValue,
         });
       }
     }
@@ -358,9 +358,9 @@ export class AuditLogService implements IAuditLogService {
       if (!(key in newValues)) {
         changes.push({
           field: key,
-          oldValue: oldValues[key],
-          newValue: undefined,
-          dataType: typeof oldValues[key],
+          old_value: oldValues[key],
+          new_value: undefined,
+          data_type: typeof oldValues[key],
         });
       }
     }

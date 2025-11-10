@@ -97,11 +97,9 @@ ${classDeclaration}
       );
     }
 
-    // Audit log service import
+    // Audit module import
     if (this.options.enableAuditLog) {
-      imports.push(
-        "import { AuditModule } from '@ojiepermana/nest-generator/audit';",
-      );
+      imports.push("import { AuditModule } from '../audit/audit.module';");
     }
 
     return imports.join('\n');

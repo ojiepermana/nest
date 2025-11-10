@@ -35,7 +35,14 @@
     "@nestjs/platform-express": "^11.1.8",
     "handlebars": "^4.7.8",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "pg": "^8.13.1",
+    "mysql2": "^3.11.5",
+    "commander": "^12.1.0",
+    "inquirer": "^8.2.6",
+    "chalk": "^4.1.2",
+    "ora": "^5.4.1",
+    "dotenv": "^16.4.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
@@ -45,6 +52,7 @@
     "@nestjs/testing": "^11.1.8",
     "@types/express": "^5.0.5",
     "@types/handlebars": "^4.0.40",
+    "@types/inquirer": "^8.2.10",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.10.0",
     "@types/pg": "^8.15.6",

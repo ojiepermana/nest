@@ -8,6 +8,11 @@
 libs/generator/dist
 libs/nest/dist
 
+# Library dependencies (should use root node_modules)
+libs/*/node_modules
+libs/generator/node_modules
+libs/nest/node_modules
+
 # Logs
 logs
 *.log

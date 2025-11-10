@@ -32,22 +32,16 @@
         "@nestjs/common": "^11.0.0",
         "@nestjs/core": "^11.0.0",
         "reflect-metadata": "^0.2.0",
-        "rxjs": "^7.0.0"
-    },
-    "dependencies": {
-        "pg": "^8.13.1",
-        "mysql2": "^3.11.5",
+        "rxjs": "^7.0.0",
+        "pg": "^8.13.0",
+        "mysql2": "^3.11.0",
         "commander": "^12.1.0",
-        "inquirer": "^8.2.6",
-        "chalk": "^4.1.2",
-        "ora": "^5.4.1",
-        "dotenv": "^16.4.7"
+        "inquirer": "^8.2.0",
+        "chalk": "^4.1.0",
+        "ora": "^5.4.0",
+        "dotenv": "^16.4.0"
     },
-    "devDependencies": {
-        "@types/inquirer": "^8.2.10",
-        "@types/pg": "^8.11.10",
-        "@types/node": "^24.10.0"
-    },
+    "devDependencies": {},
     "publishConfig": {
         "access": "public"
     },

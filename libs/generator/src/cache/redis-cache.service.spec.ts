@@ -113,7 +113,7 @@ describe('RedisCacheService', () => {
       const serviceWithoutKeys = new RedisCacheService({
         ...mockCacheManager,
         store: {},
-      } as any);
+      });
 
       const deleted = await serviceWithoutKeys.deletePattern('test:*');
 
@@ -163,7 +163,7 @@ describe('RedisCacheService', () => {
       const serviceWithoutTtl = new RedisCacheService({
         ...mockCacheManager,
         store: {},
-      } as any);
+      });
 
       const ttl = await serviceWithoutTtl.ttl('test-key');
 

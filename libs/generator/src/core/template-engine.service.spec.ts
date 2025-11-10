@@ -25,7 +25,10 @@ describe('TemplateEngineService', () => {
       (fs.existsSync as jest.Mock).mockReturnValue(true);
       (fsPromises.readFile as jest.Mock).mockResolvedValue(templateContent);
 
-      const cached = await (service as any).loadHbsTemplate('greeting', mockTemplateDir);
+      const cached = await (service as any).loadHbsTemplate(
+        'greeting',
+        mockTemplateDir,
+      );
 
       expect(cached.format).toBe('hbs');
       expect(typeof cached.template).toBe('function');
@@ -197,7 +200,8 @@ describe('TemplateEngineService', () => {
     });
 
     it('should provide comparison helpers', async () => {
-      const templateContent = '{{#if (eq status "active")}}Active{{else}}Inactive{{/if}}';
+      const templateContent =
+        '{{#if (eq status "active")}}Active{{else}}Inactive{{/if}}';
       (fs.existsSync as jest.Mock).mockReturnValue(true);
       (fsPromises.readFile as jest.Mock).mockResolvedValue(templateContent);
 

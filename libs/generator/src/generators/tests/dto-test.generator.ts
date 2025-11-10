@@ -448,10 +448,9 @@ ${columns
       case 'float':
       case 'double':
         if (col.min_value !== null && col.max_value !== null) {
-          return (
-            (Number(col.min_value) + Number(col.max_value)) /
-            2
-          ).toFixed(2);
+          return ((Number(col.min_value) + Number(col.max_value)) / 2).toFixed(
+            2,
+          );
         }
         return '1.5';
 

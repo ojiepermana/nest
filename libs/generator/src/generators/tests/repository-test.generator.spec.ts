@@ -137,8 +137,14 @@ describe('RepositoryTestGenerator', () => {
     });
 
     it('should not include soft delete tests when soft delete disabled', () => {
-      const tableWithoutSoftDelete = { ...tableMetadata, has_soft_delete: false };
-      const result = generator.generateRepositoryTest(tableWithoutSoftDelete, columns);
+      const tableWithoutSoftDelete = {
+        ...tableMetadata,
+        has_soft_delete: false,
+      };
+      const result = generator.generateRepositoryTest(
+        tableWithoutSoftDelete,
+        columns,
+      );
 
       expect(result).not.toContain('GENERATED_TEST_START: soft-delete');
       expect(result).toContain('GENERATED_TEST_START: hard-delete');
@@ -182,7 +188,9 @@ describe('RepositoryTestGenerator', () => {
 
       expect(result).toContain('GENERATED_TEST_START: soft-delete');
       expect(result).toContain("describe('softDelete'");
-      expect(result).toContain('should soft delete users by setting deleted_at');
+      expect(result).toContain(
+        'should soft delete users by setting deleted_at',
+      );
     });
 
     it('should include custom tests section', () => {
@@ -198,7 +206,10 @@ describe('RepositoryTestGenerator', () => {
         ...tableMetadata,
         primary_key_column: 'user_id',
       };
-      const result = generator.generateRepositoryTest(tableWithCustomPK, columns);
+      const result = generator.generateRepositoryTest(
+        tableWithCustomPK,
+        columns,
+      );
 
       expect(result).toContain('WHERE user_id = $1');
     });

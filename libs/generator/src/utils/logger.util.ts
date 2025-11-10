@@ -19,31 +19,26 @@ export class Logger {
 
   static debug(message: string, ...args: unknown[]): void {
     if (this.level <= LogLevel.DEBUG) {
-      // eslint-disable-next-line no-console
       console.log(`🔍 [DEBUG] ${message}`, ...args);
     }
   }
 
   static info(message: string, ...args: unknown[]): void {
     if (this.level <= LogLevel.INFO) {
-      // eslint-disable-next-line no-console
       console.log(`ℹ️  [INFO] ${message}`, ...args);
     }
   }
 
   static warn(message: string, ...args: unknown[]): void {
     if (this.level <= LogLevel.WARN) {
-      // eslint-disable-next-line no-console
       console.warn(`⚠️  [WARN] ${message}`, ...args);
     }
   }
 
   static error(message: string, error?: Error): void {
     if (this.level <= LogLevel.ERROR) {
-      // eslint-disable-next-line no-console
       console.error(`❌ [ERROR] ${message}`);
       if (error) {
-        // eslint-disable-next-line no-console
         console.error(error);
       }
     }
@@ -51,17 +46,15 @@ export class Logger {
 
   static success(message: string, ...args: unknown[]): void {
     if (this.level <= LogLevel.SUCCESS) {
-      // eslint-disable-next-line no-console
       console.log(`✅ [SUCCESS] ${message}`, ...args);
     }
   }
 
   static section(title: string): void {
-    // eslint-disable-next-line no-console
     console.log('\n' + '='.repeat(60));
-    // eslint-disable-next-line no-console
+
     console.log(`  ${title}`);
-    // eslint-disable-next-line no-console
+
     console.log('='.repeat(60) + '\n');
   }
 
@@ -73,16 +66,13 @@ export class Logger {
     message?: string,
   ): void {
     if (typeof stepOrMessage === 'string') {
-      // eslint-disable-next-line no-console
       console.log(`⏩ ${stepOrMessage}`);
     } else {
-      // eslint-disable-next-line no-console
       console.log(`[${stepOrMessage}/${total}] ${message}`);
     }
   }
 
   static progress(message: string): void {
-    // eslint-disable-next-line no-console
     console.log(`⏳ ${message}...`);
   }
 
@@ -102,11 +92,10 @@ export class Logger {
 
   static table(data: Record<string, unknown>[]): void {
     if (data.length === 0) {
-      // eslint-disable-next-line no-console
       console.log('(empty)');
       return;
     }
-    // eslint-disable-next-line no-console
+
     console.table(data);
   }
 
@@ -119,13 +108,11 @@ export class Logger {
     const maxLength = Math.max(...lines.map((l) => l.length));
     const border = '─'.repeat(maxLength + 2);
 
-    // eslint-disable-next-line no-console
     console.log(`┌${border}┐`);
     lines.forEach((line) => {
-      // eslint-disable-next-line no-console
       console.log(`│ ${line.padEnd(maxLength)} │`);
     });
-    // eslint-disable-next-line no-console
+
     console.log(`└${border}┘`);
   }
 }

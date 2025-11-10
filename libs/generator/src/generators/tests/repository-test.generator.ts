@@ -35,7 +35,11 @@ export class RepositoryTestGenerator {
     const repositoryName = `${entityName}Repository`;
 
     let testCode = this.generateFileHeader(table, repositoryName);
-    testCode += this.generateImports(entityName, repositoryName, table.table_name);
+    testCode += this.generateImports(
+      entityName,
+      repositoryName,
+      table.table_name,
+    );
     testCode += this.generateDescribeBlock(
       repositoryName,
       entityName,
@@ -349,7 +353,9 @@ import { ${entityName}FilterDto } from './${tableName}.dto';
         col.column_name !== 'created_at' &&
         col.column_name !== 'updated_at',
     );
-    const fieldName = sampleColumn ? toCamelCase(sampleColumn.column_name) : 'name';
+    const fieldName = sampleColumn
+      ? toCamelCase(sampleColumn.column_name)
+      : 'name';
     const fieldValue = sampleColumn
       ? this.generateSampleValue(sampleColumn)
       : "'test'";

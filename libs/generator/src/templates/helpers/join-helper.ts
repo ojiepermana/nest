@@ -1,6 +1,6 @@
 /**
  * JOIN Helper for Templates
- * 
+ *
  * Generates JOIN clauses for SQL queries based on foreign key relationships
  */
 
@@ -31,10 +31,10 @@ export function generateJoinClause(
   }
 
   const joinType = options?.joinType || 'LEFT';
-  const refTable = column.ref_schema 
+  const refTable = column.ref_schema
     ? `${dialect.quoteIdentifier(column.ref_schema)}.${dialect.quoteIdentifier(column.ref_table)}`
     : dialect.quoteIdentifier(column.ref_table);
-  
+
   const alias = options?.alias || column.ref_table.substring(0, 1);
   const localColumn = dialect.quoteIdentifier(column.column_name);
   const refColumn = dialect.quoteIdentifier(column.ref_column);
@@ -57,13 +57,17 @@ export function generateJoinClauses(
     joinType?: 'LEFT' | 'INNER' | 'RIGHT';
   },
 ): JoinClause[] {
-  const foreignKeyColumns = columns.filter(col => col.ref_table && col.ref_column);
-  
+  const foreignKeyColumns = columns.filter(
+    (col) => col.ref_table && col.ref_column,
+  );
+
   return foreignKeyColumns
-    .map((col, index) => generateJoinClause(col, dialect, {
-      ...options,
-      alias: col.ref_table!.substring(0, 1) + (index > 0 ? index : ''),
-    }))
+    .map((col, index) =>
+      generateJoinClause(col, dialect, {
+        ...options,
+        alias: col.ref_table!.substring(0, 1) + (index > 0 ? index : ''),
+      }),
+    )
     .filter((join): join is JoinClause => join !== null);
 }
 
@@ -72,7 +76,10 @@ export function generateJoinClauses(
  */
 export function buildJoinSQL(joins: JoinClause[]): string {
   return joins
-    .map(join => `${join.type} JOIN ${join.table} ${join.alias} ON ${join.condition}`)
+    .map(
+      (join) =>
+        `${join.type} JOIN ${join.table} ${join.alias} ON ${join.condition}`,
+    )
     .join('\n      ');
 }
 
@@ -84,10 +91,11 @@ export function generateJoinMethodName(
   refTable: string,
 ): string {
   // Convert to camelCase
-  const toPascalCase = (str: string) => str
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join('');
+  const toPascalCase = (str: string) =>
+    str
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join('');
 
   const toCamelCase = (str: string) => {
     const pascal = toPascalCase(str);

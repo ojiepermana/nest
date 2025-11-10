@@ -27,7 +27,7 @@ class UserService {
 
       expect(result.customBlocks.size).toBe(1);
       expect(result.customBlocks.has('business-logic')).toBe(true);
-      
+
       const block = result.customBlocks.get('business-logic')!;
       expect(block.type).toBe('custom');
       expect(block.content).toContain('customMethod');
@@ -191,7 +191,7 @@ code
       const result = parser.validateMarkers(content);
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.includes('Mismatched'))).toBe(true);
+      expect(result.errors.some((e) => e.includes('Mismatched'))).toBe(true);
     });
 
     it('should detect end marker without start', () => {
@@ -202,7 +202,7 @@ code
       const result = parser.validateMarkers(content);
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.includes('without start'))).toBe(true);
+      expect(result.errors.some((e) => e.includes('without start'))).toBe(true);
     });
   });
 });

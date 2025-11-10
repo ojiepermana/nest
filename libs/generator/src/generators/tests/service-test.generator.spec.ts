@@ -212,9 +212,7 @@ describe('ServiceTestGenerator', () => {
         columns,
       );
 
-      expect(result).not.toContain(
-        'GENERATED_TEST_START: find-all-pagination',
-      );
+      expect(result).not.toContain('GENERATED_TEST_START: find-all-pagination');
     });
 
     it('should exclude error handling tests when option is false', () => {

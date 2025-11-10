@@ -1,6 +1,6 @@
 /**
  * Block Marker Parser
- * 
+ *
  * Parses generated files to extract custom code blocks and generated code blocks
  * Uses marker comments to identify sections
  */
@@ -23,10 +23,14 @@ export interface ParsedFile {
 
 export class BlockMarkerParser {
   // Default markers
-  private readonly customStartPattern = /\/\/\s*CUSTOM(?:_CODE)?_START:\s*(\S+)/;
-  private readonly customEndPattern = /\/\/\s*CUSTOM(?:_CODE)?_END(?::\s*(\S+))?/;
-  private readonly generatedStartPattern = /\/\/\s*GENERATED(?:_(?:CODE|METHOD|FILE))?(?:_START)?:\s*(\S+)/;
-  private readonly generatedEndPattern = /\/\/\s*GENERATED(?:_(?:CODE|METHOD|FILE))?(?:_END)?(?::\s*(\S+))?/;
+  private readonly customStartPattern =
+    /\/\/\s*CUSTOM(?:_CODE)?_START:\s*(\S+)/;
+  private readonly customEndPattern =
+    /\/\/\s*CUSTOM(?:_CODE)?_END(?::\s*(\S+))?/;
+  private readonly generatedStartPattern =
+    /\/\/\s*GENERATED(?:_(?:CODE|METHOD|FILE))?(?:_START)?:\s*(\S+)/;
+  private readonly generatedEndPattern =
+    /\/\/\s*GENERATED(?:_(?:CODE|METHOD|FILE))?(?:_END)?(?::\s*(\S+))?/;
 
   /**
    * Parse file content and extract code blocks
@@ -49,7 +53,14 @@ export class BlockMarkerParser {
       if (customStartMatch) {
         if (currentBlock) {
           // Close previous block if not properly closed
-          this.finalizeBlock(currentBlock, blockLines, i, blocks, customBlocks, generatedBlocks);
+          this.finalizeBlock(
+            currentBlock,
+            blockLines,
+            i,
+            blocks,
+            customBlocks,
+            generatedBlocks,
+          );
         }
 
         currentBlock = {
@@ -66,11 +77,11 @@ export class BlockMarkerParser {
       if (customEndMatch && currentBlock?.type === 'custom') {
         currentBlock.endLine = lineNumber;
         currentBlock.content = blockLines.join('\n');
-        
+
         const block = currentBlock as CodeBlock;
         blocks.push(block);
         customBlocks.set(block.marker, block);
-        
+
         currentBlock = null;
         blockLines = [];
         continue;
@@ -80,7 +91,14 @@ export class BlockMarkerParser {
       const generatedStartMatch = line.match(this.generatedStartPattern);
       if (generatedStartMatch) {
         if (currentBlock) {
-          this.finalizeBlock(currentBlock, blockLines, i, blocks, customBlocks, generatedBlocks);
+          this.finalizeBlock(
+            currentBlock,
+            blockLines,
+            i,
+            blocks,
+            customBlocks,
+            generatedBlocks,
+          );
         }
 
         currentBlock = {
@@ -97,11 +115,11 @@ export class BlockMarkerParser {
       if (generatedEndMatch && currentBlock?.type === 'generated') {
         currentBlock.endLine = lineNumber;
         currentBlock.content = blockLines.join('\n');
-        
+
         const block = currentBlock as CodeBlock;
         blocks.push(block);
         generatedBlocks.set(block.marker, block);
-        
+
         currentBlock = null;
         blockLines = [];
         continue;
@@ -115,7 +133,14 @@ export class BlockMarkerParser {
 
     // Handle unclosed block
     if (currentBlock) {
-      this.finalizeBlock(currentBlock, blockLines, lines.length, blocks, customBlocks, generatedBlocks);
+      this.finalizeBlock(
+        currentBlock,
+        blockLines,
+        lines.length,
+        blocks,
+        customBlocks,
+        generatedBlocks,
+      );
     }
 
     return {

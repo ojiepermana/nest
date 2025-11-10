@@ -101,7 +101,8 @@ export class ArchitectureDetectionService {
       if (type === 'standalone') {
         structure.apps = await this.detectStandaloneApp(nestCliConfig);
       } else if (type === 'monorepo' || type === 'microservices') {
-        const { apps, libs } = await this.detectMonorepoStructure(nestCliConfig);
+        const { apps, libs } =
+          await this.detectMonorepoStructure(nestCliConfig);
         structure.apps = apps;
         structure.libs = libs;
 
@@ -142,7 +143,9 @@ export class ArchitectureDetectionService {
   private detectArchitectureType(config: NestCliConfig): ArchitectureType {
     // If has projects config, it's monorepo or microservices
     if (config.projects && Object.keys(config.projects).length > 0) {
-      const apps = Object.values(config.projects).filter((p) => p.type === 'application');
+      const apps = Object.values(config.projects).filter(
+        (p) => p.type === 'application',
+      );
 
       // If multiple apps, could be microservices
       if (apps.length > 1) {
@@ -216,7 +219,9 @@ export class ArchitectureDetectionService {
       }
     }
 
-    Logger.info(`Found ${apps.length} applications and ${libs.length} libraries`);
+    Logger.info(
+      `Found ${apps.length} applications and ${libs.length} libraries`,
+    );
     return { apps, libs };
   }
 
@@ -236,7 +241,9 @@ export class ArchitectureDetectionService {
 
     // Check if any app has @nestjs/microservices in gateway mode
     for (const app of apps) {
-      const hasGatewayPattern = await this.checkForGatewayPattern(app.sourceRoot);
+      const hasGatewayPattern = await this.checkForGatewayPattern(
+        app.sourceRoot,
+      );
       if (hasGatewayPattern) {
         Logger.info(`Detected gateway app by pattern: ${app.name}`);
         app.isGateway = true;
@@ -267,8 +274,11 @@ export class ArchitectureDetectionService {
       const content = await readFile(mainFilePath, 'utf-8');
 
       // Check for gateway patterns
-      const hasClientProxy = content.includes('ClientProxy') || content.includes('ClientsModule');
-      const hasExpressApp = content.includes('NestFactory.create') && !content.includes('createMicroservice');
+      const hasClientProxy =
+        content.includes('ClientProxy') || content.includes('ClientsModule');
+      const hasExpressApp =
+        content.includes('NestFactory.create') &&
+        !content.includes('createMicroservice');
       const hasController = existsSync(join(sourceRoot, 'app.controller.ts'));
 
       return hasClientProxy && hasExpressApp && hasController;
@@ -293,7 +303,9 @@ export class ArchitectureDetectionService {
 
     const app = structure.apps.find((a) => a.name === appName);
     if (!app) {
-      throw new Error(`Application "${appName}" not found in project structure`);
+      throw new Error(
+        `Application "${appName}" not found in project structure`,
+      );
     }
 
     return join(app.sourceRoot, 'modules');
@@ -344,7 +356,9 @@ export class ArchitectureDetectionService {
     // Check if source roots exist
     for (const app of structure.apps) {
       if (!existsSync(app.sourceRoot)) {
-        errors.push(`Application source root does not exist: ${app.sourceRoot}`);
+        errors.push(
+          `Application source root does not exist: ${app.sourceRoot}`,
+        );
       }
     }
 
@@ -356,7 +370,9 @@ export class ArchitectureDetectionService {
 
     // For microservices, validate gateway exists
     if (structure.type === 'microservices' && !structure.gatewayApp) {
-      errors.push('Microservices architecture detected but no gateway app found');
+      errors.push(
+        'Microservices architecture detected but no gateway app found',
+      );
     }
 
     return {

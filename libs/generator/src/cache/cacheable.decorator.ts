@@ -25,7 +25,7 @@ export function Cacheable(options: CacheableOptions = {}) {
 
     descriptor.value = async function (...args: any[]) {
       // Get cache service from class instance
-      const cacheService = (this as any).cacheService;
+      const cacheService = this.cacheService;
 
       if (!cacheService) {
         // No cache service, execute method normally
@@ -90,7 +90,7 @@ export function CacheInvalidate(options: CacheInvalidateOptions = {}) {
       const result = await originalMethod.apply(this, args);
 
       // Get cache service from class instance
-      const cacheService = (this as any).cacheService;
+      const cacheService = this.cacheService;
 
       if (cacheService) {
         // Invalidate cache

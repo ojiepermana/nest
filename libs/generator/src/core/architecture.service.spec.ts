@@ -132,7 +132,9 @@ describe('ArchitectureDetectionService', () => {
         },
       };
 
-      const { apps, libs } = await (service as any).detectMonorepoStructure(config);
+      const { apps, libs } = await (service as any).detectMonorepoStructure(
+        config,
+      );
 
       expect(apps).toHaveLength(2);
       expect(libs).toHaveLength(1);
@@ -144,7 +146,9 @@ describe('ArchitectureDetectionService', () => {
     it('should return empty arrays when no projects defined', async () => {
       const config = {};
 
-      const { apps, libs } = await (service as any).detectMonorepoStructure(config);
+      const { apps, libs } = await (service as any).detectMonorepoStructure(
+        config,
+      );
 
       expect(apps).toHaveLength(0);
       expect(libs).toHaveLength(0);
@@ -282,7 +286,9 @@ describe('ArchitectureDetectionService', () => {
 
       const modulePath = service.getModulePath(structure);
 
-      expect(modulePath).toBe(join(mockRootPath, 'apps/gateway/src', 'modules'));
+      expect(modulePath).toBe(
+        join(mockRootPath, 'apps/gateway/src', 'modules'),
+      );
     });
 
     it('should throw error when app not found', () => {

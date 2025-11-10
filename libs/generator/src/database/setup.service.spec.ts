@@ -100,7 +100,8 @@ describe('DatabaseSetupService', () => {
 
   describe('splitSQLStatements', () => {
     it('should split SQL by semicolons', () => {
-      const sql = 'CREATE TABLE test (id INT); SELECT 1; INSERT INTO test VALUES (1);';
+      const sql =
+        'CREATE TABLE test (id INT); SELECT 1; INSERT INTO test VALUES (1);';
       const statements = (service as any).splitSQLStatements(sql);
 
       expect(statements).toHaveLength(3);
@@ -119,7 +120,8 @@ describe('DatabaseSetupService', () => {
     });
 
     it('should remove comments', () => {
-      const sql = '-- This is a comment\nSELECT 1; -- Another comment\nSELECT 2;';
+      const sql =
+        '-- This is a comment\nSELECT 1; -- Another comment\nSELECT 2;';
       const statements = (service as any).splitSQLStatements(sql);
 
       expect(statements).toHaveLength(2);

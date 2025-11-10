@@ -195,7 +195,9 @@ describe('ControllerTestGenerator', () => {
 
       // create passes DTO
       expect(result).toContain('controller.create(createDto)');
-      expect(result).toContain('service.create).toHaveBeenCalledWith(createDto)');
+      expect(result).toContain(
+        'service.create).toHaveBeenCalledWith(createDto)',
+      );
 
       // update passes ID and DTO
       expect(result).toContain("controller.update('123', updateDto)");

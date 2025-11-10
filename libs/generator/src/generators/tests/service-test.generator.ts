@@ -27,10 +27,7 @@ export class ServiceTestGenerator {
   /**
    * Generate service test file
    */
-  generateServiceTest(
-    table: TableMetadata,
-    columns: ColumnMetadata[],
-  ): string {
+  generateServiceTest(table: TableMetadata, columns: ColumnMetadata[]): string {
     const entityName = toPascalCase(table.table_name);
     const serviceName = `${entityName}Service`;
     const repositoryName = `${entityName}Repository`;
@@ -56,7 +53,10 @@ export class ServiceTestGenerator {
   /**
    * Generate file header comment
    */
-  private generateFileHeader(table: TableMetadata, serviceName: string): string {
+  private generateFileHeader(
+    table: TableMetadata,
+    serviceName: string,
+  ): string {
     return `/**
  * ${serviceName} Unit Tests
  * Auto-generated test file for ${table.table_name} service
@@ -205,10 +205,7 @@ import { ${repositoryName} } from './${tableName}.repository';
   /**
    * Generate findAll test
    */
-  private generateFindAllTest(
-    entityName: string,
-    camelEntity: string,
-  ): string {
+  private generateFindAllTest(entityName: string, camelEntity: string): string {
     return `  // GENERATED_TEST_START: find-all
   describe('findAll', () => {
     it('should return all ${camelEntity} records', async () => {

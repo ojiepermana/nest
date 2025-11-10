@@ -207,7 +207,7 @@ export class SecurityValidator {
       );
     }
 
-    return upper as 'ASC' | 'DESC';
+    return upper;
   }
 
   /**

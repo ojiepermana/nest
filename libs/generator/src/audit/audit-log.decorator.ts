@@ -50,7 +50,6 @@ export interface AuditLogOptions {
    * - function: custom extractor
    */
   newValuesParam?:
-    | 'return'
     | string
     | number
     | ((params: any[], result?: any) => Record<string, any> | undefined);
@@ -122,7 +121,7 @@ export function AuditLog(options: AuditLogOptions): MethodDecorator {
 
     // Replace with wrapped method
     descriptor.value = async function (...args: any[]) {
-      const auditLogService = (this as any).auditLogService;
+      const auditLogService = this.auditLogService;
 
       if (!auditLogService) {
         console.warn(

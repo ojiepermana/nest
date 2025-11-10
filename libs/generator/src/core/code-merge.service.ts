@@ -1,11 +1,15 @@
 /**
  * Code Merge Service
- * 
+ *
  * Merges custom code blocks with newly generated code
  * Preserves custom modifications during regeneration
  */
 
-import { BlockMarkerParser, type ParsedFile, type CodeBlock } from './block-marker-parser';
+import {
+  BlockMarkerParser,
+  type ParsedFile,
+  type CodeBlock,
+} from './block-marker-parser';
 import { calculateChecksum } from '../utils/string.util';
 import { Logger } from '../utils/logger.util';
 
@@ -81,7 +85,9 @@ export class CodeMergeService {
         const line = newLines[i];
 
         // Check if we're entering a custom block
-        const customStartMatch = line.match(/\/\/\s*CUSTOM(?:_CODE)?_START:\s*(\S+)/);
+        const customStartMatch = line.match(
+          /\/\/\s*CUSTOM(?:_CODE)?_START:\s*(\S+)/,
+        );
         if (customStartMatch) {
           const marker = customStartMatch[1];
           mergedLines.push(line); // Add start marker
@@ -105,7 +111,9 @@ export class CodeMergeService {
         }
 
         // Check if we're entering a generated block
-        const generatedStartMatch = line.match(/\/\/\s*GENERATED(?:_(?:CODE|METHOD|FILE))?(?:_START)?:\s*(\S+)/);
+        const generatedStartMatch = line.match(
+          /\/\/\s*GENERATED(?:_(?:CODE|METHOD|FILE))?(?:_START)?:\s*(\S+)/,
+        );
         if (generatedStartMatch) {
           inGeneratedBlock = true;
           currentBlockMarker = generatedStartMatch[1];
@@ -113,7 +121,9 @@ export class CodeMergeService {
         }
 
         // Check if we're leaving a generated block
-        const generatedEndMatch = line.match(/\/\/\s*GENERATED(?:_(?:CODE|METHOD|FILE))?(?:_END)?/);
+        const generatedEndMatch = line.match(
+          /\/\/\s*GENERATED(?:_(?:CODE|METHOD|FILE))?(?:_END)?/,
+        );
         if (generatedEndMatch) {
           inGeneratedBlock = false;
           currentBlockMarker = null;
@@ -138,9 +148,13 @@ export class CodeMergeService {
       });
 
       if (result.conflicts.length > 0) {
-        Logger.warn(`Merge completed with ${result.conflicts.length} conflicts`);
+        Logger.warn(
+          `Merge completed with ${result.conflicts.length} conflicts`,
+        );
       } else {
-        Logger.success(`Merge successful: ${result.customBlocksPreserved} custom blocks preserved`);
+        Logger.success(
+          `Merge successful: ${result.customBlocksPreserved} custom blocks preserved`,
+        );
       }
 
       return result;
@@ -159,7 +173,11 @@ export class CodeMergeService {
   /**
    * Find end marker for a block
    */
-  private findBlockEnd(lines: string[], startIndex: number, endPattern: RegExp): number {
+  private findBlockEnd(
+    lines: string[],
+    startIndex: number,
+    endPattern: RegExp,
+  ): number {
     for (let i = startIndex + 1; i < lines.length; i++) {
       if (endPattern.test(lines[i])) {
         return i;
@@ -192,7 +210,10 @@ export class CodeMergeService {
   /**
    * Check if generated blocks have been modified
    */
-  detectModifications(filePath: string, content: string): {
+  detectModifications(
+    filePath: string,
+    content: string,
+  ): {
     modified: boolean;
     modifiedBlocks: string[];
   } {
@@ -237,7 +258,11 @@ export class CodeMergeService {
   /**
    * Get merge statistics
    */
-  getMergeStatistics(filePath: string, existingContent: string, newContent: string): {
+  getMergeStatistics(
+    filePath: string,
+    existingContent: string,
+    newContent: string,
+  ): {
     totalBlocks: number;
     customBlocks: number;
     generatedBlocks: number;

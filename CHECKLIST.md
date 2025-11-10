@@ -92,8 +92,8 @@ npm run publish:all-libs
 ### Verifikasi di npm
 
 1. Cek di browser:
-   - https://www.npmjs.com/package/@ojiepermana/nest-generator
-   - https://www.npmjs.com/package/@ojiepermana/nest
+   - <https://www.npmjs.com/package/@ojiepermana/nest-generator>
+   - <https://www.npmjs.com/package/@ojiepermana/nest>
 
 2. Test install:
 
@@ -138,6 +138,7 @@ Untuk publish versi baru:
    ```
 
 4. **Publish**
+
    ```bash
    ./scripts/publish-libs.sh
    ```

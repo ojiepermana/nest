@@ -105,6 +105,7 @@ cd libs/generator && npm version major && cd ../..
    ```
 
 3. **Publish**
+
    ```bash
    ./scripts/publish-libs.sh
    ```
@@ -113,7 +114,7 @@ cd libs/generator && npm version major && cd ../..
 
 ### @ojiepermana/nest-generator
 
-**npm:** https://www.npmjs.com/package/@ojiepermana/nest-generator
+**npm:** <https://www.npmjs.com/package/@ojiepermana/nest-generator>
 
 **Install:**
 
@@ -134,7 +135,7 @@ export class AppModule {}
 
 ### @ojiepermana/nest
 
-**npm:** https://www.npmjs.com/package/@ojiepermana/nest
+**npm:** <https://www.npmjs.com/package/@ojiepermana/nest>
 
 **Install:**
 
@@ -186,7 +187,7 @@ Jika package sudah ada:
 
 Verifikasi email Anda di npm:
 
-1. Buka https://www.npmjs.com/
+1. Buka <https://www.npmjs.com/>
 2. Login
 3. Verify email
 

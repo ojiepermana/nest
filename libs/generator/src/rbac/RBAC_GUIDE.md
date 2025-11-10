@@ -1558,9 +1558,9 @@ describe('RBAC Integration', () => {
 
 For issues, questions, or feature requests:
 
-- **GitHub Issues:** https://github.com/ojiepermana/nest/issues
-- **Documentation:** https://github.com/ojiepermana/nest/blob/main/libs/generator/README.md
-- **NPM Package:** https://www.npmjs.com/package/@ojiepermana/nest-generator
+- **GitHub Issues:** <https://github.com/ojiepermana/nest/issues>
+- **Documentation:** <https://github.com/ojiepermana/nest/blob/main/libs/generator/README.md>
+- **NPM Package:** <https://www.npmjs.com/package/@ojiepermana/nest-generator>
 
 ---
 

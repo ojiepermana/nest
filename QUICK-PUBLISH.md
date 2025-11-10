@@ -29,8 +29,8 @@ Script akan menampilkan menu:
 
 Packages Anda sudah public di npm:
 
-- **@ojiepermana/nest-generator** - https://npmjs.com/package/@ojiepermana/nest-generator
-- **@ojiepermana/nest** - https://npmjs.com/package/@ojiepermana/nest
+- **@ojiepermana/nest-generator** - <https://npmjs.com/package/@ojiepermana/nest-generator>
+- **@ojiepermana/nest** - <https://npmjs.com/package/@ojiepermana/nest>
 
 ## Update & Re-publish
 

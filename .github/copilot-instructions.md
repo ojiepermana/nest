@@ -1474,12 +1474,13 @@ When working with this codebase:
 **Internal Documentation**:
 
 - `docs/generator/INDEX.md` - Complete documentation index
-- `docs/generator/QUICKSTART.md` - 5-minute getting started guide (NEW!)
-- `docs/generator/FEATURE_SCORING.md` - Detailed feature analysis (104.5/100)
-- `docs/generator/FEATURE_STATUS.md` - Implementation status and capabilities
-- `docs/generator/audit/AUDIT_DOCUMENTATION.md` - Audit trail complete guide
+- `docs/generator/QUICKSTART.md` - 5-minute getting started guide
+- `docs/generator/FEATURE_SCORING.md` - Detailed feature analysis (119/100)
+- `docs/generator/FEATURES.md` - Implementation status and capabilities
+- `docs/generator/audit/AUDIT_GUIDE.md` - Audit trail complete guide
 - `docs/generator/rbac/RBAC_GUIDE.md` - RBAC complete guide (1432 lines)
 - `docs/generator/archive/specs/prompt.md` - Original specifications (archived)
+- `docs/workspace/` - Workspace management documentation
 
 **External References**:
 

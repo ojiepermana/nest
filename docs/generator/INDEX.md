@@ -19,12 +19,12 @@ Fast-track guides for specific features:
 - [📤 File Upload in 7 Minutes](./quickstart/UPLOAD_QUICKSTART.md) - Multi-cloud storage
 - [🌐 Microservices in 15 Minutes](./quickstart/MICROSERVICES_QUICKSTART.md) - Distributed architecture
 
-## �🔥 Most Used Guides
+##  Most Used Guides
 
 Quick links to the most popular documentation:
 
 - [🔐 RBAC Setup](./rbac/RBAC_GUIDE.md) - Add role-based access control
-- [🔍 Audit Trail](./audit/AUDIT_DOCUMENTATION.md) - Track all changes
+- [🔍 Audit Trail](./audit/AUDIT_GUIDE.md) - Track all changes
 - [📤 File Upload](./FILE_UPLOAD.md) - Handle file uploads (S3, GCS, Azure, Local)
 - [💾 Caching](./CACHING.md) - Add Redis caching
 - [🗄️ Database Setup](./DATABASE.md) - PostgreSQL & MySQL configuration
@@ -41,10 +41,10 @@ Quick links to the most popular documentation:
 **I want to...**
 
 - **Add authentication & authorization** → [RBAC Guide](./rbac/RBAC_GUIDE.md)
-- **Track who changed what and when** → [Audit Trail](./audit/AUDIT_DOCUMENTATION.md)
+- **Track who changed what and when** → [Audit Trail](./audit/AUDIT_GUIDE.md)
 - **Upload files to cloud storage** → [File Upload Guide](./FILE_UPLOAD.md)
 - **Improve API performance** → [Caching Guide](./CACHING.md)
-- **Build microservices** → [Feature Status](./FEATURE_STATUS.md#architecture-support)
+- **Build microservices** → [Feature Guide](./FEATURES.md#architecture-support)
 - **Generate my first module** → [Quick Start](./QUICKSTART.md)
 - **Understand all features** → [Feature Scoring](./FEATURE_SCORING.md)
 
@@ -55,37 +55,35 @@ Quick links to the most popular documentation:
 - [Quick Start Guide](./QUICKSTART.md) - 5-minute tutorial
 - [Main README](../../libs/generator/README.md) - Package overview
 - [Requirements](./REQUIREMENTS.md) - System requirements and compatibility
-- [Feature Status](./FEATURE_STATUS.md) - Complete feature implementation status
+- [Features](./FEATURES.md) - Complete feature implementation status
 - [Feature Scoring](./FEATURE_SCORING.md) - Detailed feature analysis (104.5/100!)
 
 ### Feature Guides
 
 #### Core Features
 
-- [CRUD Operations](./FEATURE_STATUS.md#core-crud) - Create, Read, Update, Delete
-- [Advanced Queries](./FEATURE_STATUS.md#advanced-queries) - JOINs, CTEs, Aggregations
-- [Validation](./FEATURE_STATUS.md#validation--security) - Input validation with class-validator
-- [Swagger/OpenAPI](./FEATURE_STATUS.md#swagger-documentation) - Auto-generated API docs
+- [CRUD Operations](./FEATURES.md#core-crud) - Create, Read, Update, Delete
+- [Advanced Queries](./FEATURES.md#advanced-queries) - JOINs, CTEs, Aggregations
+- [Validation](./FEATURES.md#validation--security) - Input validation with class-validator
+- [Swagger/OpenAPI](./FEATURES.md#swagger-documentation) - Auto-generated API docs
 
 #### Advanced Features
 
 - [**RBAC System**](./rbac/RBAC_GUIDE.md) - Complete role-based access control (1432 lines)
-- [**Audit Trail**](./audit/AUDIT_DOCUMENTATION.md) - Change tracking with rollback
-  - [Audit CLI Integration](./AUDIT_CLI.md) - CLI usage guide
-  - [Audit Implementation](./audit/AUDIT_IMPLEMENTATION_SUMMARY.md) - Technical details
+- [**Audit Trail**](./audit/AUDIT_GUIDE.md) - Change tracking with rollback
 - [**File Upload**](./FILE_UPLOAD.md) - Multi-provider file storage
   - Local Filesystem
   - AWS S3
   - Google Cloud Storage
   - Azure Blob Storage
 - [**Caching**](./CACHING.md) - Redis integration with smart invalidation
-- [**Export**](./FEATURE_STATUS.md#export) - CSV/Excel data export
+- [**Export**](./FEATURES.md#export) - CSV/Excel data export
 
 ### Database & Architecture
 
 - [Database Compatibility](./DATABASE.md) - PostgreSQL 18+ and MySQL 8+ support
 - [Database Schemas](./database/SCHEMAS.md) - Metadata schema structure
-- [Architecture Patterns](./FEATURE_STATUS.md#architecture-support) - Standalone, Monorepo, Microservices
+- [Architecture Patterns](./FEATURES.md#architecture-support) - Standalone, Monorepo, Microservices
 
 ## 🎯 Feature Overview
 
@@ -113,20 +111,23 @@ Quick links to the most popular documentation:
 ### By Task
 
 **Setting Up:**
+
 1. [System Requirements](./REQUIREMENTS.md)
 2. [Database Setup](./database/SCHEMAS.md)
 3. [Main README - Installation](../../libs/generator/README.md#installation)
 
 **Implementing Features:**
-1. [Audit Trail](./audit/AUDIT_DOCUMENTATION.md)
+
+1. [Audit Trail](./audit/AUDIT_GUIDE.md)
 2. [RBAC System](./rbac/RBAC_GUIDE.md)
 3. [File Upload](./FILE_UPLOAD.md)
 4. [Caching](./CACHING.md)
 
 **Understanding Architecture:**
+
 1. [Original Spec](./archive/specs/prompt.md)
 2. [Database Compatibility](./DATABASE.md)
-3. [Implementation Status](./FEATURE_STATUS.md)
+3. [Features](./FEATURES.md)
 
 ## 🔧 Development & Reference
 
@@ -138,39 +139,42 @@ docs/generator/
 ├── QUICKSTART.md                  (5-minute getting started)
 ├── REQUIREMENTS.md                (system requirements)
 ├── DATABASE.md                    (database setup guide)
-├── FEATURE_STATUS.md              (implementation status)
-├── FEATURE_SCORING.md             (feature analysis 104.5/100)
+├── FEATURES.md                    (complete feature status)
+├── FEATURE_SCORING.md             (detailed feature analysis 119/100)
 ├── CACHING.md                     (Redis caching guide)
 ├── FILE_UPLOAD.md                 (file upload multi-cloud)
-├── AUDIT_CLI.md                   (audit CLI usage)
 ├── TROUBLESHOOTING.md             (common issues & fixes)
 ├── MIGRATION.md                   (version upgrade guide)
 ├── BEST_PRACTICES.md              (production tips)
 ├── EXAMPLES.md                    (real-world use cases)
-├── DOCUMENTATION_ANALYSIS.md      (refactoring plan)
+├── REORGANIZATION_PLAN.md         (documentation cleanup plan)
 │
-├── quickstart/                    (NEW! Fast-track guides)
+├── quickstart/                    (Fast-track guides)
 │   ├── RBAC_QUICKSTART.md         (10 minutes)
 │   ├── AUDIT_QUICKSTART.md        (5 minutes)
 │   ├── UPLOAD_QUICKSTART.md       (7 minutes)
 │   └── MICROSERVICES_QUICKSTART.md (15 minutes)
 │
 ├── audit/
-│   ├── AUDIT_DOCUMENTATION.md (complete guide)
-│   └── AUDIT_IMPLEMENTATION_SUMMARY.md
+│   └── AUDIT_GUIDE.md             (comprehensive guide)
 │
 ├── database/
-│   └── SCHEMAS.md             (metadata structure)
+│   └── SCHEMAS.md                 (metadata structure)
 │
 ├── rbac/
-│   └── RBAC_GUIDE.md          (comprehensive RBAC)
+│   ├── RBAC_GUIDE.md              (comprehensive RBAC)
+│   ├── RBAC_EXAMPLES.md           (real-world examples)
+│   └── IMPLEMENTATION_STATUS.md   (technical status)
 │
-└── archive/                   (historical docs)
+└── archive/                       (historical docs)
+    ├── AUDIT_CLI.md               (archived - merged into AUDIT_GUIDE.md)
+    ├── AUDIT_IMPLEMENTATION_SUMMARY.md (archived)
+    ├── DOCUMENTATION_ANALYSIS.md  (archived)
     ├── DEEP_ANALYSIS_SCORE_OLD.md
     ├── PROGRESS_HISTORY.md
     ├── AUDIT_CLI_INTEGRATION_COMPLETE.md
     └── specs/
-        └── prompt.md          (original specification)
+        └── prompt.md              (original specification)
 ```
 
 ### Contributing to Documentation
@@ -187,14 +191,14 @@ When adding new documentation:
 
 - **Just getting started?** → [Quick Start](./QUICKSTART.md)
 - **Need a specific feature?** → Check [By Use Case](#-by-use-case) above
-- **Want to see all features?** → [Feature Scoring](./FEATURE_SCORING.md)
+- **Want to see all features?** → [Features](./FEATURES.md)
 - **Looking for API reference?** → [Main README](../../libs/generator/README.md)
 
 ## 📊 Statistics
 
-- **Total Documentation Files**: 16
-- **Total Lines of Documentation**: ~15,000+
-- **Feature Coverage**: 104.5/100 (exceeds target!)
+- **Total Documentation Files**: 13 main docs (3 moved to archive)
+- **Total Lines of Documentation**: ~33,500+ (reduced redundancy)
+- **Feature Coverage**: 119/100 (exceeds target by 19%!)
 - **Test Coverage**: 99% (579/585 tests passing)
 
 ## 🆘 Support

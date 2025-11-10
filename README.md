@@ -137,6 +137,28 @@ export class UsersController {
 
 ### Development Setup
 
+### Prerequisites
+
+- **Node.js**: 24.0.0 or higher (enforced by .nvmrc and engines)
+- **npm**: 10.0.0 or higher
+- **NestJS**: 11.x
+- **Database**: PostgreSQL 18+ or MySQL 8+
+
+### Node Version Management
+
+This project uses `.nvmrc` to specify the required Node.js version:
+
+```bash
+# Automatically switch to correct Node.js version
+nvm use
+
+# Or install if not available
+nvm install
+
+# Verify version
+node --version  # Should show v24.x.x
+```
+
 ### Install Dependencies
 
 ```bash

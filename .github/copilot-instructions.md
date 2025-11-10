@@ -107,6 +107,8 @@ nest-generator generate users --features.audit=true  # With audit
 
 - `docs/generator/QUICKSTART.md` - 5-min tutorial
 - `docs/generator/FEATURES.md` - All features
+- `docs/generator/ENTERPRISE_QUALITY.md` - ⭐ Enterprise best practices
+- `docs/generator/RECOMMENDED_SCHEMAS.md` - ⭐ Database schemas
 - `docs/generator/audit/AUDIT_GUIDE.md` - Audit trail
 - `docs/workspace/PUBLISHING.md` - Publishing guide
 

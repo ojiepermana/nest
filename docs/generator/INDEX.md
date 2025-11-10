@@ -48,15 +48,15 @@ Quick links to the most popular documentation:
 - **Generate my first module** → [Quick Start](./QUICKSTART.md)
 - **Understand all features** → [Feature Scoring](./FEATURE_SCORING.md)
 
-## 📚 Table of Contents
+## 📚 Feature Documentation
 
-### Getting Started
-
-- [Quick Start Guide](./QUICKSTART.md) - 5-minute tutorial
-- [Main README](../../libs/generator/README.md) - Package overview
-- [Requirements](./REQUIREMENTS.md) - System requirements and compatibility
-- [Features](./FEATURES.md) - Complete feature implementation status
-- [Feature Scoring](./FEATURE_SCORING.md) - Detailed feature analysis (104.5/100!)
+- [**QUICKSTART.md**](QUICKSTART.md) - 5-minute tutorial
+- [**FEATURES.md**](FEATURES.md) - All features status
+- [**FEATURE_SCORING.md**](FEATURE_SCORING.md) - Detailed analysis
+- [**ENTERPRISE_QUALITY.md**](ENTERPRISE_QUALITY.md) - ⭐ Enterprise-level best practices
+- [**RECOMMENDED_SCHEMAS.md**](RECOMMENDED_SCHEMAS.md) - ⭐ Pre-designed database schemas
+- [**API.md**](API.md) - API reference
+- [**TROUBLESHOOTING.md**](TROUBLESHOOTING.md) - Common issues
 
 ### Feature Guides
 

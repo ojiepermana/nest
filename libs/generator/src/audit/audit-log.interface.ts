@@ -104,6 +104,8 @@ export interface AuditLogFilter {
   start_date?: Date;
   end_date?: Date;
   search?: string; // Search in entity_type, user_name, etc.
+  limit?: number; // Pagination limit
+  offset?: number; // Pagination offset
 }
 
 /**

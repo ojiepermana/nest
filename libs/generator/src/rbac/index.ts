@@ -17,6 +17,3 @@ export * from './guards';
 
 // Interfaces
 export * from './interfaces';
-
-// Schema Generator
-export * from './generators/rbac-schema.generator';

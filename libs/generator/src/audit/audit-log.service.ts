@@ -122,7 +122,7 @@ export class AuditLogService implements IAuditLogService {
 
     if (filter.action) {
       if (Array.isArray(filter.action)) {
-        results = results.filter((log) => filter.action.includes(log.action));
+        results = results.filter((log) => (filter.action as string[]).includes(log.action));
       } else {
         results = results.filter((log) => log.action === filter.action);
       }
@@ -133,15 +133,15 @@ export class AuditLogService implements IAuditLogService {
     }
 
     if (filter.start_date) {
-      results = results.filter((log) => log.created_at >= filter.start_date);
+      results = results.filter((log) => log.created_at >= filter.start_date!);
     }
 
     if (filter.end_date) {
-      results = results.filter((log) => log.created_at <= filter.end_date);
+      results = results.filter((log) => log.created_at <= filter.end_date!);
     }
 
     if (filter.tags && filter.tags.length > 0) {
-      results = results.filter((log) => log.tags?.some((tag) => filter.tags.includes(tag)));
+      results = results.filter((log) => log.tags?.some((tag) => filter.tags!.includes(tag)));
     }
 
     // Ordering (newest first)
@@ -243,11 +243,11 @@ export class AuditLogService implements IAuditLogService {
     let logs = [...this.logs];
 
     if (filter?.start_date) {
-      logs = logs.filter((log) => log.created_at >= filter.start_date);
+      logs = logs.filter((log) => log.created_at >= filter.start_date!);
     }
 
     if (filter?.end_date) {
-      logs = logs.filter((log) => log.created_at <= filter.end_date);
+      logs = logs.filter((log) => log.created_at <= filter.end_date!);
     }
 
     const total_logs = logs.length;
@@ -382,6 +382,71 @@ export class AuditLogService implements IAuditLogService {
     }
 
     return cleaned;
+  }
+
+  /**
+   * Get single audit log by ID
+   */
+  async findOne(id: string): Promise<AuditLogEntry | null> {
+    return this.logs.find((log) => log.id === id) || null;
+  }
+
+  /**
+   * Query audit logs with pagination
+   */
+  async query(
+    filter: AuditLogFilter,
+    page: number = 1,
+    limit: number = 50,
+  ): Promise<{ data: AuditLogEntry[]; total: number }> {
+    const allLogs = await this.find(filter);
+    const offset = (page - 1) * limit;
+    const data = allLogs.slice(offset, offset + limit);
+    return { data, total: allLogs.length };
+  }
+
+  /**
+   * Get rollback history for entity
+   */
+  async getRollbackHistory(entity_type: string, entity_id: string): Promise<AuditLogEntry[]> {
+    return this.logs.filter(
+      (log) =>
+        log.entity_type === entity_type &&
+        log.entity_id === entity_id &&
+        log.is_rolled_back === true,
+    );
+  }
+
+  /**
+   * Archive old logs
+   */
+  async archive(before_date: Date): Promise<number> {
+    const toArchive = this.logs.filter((log) => log.created_at < before_date);
+    // In real implementation, move to archive storage
+    return toArchive.length;
+  }
+
+  /**
+   * Export audit logs
+   */
+  async export(filter: AuditLogFilter, format: 'json' | 'csv'): Promise<string | Buffer> {
+    const logs = await this.find(filter);
+
+    if (format === 'json') {
+      return JSON.stringify(logs, null, 2);
+    }
+
+    // CSV export (simple implementation)
+    const headers = ['id', 'action', 'entity_type', 'entity_id', 'user_id', 'created_at'];
+    const rows = logs.map((log) =>
+      headers
+        .map((h) => {
+          const value = log[h as keyof AuditLogEntry];
+          return value instanceof Date ? value.toISOString() : String(value || '');
+        })
+        .join(','),
+    );
+    return [headers.join(','), ...rows].join('\n');
   }
 
   /**

@@ -7,7 +7,7 @@
 
 import { Injectable, Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
+import type { Cache } from 'cache-manager';
 import {
   ICacheService,
   CacheOptions,
@@ -77,7 +77,8 @@ export class RedisCacheService implements ICacheService {
   async deletePattern(pattern: string): Promise<number> {
     try {
       // Note: This requires Redis store with SCAN support
-      const store = this.cacheManager.store as any;
+      const stores = (this.cacheManager as any).stores;
+      const store = stores?.[0] || this.cacheManager;
 
       if (!store.keys) {
         Logger.warn('Cache store does not support pattern deletion');
@@ -105,7 +106,16 @@ export class RedisCacheService implements ICacheService {
    */
   async clear(): Promise<void> {
     try {
-      await this.cacheManager.reset();
+      // Note: cache-manager v5+ doesn't have reset(), use deletePattern
+      const stores = (this.cacheManager as any).stores;
+      const store = stores?.[0] || this.cacheManager;
+
+      if (store.reset) {
+        await store.reset();
+      } else {
+        // Fallback: delete all keys
+        await this.deletePattern('*');
+      }
       Logger.debug('Cache CLEARED');
     } catch (error) {
       Logger.error('Cache clear error', error as Error);
@@ -130,7 +140,8 @@ export class RedisCacheService implements ICacheService {
    */
   async ttl(key: string): Promise<number> {
     try {
-      const store = this.cacheManager.store as any;
+      const stores = (this.cacheManager as any).stores;
+      const store = stores?.[0] || this.cacheManager;
 
       if (!store.ttl) {
         Logger.warn('Cache store does not support TTL query');
@@ -181,7 +192,8 @@ export class RedisCacheService implements ICacheService {
    */
   async getStats(): Promise<CacheStats> {
     try {
-      const store = this.cacheManager.store as any;
+      const stores = (this.cacheManager as any).stores;
+      const store = stores?.[0] || this.cacheManager;
       let keys = 0;
 
       if (store.keys) {

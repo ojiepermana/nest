@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Pool } from 'pg';
-import { Permission, Role, UserRole, RolePermission } from '../interfaces';
+import { Permission, Role, UserRole, RolePermission } from './interfaces';
 
 /**
  * RBAC Repository

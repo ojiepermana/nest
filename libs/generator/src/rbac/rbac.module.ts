@@ -1,4 +1,5 @@
 import { Module, Global, DynamicModule } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { CacheModule } from '@nestjs/cache-manager';
 import { RBACService } from './rbac.service';
 import { RBACRepository } from './rbac.repository';
@@ -64,7 +65,7 @@ export class RBACModule {
       defaultExpiration: options.defaultExpiration,
     };
 
-    const providers = [
+    const providers: any[] = [
       {
         provide: 'RBAC_CONFIG',
         useValue: config,
@@ -79,11 +80,11 @@ export class RBACModule {
     if (options.useGlobalGuards) {
       providers.push(
         {
-          provide: 'APP_GUARD',
+          provide: APP_GUARD,
           useClass: RolesGuard,
         },
         {
-          provide: 'APP_GUARD',
+          provide: APP_GUARD,
           useClass: PermissionsGuard,
         },
       );

@@ -175,7 +175,7 @@ export class InitCommand {
         Logger.warn('\n⚠️  Database version does not meet minimum requirements!');
         Logger.warn(`   Current: ${validation.version}`);
         Logger.warn(`   Minimum: ${validation.minimumVersion}`);
-        
+
         if (validation.warnings.length > 0) {
           validation.warnings.forEach((warning) => Logger.warn(`   ${warning}`));
         }

@@ -13,7 +13,6 @@ export class UsersRepository {
     private readonly repository: Repository<Users>,
   ) {}
 
-
   /**
    * Create a new users
    */
@@ -77,13 +76,16 @@ export class UsersRepository {
     return count > 0;
   }
 
-
   /**
    * Find userss with filters
    */
   async findWithFilters(
     filterDto: UsersFilterDto,
-    options?: { page?: number; limit?: number; sort?: Array<{ field: string; order: 'ASC' | 'DESC' }> },
+    options?: {
+      page?: number;
+      limit?: number;
+      sort?: Array<{ field: string; order: 'ASC' | 'DESC' }>;
+    },
   ): Promise<{ data: Users[]; total: number; page: number; limit: number }> {
     const queryBuilder = this.repository.createQueryBuilder('users');
 
@@ -96,7 +98,7 @@ export class UsersRepository {
 
       // Parse operator suffix
       const operatorMatch = key.match(/^(.+)_(eq|ne|gt|gte|lt|lte|like|in|between|null)$/);
-      
+
       if (operatorMatch) {
         const [, field, operator] = operatorMatch;
         this.applyFilter(queryBuilder, field, operator, value);
@@ -133,12 +135,7 @@ export class UsersRepository {
   /**
    * Apply filter to query builder
    */
-  private applyFilter(
-    queryBuilder: any,
-    field: string,
-    operator: string,
-    value: any,
-  ): void {
+  private applyFilter(queryBuilder: any, field: string, operator: string, value: any): void {
     const camelName = 'users';
     const paramKey = `filter_${field}_${operator}`;
 
@@ -162,7 +159,9 @@ export class UsersRepository {
         queryBuilder.andWhere(`${camelName}.${field} <= :${paramKey}`, { [paramKey]: value });
         break;
       case 'like':
-        queryBuilder.andWhere(`${camelName}.${field} LIKE :${paramKey}`, { [paramKey]: `%${value}%` });
+        queryBuilder.andWhere(`${camelName}.${field} LIKE :${paramKey}`, {
+          [paramKey]: `%${value}%`,
+        });
         break;
       case 'in':
         if (Array.isArray(value) && value.length > 0) {
@@ -171,10 +170,13 @@ export class UsersRepository {
         break;
       case 'between':
         if (Array.isArray(value) && value.length === 2) {
-          queryBuilder.andWhere(`${camelName}.${field} BETWEEN :${paramKey}_start AND :${paramKey}_end`, {
-            [`${paramKey}_start`]: value[0],
-            [`${paramKey}_end`]: value[1],
-          });
+          queryBuilder.andWhere(
+            `${camelName}.${field} BETWEEN :${paramKey}_start AND :${paramKey}_end`,
+            {
+              [`${paramKey}_start`]: value[0],
+              [`${paramKey}_end`]: value[1],
+            },
+          );
         }
         break;
       case 'null':
@@ -186,9 +188,4 @@ export class UsersRepository {
         break;
     }
   }
-
-
-
-
-
 }

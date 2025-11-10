@@ -204,10 +204,7 @@ describe('DatabaseConnectionManager - Version Validation', () => {
       const manager = new DatabaseConnectionManager(config);
       (manager as any).mysqlPool = mockMysqlPool;
 
-      mockMysqlPool.query.mockResolvedValueOnce([
-        [{ version: '8.0.35' }],
-        [],
-      ]);
+      mockMysqlPool.query.mockResolvedValueOnce([[{ version: '8.0.35' }], []]);
 
       const result = await manager.validateDatabaseVersion();
 
@@ -230,10 +227,7 @@ describe('DatabaseConnectionManager - Version Validation', () => {
       const manager = new DatabaseConnectionManager(config);
       (manager as any).mysqlPool = mockMysqlPool;
 
-      mockMysqlPool.query.mockResolvedValueOnce([
-        [{ version: '8.4.0' }],
-        [],
-      ]);
+      mockMysqlPool.query.mockResolvedValueOnce([[{ version: '8.4.0' }], []]);
 
       const result = await manager.validateDatabaseVersion();
 
@@ -254,10 +248,7 @@ describe('DatabaseConnectionManager - Version Validation', () => {
       const manager = new DatabaseConnectionManager(config);
       (manager as any).mysqlPool = mockMysqlPool;
 
-      mockMysqlPool.query.mockResolvedValueOnce([
-        [{ version: '5.7.40' }],
-        [],
-      ]);
+      mockMysqlPool.query.mockResolvedValueOnce([[{ version: '5.7.40' }], []]);
 
       const result = await manager.validateDatabaseVersion();
 
@@ -284,10 +275,7 @@ describe('DatabaseConnectionManager - Version Validation', () => {
       const manager = new DatabaseConnectionManager(config);
       (manager as any).mysqlPool = mockMysqlPool;
 
-      mockMysqlPool.query.mockResolvedValueOnce([
-        [{ version: '8.0.35-0ubuntu0.22.04.1' }],
-        [],
-      ]);
+      mockMysqlPool.query.mockResolvedValueOnce([[{ version: '8.0.35-0ubuntu0.22.04.1' }], []]);
 
       const result = await manager.validateDatabaseVersion();
 
@@ -308,10 +296,7 @@ describe('DatabaseConnectionManager - Version Validation', () => {
       const manager = new DatabaseConnectionManager(config);
       (manager as any).mysqlPool = mockMysqlPool;
 
-      mockMysqlPool.query.mockResolvedValueOnce([
-        [{ version: 'unknown-format' }],
-        [],
-      ]);
+      mockMysqlPool.query.mockResolvedValueOnce([[{ version: 'unknown-format' }], []]);
 
       const result = await manager.validateDatabaseVersion();
 

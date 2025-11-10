@@ -178,7 +178,9 @@ export class DatabaseConnectionManager {
 
           if (majorVersion < 18) {
             valid = false;
-            warnings.push(`PostgreSQL ${majorVersion}.${minorVersion} detected. Minimum required: 18.0`);
+            warnings.push(
+              `PostgreSQL ${majorVersion}.${minorVersion} detected. Minimum required: 18.0`,
+            );
             warnings.push('Some features may not work correctly:');
             warnings.push('  - UUID v7 requires PostgreSQL 18+ or custom function');
             warnings.push('  - Performance optimizations for JSONB');
@@ -186,7 +188,9 @@ export class DatabaseConnectionManager {
             valid = true;
           }
         } else {
-          warnings.push('Could not parse PostgreSQL version. Please ensure you are using PostgreSQL 18+');
+          warnings.push(
+            'Could not parse PostgreSQL version. Please ensure you are using PostgreSQL 18+',
+          );
         }
       } else if (this.config.type === 'mysql') {
         minimumVersion = '8.0.0';
@@ -215,9 +219,13 @@ export class DatabaseConnectionManager {
       }
 
       if (valid) {
-        Logger.success(`✓ Database version ${version} meets minimum requirements (${minimumVersion}+)`);
+        Logger.success(
+          `✓ Database version ${version} meets minimum requirements (${minimumVersion}+)`,
+        );
       } else {
-        Logger.warn(`⚠️  Database version ${version} is below minimum requirements (${minimumVersion}+)`);
+        Logger.warn(
+          `⚠️  Database version ${version} is below minimum requirements (${minimumVersion}+)`,
+        );
         warnings.forEach((warning) => Logger.warn(`   ${warning}`));
       }
 

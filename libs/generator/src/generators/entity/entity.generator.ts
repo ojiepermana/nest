@@ -1,7 +1,8 @@
 /**
  * Entity Generator
  *
- * Generates TypeORM entities from database metadata
+ * Generates entity classes from database metadata
+ * Supports both plain TypeScript classes and TypeORM entities
  */
 
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
@@ -14,6 +15,7 @@ export interface EntityGeneratorOptions {
   enableTimestamps?: boolean;
   enableSoftDelete?: boolean;
   customDecorators?: Record<string, string[]>;
+  useTypeORM?: boolean; // New option to enable/disable TypeORM decorators
 }
 
 export class EntityGenerator {
@@ -29,6 +31,12 @@ export class EntityGenerator {
   generate(): string {
     const entityName = this.options.entityName || toPascalCase(this.options.tableName);
 
+    // Generate plain class if TypeORM is disabled
+    if (this.options.useTypeORM === false) {
+      return this.generatePlainClass(entityName);
+    }
+
+    // Generate TypeORM entity (default behavior)
     const imports = this.generateImports();
     const classDeclaration = this.generateClassDeclaration(entityName);
     const properties = this.generateProperties();
@@ -38,6 +46,85 @@ export class EntityGenerator {
 ${classDeclaration}
 ${properties}}
 `;
+  }
+
+  /**
+   * Generate plain TypeScript class without ORM decorators
+   */
+  private generatePlainClass(entityName: string): string {
+    const description = (this.tableMetadata as any).description || `${entityName} Entity`;
+
+    let code = `/**\n * ${description}\n`;
+    if (this.options.schema) {
+      code += ` * Schema: ${this.options.schema}\n`;
+    }
+    code += ` * Table: ${this.options.tableName}\n */\n`;
+    code += `export class ${entityName} {\n`;
+
+    // Generate properties
+    this.columns.forEach((column) => {
+      const propertyName = toCamelCase(column.column_name);
+      const tsType = this.getTypeScriptType(column);
+      const isOptional = column.is_nullable || (column as any).column_default !== null;
+
+      // Add comment if description exists
+      if ((column as any).description) {
+        code += `  /** ${(column as any).description} */\n`;
+      }
+
+      code += `  ${propertyName}${isOptional ? '?' : ''}: ${tsType};\n`;
+    });
+
+    code += `}\n`;
+    return code;
+  }
+
+  /**
+   * Get TypeScript type for column
+   */
+  private getTypeScriptType(column: ColumnMetadata): string {
+    const dataType = column.data_type.toLowerCase();
+
+    // UUID/GUID
+    if (dataType.includes('uuid')) {
+      return 'string';
+    }
+
+    // Numeric types
+    if (
+      dataType.includes('int') ||
+      dataType.includes('serial') ||
+      dataType.includes('numeric') ||
+      dataType.includes('decimal') ||
+      dataType.includes('float') ||
+      dataType.includes('double') ||
+      dataType.includes('real')
+    ) {
+      return 'number';
+    }
+
+    // Boolean
+    if (dataType.includes('bool')) {
+      return 'boolean';
+    }
+
+    // Date/Time
+    if (dataType.includes('date') || dataType.includes('time') || dataType.includes('timestamp')) {
+      return 'Date';
+    }
+
+    // JSON
+    if (dataType.includes('json')) {
+      return 'any';
+    }
+
+    // Array types
+    if (dataType.includes('[]')) {
+      return 'any[]';
+    }
+
+    // Default to string for text/varchar/char etc
+    return 'string';
   }
 
   /**
@@ -156,7 +243,7 @@ export class ${entityName} {`;
 
     const decorators: string[] = [];
     const propertyName = this.toCamelCase(column.column_name);
-    const tsType = this.getTypeScriptType(column.data_type);
+    const tsType = this.getTypeScriptType(column);
     const nullable = column.is_nullable ? '?' : '';
 
     // Primary key decorator
@@ -375,9 +462,9 @@ export class ${entityName} {`;
   }
 
   /**
-   * Get TypeScript type from database type
+   * Get TypeScript type from database type string (for plain classes)
    */
-  private getTypeScriptType(dataType: string): string {
+  private getTypeScriptTypeFromString(dataType: string): string {
     const typeMap: Record<string, string> = {
       integer: 'number',
       bigint: 'number',

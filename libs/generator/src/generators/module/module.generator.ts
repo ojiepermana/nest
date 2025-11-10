@@ -18,6 +18,7 @@ export interface ModuleGeneratorOptions {
   customProviders?: string[];
   customImports?: string[];
   customExports?: string[];
+  useTypeORM?: boolean; // Add option to use TypeORM or plain SQL
 }
 
 export class ModuleGenerator {
@@ -54,8 +55,12 @@ ${classDeclaration}
     // NestJS common imports
     imports.push("import { Module } from '@nestjs/common';");
 
-    // TypeORM import if repository enabled
-    if (this.options.includeRepository !== false && this.options.includeService !== false) {
+    // TypeORM import if repository enabled AND using TypeORM
+    if (
+      this.options.useTypeORM !== false &&
+      this.options.includeRepository !== false &&
+      this.options.includeService !== false
+    ) {
       imports.push("import { TypeOrmModule } from '@nestjs/typeorm';");
     }
 
@@ -64,10 +69,12 @@ ${classDeclaration}
       imports.push("import { CacheModule } from '@nestjs/cache-manager';");
     }
 
-    // Entity import
-    imports.push(
-      `import { ${entityName} } from './entities/${this.toKebabCase(entityName)}.entity';`,
-    );
+    // Entity import (not needed for plain SQL repositories)
+    if (this.options.useTypeORM !== false) {
+      imports.push(
+        `import { ${entityName} } from './entities/${this.toKebabCase(entityName)}.entity';`,
+      );
+    }
 
     // Controller import
     if (this.options.includeController !== false) {
@@ -139,8 +146,12 @@ ${moduleConfig.join(',\n')}
   private generateModuleImports(entityName: string): string[] {
     const imports: string[] = [];
 
-    // TypeOrmModule.forFeature if repository enabled
-    if (this.options.includeRepository !== false && this.options.includeService !== false) {
+    // TypeOrmModule.forFeature if repository enabled AND using TypeORM
+    if (
+      this.options.useTypeORM !== false &&
+      this.options.includeRepository !== false &&
+      this.options.includeService !== false
+    ) {
       imports.push(`TypeOrmModule.forFeature([${entityName}])`);
     }
 

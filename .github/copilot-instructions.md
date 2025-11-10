@@ -97,6 +97,14 @@ nest-generator generate users --features.audit=true  # With audit
 - Write tests FIRST
 - 99% coverage target
 
+**🚨 CRITICAL RULE - Fix Generator, NOT Generated Output**:
+
+- ❌ **NEVER** manually fix files in `src/` that were generated
+- ✅ **ALWAYS** fix the generator templates in `libs/generator/src/generators/`
+- When generated code has errors → Fix the generator → Rebuild → Re-generate
+- Flow: `Fix generator` → `npm run build:generator` → `rm -rf src/module` → `nest-generator generate` → `npm run build`
+- This ensures all future generations are correct, not just one-time fixes
+
 ---
 
 ## 📚 Documentation

@@ -250,8 +250,8 @@ export function shouldExcludeFromCreate(column: ColumnMetadata): boolean {
   const autoColumns = ['created_at', 'updated_at', 'deleted_at', 'created_by', 'updated_by'];
   if (autoColumns.includes(column.column_name.toLowerCase())) return true;
 
-  // Exclude if not in form
-  if (!column.display_in_form) return true;
+  // Exclude if explicitly marked as not for form (only if property exists)
+  if ((column as any).display_in_form === false) return true;
 
   return false;
 }
@@ -271,8 +271,8 @@ export function shouldExcludeFromUpdate(column: ColumnMetadata): boolean {
   const autoColumns = ['updated_at', 'updated_by', 'deleted_at'];
   if (autoColumns.includes(column.column_name.toLowerCase())) return true;
 
-  // Exclude if not in form
-  if (!column.display_in_form) return true;
+  // Exclude if explicitly marked as not for form (only if property exists)
+  if ((column as any).display_in_form === false) return true;
 
   return false;
 }

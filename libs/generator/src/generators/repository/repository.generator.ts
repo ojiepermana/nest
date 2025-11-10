@@ -20,6 +20,7 @@ export interface RepositoryGeneratorOptions {
   bulkOperations?: boolean;
   transactionSupport?: boolean;
   auditLogging?: boolean;
+  useTypeORM?: boolean; // Add option to use TypeORM or plain SQL
 }
 
 export class RepositoryGenerator {
@@ -33,6 +34,11 @@ export class RepositoryGenerator {
    * Generate repository class
    */
   generate(): string {
+    // Use plain SQL repository if useTypeORM is false
+    if (this.options.useTypeORM === false) {
+      return this.generatePlainRepository();
+    }
+
     const entityName = this.options.entityName || toPascalCase(this.options.tableName);
     const repositoryName = `${entityName}Repository`;
     const filterDtoName = `${entityName}FilterDto`;
@@ -870,6 +876,139 @@ export const auditConfig = {
 - Full audit documentation: \`audit/AUDIT_DOCUMENTATION.md\`
 - Audit service API: \`audit/audit-log.service.ts\`
 - Decorator usage: \`audit/audit-log.decorator.ts\`
+`;
+  }
+
+  /**
+   * Generate plain SQL repository (no TypeORM)
+   */
+  private generatePlainRepository(): string {
+    const entityName = this.options.entityName || toPascalCase(this.options.tableName);
+    const repositoryName = `${entityName}Repository`;
+    const schemaName = this.tableMetadata.schema_name || 'public';
+    const tableName = this.options.tableName;
+    const pkColumn = this.getPrimaryKeyColumn();
+    const pkName = pkColumn?.column_name || 'id';
+    const pkType = this.getTypeScriptType(pkColumn?.data_type || 'integer');
+
+    return `import { Injectable, Inject } from '@nestjs/common';
+import { Pool } from 'pg';
+import { Create${entityName}Dto } from '../dto/create-${this.toKebabCase(entityName)}.dto';
+import { Update${entityName}Dto } from '../dto/update-${this.toKebabCase(entityName)}.dto';
+import { ${entityName}FilterDto } from '../dto/${this.toKebabCase(entityName)}-filter.dto';
+
+@Injectable()
+export class ${repositoryName} {
+  constructor(@Inject('DATABASE_POOL') private readonly pool: Pool) {}
+
+  /**
+   * Create a new ${toCamelCase(entityName)}
+   */
+  async create(dto: Create${entityName}Dto): Promise<any> {
+    const columns = Object.keys(dto);
+    const values = Object.values(dto);
+    const placeholders = values.map((_, i) => \`$\${i + 1}\`).join(', ');
+    
+    const query = \`
+      INSERT INTO ${schemaName}.${tableName} (\${columns.join(', ')})
+      VALUES (\${placeholders})
+      RETURNING *
+    \`;
+    
+    const result = await this.pool.query(query, values);
+    return result.rows[0];
+  }
+
+  /**
+   * Find all ${toCamelCase(entityName)}s
+   */
+  async findAll(): Promise<any[]> {
+    const query = \`SELECT * FROM ${schemaName}.${tableName} ORDER BY ${pkName}\`;
+    const result = await this.pool.query(query);
+    return result.rows;
+  }
+
+  /**
+   * Find one ${toCamelCase(entityName)} by ID
+   */
+  async findOne(id: ${pkType}): Promise<any | null> {
+    const query = \`SELECT * FROM ${schemaName}.${tableName} WHERE ${pkName} = $1\`;
+    const result = await this.pool.query(query, [id]);
+    return result.rows[0] || null;
+  }
+
+  /**
+   * Find ${toCamelCase(entityName)}s with filters
+   */
+  async findWithFilters(filter: ${entityName}FilterDto): Promise<any[]> {
+    const conditions: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    // Build WHERE conditions from filter
+    Object.entries(filter).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        conditions.push(\`\${key} = $\${paramIndex}\`);
+        values.push(value);
+        paramIndex++;
+      }
+    });
+
+    const whereClause = conditions.length > 0 ? \`WHERE \${conditions.join(' AND ')}\` : '';
+    const query = \`SELECT * FROM ${schemaName}.${tableName} \${whereClause} ORDER BY ${pkName}\`;
+    
+    const result = await this.pool.query(query, values);
+    return result.rows;
+  }
+
+  /**
+   * Update ${toCamelCase(entityName)}
+   */
+  async update(id: ${pkType}, dto: Update${entityName}Dto): Promise<any | null> {
+    const entries = Object.entries(dto).filter(([_, value]) => value !== undefined);
+    if (entries.length === 0) return this.findOne(id);
+
+    const setClauses = entries.map(([key], i) => \`\${key} = $\${i + 1}\`).join(', ');
+    const values = [...entries.map(([_, value]) => value), id];
+    
+    const query = \`
+      UPDATE ${schemaName}.${tableName}
+      SET \${setClauses}
+      WHERE ${pkName} = $\${values.length}
+      RETURNING *
+    \`;
+    
+    const result = await this.pool.query(query, values);
+    return result.rows[0] || null;
+  }
+
+  /**
+   * Delete ${toCamelCase(entityName)}
+   */
+  async delete(id: ${pkType}): Promise<boolean> {
+    const query = \`DELETE FROM ${schemaName}.${tableName} WHERE ${pkName} = $1\`;
+    const result = await this.pool.query(query, [id]);
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  /**
+   * Count ${toCamelCase(entityName)}s
+   */
+  async count(): Promise<number> {
+    const query = \`SELECT COUNT(*) as count FROM ${schemaName}.${tableName}\`;
+    const result = await this.pool.query(query);
+    return parseInt(result.rows[0].count, 10);
+  }
+
+  /**
+   * Check if ${toCamelCase(entityName)} exists
+   */
+  async exists(id: ${pkType}): Promise<boolean> {
+    const query = \`SELECT 1 FROM ${schemaName}.${tableName} WHERE ${pkName} = $1 LIMIT 1\`;
+    const result = await this.pool.query(query, [id]);
+    return result.rows.length > 0;
+  }
+}
 `;
   }
 }

@@ -383,7 +383,7 @@ export class ${serviceName} {`;
     if (this.options.enableErrorHandling) {
       removeMethod += `
     try {
-      await this.repository.remove(id);`;
+      await this.repository.delete(id);`;
 
       if (this.options.enableCaching) {
         removeMethod += `
@@ -410,7 +410,7 @@ export class ${serviceName} {`;
     }`;
     } else {
       removeMethod += `
-    await this.repository.remove(id);`;
+    await this.repository.delete(id);`;
 
       if (this.options.enableCaching) {
         removeMethod += `
@@ -471,7 +471,15 @@ export class ${serviceName} {`;
     }
 
     method += `
-    const result = await this.repository.findWithFilters(filterDto, options);`;
+    const data = await this.repository.findWithFilters(filterDto);
+    const total = data.length;
+    
+    const result = {
+      data,
+      total,
+      page: options?.page || 1,
+      limit: options?.limit || 10,
+    };`;
 
     if (this.options.enableCaching) {
       method += `
@@ -555,15 +563,18 @@ export class ${serviceName} {`;
   }
 `;
 
-    // Validation helper method
+    // Validation methods
     if (this.options.enableValidation) {
+      const pkColumn = this.getPrimaryKeyColumn();
+      const pkType = pkColumn ? this.getTypeScriptType(pkColumn.data_type) : 'string';
+
       methods += `
   /**
    * Validate unique constraints
    */
   private async validateUniqueConstraints(
     data: Create${entityName}Dto | Update${entityName}Dto,
-    excludeId?: number,
+    excludeId?: ${pkType},
   ): Promise<void> {
     // Add custom validation logic here based on unique columns
     // Example: Check if email already exists

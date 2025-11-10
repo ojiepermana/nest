@@ -177,7 +177,12 @@ export class FilterDtoGenerator {
     // Add class
     classCode += `export class ${className} {\n`;
     classCode += properties.join('\n');
-    classCode += '}\n';
+    classCode += '}\n\n';
+
+    // Add alias export for compatibility (FilterUsersDto and UsersFilterDto)
+    const aliasName = `${toPascalCase(table.table_name)}FilterDto`;
+    classCode += `// Export alias for compatibility\n`;
+    classCode += `export { ${className} as ${aliasName} };\n`;
 
     return {
       code: classCode,
@@ -218,7 +223,37 @@ export class FilterDtoGenerator {
     const props: string[] = [];
     props.push(`description: '${description}'`);
     props.push(`required: false`);
-    props.push(`type: '${type}'`);
+
+    // Fix type for arrays and tuples to be compatible with Swagger
+    if (type.endsWith('[]')) {
+      // Array type like 'string[]' -> type: [String]
+      const baseType = type.slice(0, -2);
+      const swaggerType =
+        baseType === 'string'
+          ? 'String'
+          : baseType === 'number'
+            ? 'Number'
+            : baseType === 'boolean'
+              ? 'Boolean'
+              : baseType === 'Date'
+                ? 'Date'
+                : 'String';
+      props.push(`type: [${swaggerType}]`);
+    } else if (type.startsWith('[') && type.endsWith(']')) {
+      // Tuple type like '[string, string]' -> use 'array'
+      props.push(`type: 'array'`);
+    } else if (type === 'Date') {
+      // Date type -> use Date class
+      props.push(`type: Date`);
+    } else if (type === 'boolean') {
+      // Boolean type -> use 'boolean'
+      props.push(`type: 'boolean'`);
+    } else if (type === 'number') {
+      // Number type -> use 'number'
+      props.push(`type: 'number'`);
+    } else {
+      props.push(`type: '${type}'`);
+    }
 
     if (column.enum_values && column.enum_values.length > 0) {
       const enumName = `${toPascalCase(column.column_name)}Enum`;

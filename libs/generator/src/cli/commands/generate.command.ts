@@ -334,6 +334,7 @@ export class GenerateCommand {
       entityName,
       schema: this.config?.database.schema,
       enableSoftDelete: features.softDelete,
+      useTypeORM: false, // Use plain TypeScript classes instead of TypeORM
     });
     const entityCode = entityGenerator.generate();
     this.writeFile(join(moduleDir, 'entities', `${moduleName}.entity.ts`), entityCode);
@@ -346,21 +347,24 @@ export class GenerateCommand {
       includeComments: true,
     });
     const createDtoResult = createDtoGenerator.generate(tableMetadata, columns);
-    this.writeFile(join(moduleDir, 'dto', `create-${moduleName}.dto.ts`), createDtoResult.code);
+    const createDtoCode = [...createDtoResult.imports, '', createDtoResult.code].join('\n');
+    this.writeFile(join(moduleDir, 'dto', `create-${moduleName}.dto.ts`), createDtoCode);
 
     const updateDtoGenerator = new UpdateDtoGenerator({
       includeSwagger: features.swagger,
       includeComments: true,
     });
     const updateDtoResult = updateDtoGenerator.generate(tableMetadata, columns);
-    this.writeFile(join(moduleDir, 'dto', `update-${moduleName}.dto.ts`), updateDtoResult.code);
+    const updateDtoCode = [...updateDtoResult.imports, '', updateDtoResult.code].join('\n');
+    this.writeFile(join(moduleDir, 'dto', `update-${moduleName}.dto.ts`), updateDtoCode);
 
     const filterDtoGenerator = new FilterDtoGenerator({
       includeSwagger: features.swagger,
       includeComments: true,
     });
     const filterDtoResult = filterDtoGenerator.generate(tableMetadata, columns);
-    this.writeFile(join(moduleDir, 'dto', `${moduleName}-filter.dto.ts`), filterDtoResult.code);
+    const filterDtoCode = [...filterDtoResult.imports, '', filterDtoResult.code].join('\n');
+    this.writeFile(join(moduleDir, 'dto', `${moduleName}-filter.dto.ts`), filterDtoCode);
     Logger.info('   ✓ DTOs generated (Create, Update, Filter)');
 
     // 3. Generate Repository
@@ -368,6 +372,7 @@ export class GenerateCommand {
     const repositoryGenerator = new RepositoryGenerator(tableMetadata, columns, {
       tableName,
       entityName,
+      useTypeORM: false,
     });
     const repositoryCode = repositoryGenerator.generate();
     this.writeFile(join(moduleDir, 'repositories', `${moduleName}.repository.ts`), repositoryCode);
@@ -381,7 +386,7 @@ export class GenerateCommand {
       enableCaching: features.caching,
       enableValidation: features.validation,
       enableAuditLog: features.auditLog,
-      enableTransactions: true,
+      enableTransactions: false, // Disable for plain SQL (no TypeORM DataSource)
     });
     const serviceCode = serviceGenerator.generate();
     this.writeFile(join(moduleDir, 'services', `${moduleName}.service.ts`), serviceCode);
@@ -410,6 +415,7 @@ export class GenerateCommand {
       entityName,
       enableCaching: features.caching,
       enableAuditLog: features.auditLog,
+      useTypeORM: false,
     });
     const moduleCode = moduleGenerator.generate();
     this.writeFile(join(moduleDir, `${moduleName}.module.ts`), moduleCode);

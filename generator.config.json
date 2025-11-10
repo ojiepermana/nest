@@ -4,9 +4,9 @@
     "type": "postgresql",
     "host": "127.0.0.1",
     "port": 5432,
-    "username": "root",
+    "username": "postgres",
     "password": "",
-    "database": "best",
+    "database": "nest_dev",
     "ssl": false
   }
 }

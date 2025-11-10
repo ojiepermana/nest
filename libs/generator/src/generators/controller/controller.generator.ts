@@ -5,6 +5,7 @@
  */
 
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
+import { FileUploadGenerator } from '../features/file-upload.generator';
 import type {
   TableMetadata,
   ColumnMetadata,
@@ -17,6 +18,8 @@ export interface ControllerGeneratorOptions {
   enableSwagger?: boolean;
   enableValidation?: boolean;
   enablePagination?: boolean;
+  enableFileUpload?: boolean;
+  storageProvider?: 'local' | 's3' | 'gcs' | 'azure';
   customEndpoints?: string[];
 }
 
@@ -44,12 +47,13 @@ export class ControllerGenerator {
     );
     const constructor = this.generateConstructor(serviceName);
     const crudEndpoints = this.generateCRUDEndpoints(entityName, serviceName);
+    const fileUploadEndpoints = this.generateFileUploadEndpoints();
 
     return `${imports}
 
 ${classDeclaration}
 ${constructor}
-${crudEndpoints}
+${crudEndpoints}${fileUploadEndpoints}
 }
 `;
   }
@@ -84,7 +88,12 @@ ${crudEndpoints}
       commonImports.push('ValidationPipe');
     }
 
-    commonImports.push('NotFoundException');
+    commonImports.push('NotFoundException', 'BadRequestException');
+
+    // Add file upload imports if needed
+    if (this.options.enableFileUpload && this.hasFileUploadColumns()) {
+      commonImports.push('UseInterceptors', 'UploadedFile', 'UploadedFiles');
+    }
 
     const imports = [
       `import { ${commonImports.join(', ')} } from '@nestjs/common';`,
@@ -95,9 +104,32 @@ ${crudEndpoints}
       `import { ${entityName}FilterDto } from '../dto/${this.toKebabCase(entityName)}-filter.dto';`,
     ];
 
-    if (this.options.enableSwagger) {
+    // Add file upload imports
+    if (this.options.enableFileUpload && this.hasFileUploadColumns()) {
       imports.push(
-        "import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';",
+        "import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';",
+      );
+      imports.push(
+        "import { StorageService } from '../services/storage.service';",
+      );
+    }
+
+    if (this.options.enableSwagger) {
+      const swaggerImports = [
+        'ApiTags',
+        'ApiOperation',
+        'ApiResponse',
+        'ApiParam',
+        'ApiQuery',
+        'ApiBody',
+      ];
+
+      if (this.options.enableFileUpload && this.hasFileUploadColumns()) {
+        swaggerImports.push('ApiConsumes');
+      }
+
+      imports.push(
+        `import { ${swaggerImports.join(', ')} } from '@nestjs/swagger';`,
       );
     }
 
@@ -125,7 +157,13 @@ export class ${controllerName} {`;
    * Generate constructor
    */
   private generateConstructor(serviceName: string): string {
-    return `  constructor(private readonly service: ${serviceName}) {}
+    const params = [`private readonly service: ${serviceName}`];
+
+    if (this.options.enableFileUpload && this.hasFileUploadColumns()) {
+      params.push('private readonly storageService: StorageService');
+    }
+
+    return `  constructor(${params.join(', ')}) {}
 `;
   }
 
@@ -409,6 +447,40 @@ export class ${controllerName} {`;
 `;
 
     return endpoint;
+  }
+
+  /**
+   * Generate file upload endpoints
+   */
+  private generateFileUploadEndpoints(): string {
+    if (!this.options.enableFileUpload) {
+      return '';
+    }
+
+    const fileUploadGenerator = new FileUploadGenerator(
+      this.tableMetadata,
+      this.columns,
+      {
+        tableName: this.options.tableName,
+        entityName: this.options.entityName,
+        storageProvider: this.options.storageProvider || 'local',
+        enableValidation: this.options.enableValidation,
+        enableSwagger: this.options.enableSwagger,
+      },
+    );
+
+    if (!fileUploadGenerator.hasFileUploadColumns()) {
+      return '';
+    }
+
+    return '\n\n' + fileUploadGenerator.generateUploadEndpoints();
+  }
+
+  /**
+   * Check if any columns have file upload enabled
+   */
+  private hasFileUploadColumns(): boolean {
+    return this.columns.some((col) => col.is_file_upload === true);
   }
 
   /**

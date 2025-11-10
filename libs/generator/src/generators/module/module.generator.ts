@@ -100,7 +100,7 @@ ${classDeclaration}
     // Audit log service import
     if (this.options.enableAuditLog) {
       imports.push(
-        "import { AuditLogService } from '../audit/audit-log.service';",
+        "import { AuditModule } from '@ojiepermana/nest-generator/audit';",
       );
     }
 
@@ -161,6 +161,11 @@ ${moduleConfig.join(',\n')}
       imports.push('CacheModule.register()');
     }
 
+    // AuditModule if audit logging enabled
+    if (this.options.enableAuditLog) {
+      imports.push('AuditModule');
+    }
+
     // Custom imports
     if (this.options.customImports) {
       imports.push(...this.options.customImports);
@@ -196,11 +201,6 @@ ${moduleConfig.join(',\n')}
     // Repository
     if (this.options.includeRepository !== false) {
       providers.push(`${entityName}Repository`);
-    }
-
-    // Audit log service
-    if (this.options.enableAuditLog) {
-      providers.push('AuditLogService');
     }
 
     // Custom providers

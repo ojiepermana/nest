@@ -98,7 +98,7 @@ ${customMethods}
 
     if (this.options.enableAuditLog) {
       imports.push(
-        "import { AuditLogService } from '../audit/audit-log.service';",
+        "import { AuditLogService } from '@ojiepermana/nest-generator/audit';",
       );
     }
 

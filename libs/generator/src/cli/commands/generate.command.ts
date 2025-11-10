@@ -44,8 +44,12 @@ export interface GenerateCommandOptions {
     pagination?: boolean;
     auditLog?: boolean;
     softDelete?: boolean;
+    fileUpload?: boolean;
   };
   skipPrompts?: boolean;
+  // CLI flags
+  enableAudit?: boolean;
+  storageProvider?: 'local' | 's3' | 'gcs' | 'azure';
 }
 
 export class GenerateCommand {
@@ -212,6 +216,7 @@ export class GenerateCommand {
         pagination: providedFeatures.pagination ?? true,
         auditLog: providedFeatures.auditLog ?? false,
         softDelete: providedFeatures.softDelete ?? false,
+        fileUpload: providedFeatures.fileUpload ?? false,
       };
     }
 
@@ -245,7 +250,8 @@ export class GenerateCommand {
       {
         type: 'confirm',
         name: 'auditLog',
-        message: 'Enable audit logging?',
+        message:
+          '🔍 Enable audit logging? (tracks all CREATE/UPDATE/DELETE operations)',
         default: this.config?.features?.audit ?? false,
       },
       {
@@ -253,6 +259,12 @@ export class GenerateCommand {
         name: 'softDelete',
         message: 'Enable soft delete?',
         default: false,
+      },
+      {
+        type: 'confirm',
+        name: 'fileUpload',
+        message: '📁 Enable file upload? (auto-detects file columns)',
+        default: this.config?.features?.fileUpload ?? false,
       },
     ]);
 
@@ -403,6 +415,10 @@ export class GenerateCommand {
         enableSwagger: features.swagger,
         enableValidation: features.validation,
         enablePagination: features.pagination,
+        enableFileUpload: features.fileUpload,
+        storageProvider:
+          (process.env.STORAGE_PROVIDER as 'local' | 's3' | 'gcs' | 'azure') ||
+          'local',
       },
     );
     const controllerCode = controllerGenerator.generate();

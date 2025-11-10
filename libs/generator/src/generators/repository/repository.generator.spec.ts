@@ -650,6 +650,156 @@ describe('RepositoryGenerator', () => {
     });
   });
 
+  describe('Audit Logging', () => {
+    it('should include AuditLogService import when audit logging enabled', () => {
+      const generator = new RepositoryGenerator(
+        mockTableMetadata,
+        mockColumns,
+        {
+          tableName: 'users',
+          auditLogging: true,
+        },
+      );
+
+      const result = generator.generate();
+
+      expect(result).toContain(
+        "import { AuditLogService } from '../audit/audit-log.service';",
+      );
+    });
+
+    it('should inject AuditLogService in constructor when enabled', () => {
+      const generator = new RepositoryGenerator(
+        mockTableMetadata,
+        mockColumns,
+        {
+          tableName: 'users',
+          auditLogging: true,
+        },
+      );
+
+      const result = generator.generate();
+
+      expect(result).toContain(
+        'private readonly auditLogService: AuditLogService',
+      );
+    });
+
+    it('should generate create method with audit logging', () => {
+      const generator = new RepositoryGenerator(
+        mockTableMetadata,
+        mockColumns,
+        {
+          tableName: 'users',
+          auditLogging: true,
+        },
+      );
+
+      const result = generator.generate();
+
+      expect(result).toContain(
+        'async create(createDto: CreateUsersDto, userId?: string)',
+      );
+      expect(result).toContain('await this.auditLogService.log({');
+      expect(result).toContain("action: 'CREATE'");
+      expect(result).toContain("entity_type: 'users'");
+    });
+
+    it('should generate update method with audit logging', () => {
+      const generator = new RepositoryGenerator(
+        mockTableMetadata,
+        mockColumns,
+        {
+          tableName: 'users',
+          auditLogging: true,
+        },
+      );
+
+      const result = generator.generate();
+
+      expect(result).toContain(
+        'async update(id: number, updateDto: UpdateUsersDto, userId?: string)',
+      );
+      expect(result).toContain('const oldValues = { ...users };');
+      expect(result).toContain("action: 'UPDATE'");
+      expect(result).toContain('old_values: oldValues');
+      expect(result).toContain('new_values: updated');
+    });
+
+    it('should generate delete method with audit logging', () => {
+      const generator = new RepositoryGenerator(
+        mockTableMetadata,
+        mockColumns,
+        {
+          tableName: 'users',
+          auditLogging: true,
+        },
+      );
+
+      const result = generator.generate();
+
+      expect(result).toContain('async remove(id: number, userId?: string)');
+      expect(result).toContain('const users = await this.findOne(id)');
+      expect(result).toContain("action: 'DELETE'");
+      expect(result).toContain('old_values: users');
+    });
+
+    it('should not include audit code when disabled', () => {
+      const generator = new RepositoryGenerator(
+        mockTableMetadata,
+        mockColumns,
+        {
+          tableName: 'users',
+          auditLogging: false,
+        },
+      );
+
+      const result = generator.generate();
+
+      expect(result).not.toContain('AuditLogService');
+      expect(result).not.toContain('auditLogService.log');
+      expect(result).toContain('async create(createDto: CreateUsersDto)');
+      expect(result).toContain(
+        'async update(id: number, updateDto: UpdateUsersDto)',
+      );
+      expect(result).toContain('async remove(id: number)');
+    });
+
+    it('should generate README with audit examples when enabled', () => {
+      const generator = new RepositoryGenerator(
+        mockTableMetadata,
+        mockColumns,
+        {
+          tableName: 'users',
+          auditLogging: true,
+        },
+      );
+
+      const readme = generator.generateReadme();
+
+      expect(readme).toContain('# UsersRepository - Audit Logging Guide');
+      expect(readme).toContain('Pass userId as second parameter');
+      expect(readme).toContain('@AuditLog Decorator');
+      expect(readme).toContain('Get Entity History');
+      expect(readme).toContain('Rollback Changes');
+    });
+
+    it('should not generate README when audit disabled', () => {
+      const generator = new RepositoryGenerator(
+        mockTableMetadata,
+        mockColumns,
+        {
+          tableName: 'users',
+          auditLogging: false,
+        },
+      );
+
+      const readme = generator.generateReadme();
+
+      expect(readme).toBe('');
+    });
+  });
+
   describe('Combined Features', () => {
     it('should generate repository with all features enabled', () => {
       const generator = new RepositoryGenerator(
@@ -700,6 +850,33 @@ describe('RepositoryGenerator', () => {
       expect(result).not.toContain('async findByIds(');
       expect(result).not.toContain('async bulkCreate(');
       expect(result).not.toContain('async transaction<T>(');
+    });
+
+    it('should generate repository with audit logging and all other features', () => {
+      const generator = new RepositoryGenerator(
+        mockTableMetadata,
+        mockColumns,
+        {
+          tableName: 'users',
+          auditLogging: true,
+          softDelete: true,
+          customMethods: true,
+          bulkOperations: true,
+          transactionSupport: true,
+        },
+      );
+
+      const result = generator.generate();
+
+      // Check audit logging
+      expect(result).toContain('AuditLogService');
+      expect(result).toContain('userId?: string');
+
+      // Check other features
+      expect(result).toContain('async softDelete(');
+      expect(result).toContain('async findByIds(');
+      expect(result).toContain('async bulkCreate(');
+      expect(result).toContain('async transaction<T>(');
     });
   });
 });

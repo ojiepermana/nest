@@ -8,11 +8,15 @@
  * - Compliance features (archive, export)
  */
 
+// Module
+export * from './audit.module';
+
 // Interfaces
 export * from './audit-log.interface';
 
-// Service
+// Services
 export * from './audit-log.service';
+export * from './audit-query.service';
 
 // Decorator
 export * from './audit-log.decorator';

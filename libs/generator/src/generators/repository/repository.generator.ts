@@ -22,6 +22,7 @@ export interface RepositoryGeneratorOptions {
   customMethods?: boolean;
   bulkOperations?: boolean;
   transactionSupport?: boolean;
+  auditLogging?: boolean;
 }
 
 export class RepositoryGenerator {
@@ -102,6 +103,12 @@ ${transactionMethods}
       imports.push("import { DataSource, QueryRunner } from 'typeorm';");
     }
 
+    if (this.options.auditLogging) {
+      imports.push(
+        "import { AuditLogService } from '../audit/audit-log.service';",
+      );
+    }
+
     return imports.join('\n');
   }
 
@@ -131,6 +138,10 @@ export class ${repositoryName} {`;
       params.push('private readonly dataSource: DataSource');
     }
 
+    if (this.options.auditLogging) {
+      params.push('private readonly auditLogService: AuditLogService');
+    }
+
     return `  constructor(
     ${params.join(',\n    ')},
   ) {}
@@ -145,14 +156,20 @@ export class ${repositoryName} {`;
     const pkColumn = this.getPrimaryKeyColumn();
     const pkType = this.getTypeScriptType(pkColumn?.data_type || 'integer');
 
+    const createMethod = this.options.auditLogging
+      ? this.generateCreateWithAudit(entityName, camelName, pkColumn)
+      : this.generateCreateBasic(entityName, camelName);
+
+    const updateMethod = this.options.auditLogging
+      ? this.generateUpdateWithAudit(entityName, camelName, pkType, pkColumn)
+      : this.generateUpdateBasic(entityName, camelName, pkType, pkColumn);
+
+    const deleteMethod = this.options.auditLogging
+      ? this.generateDeleteWithAudit(entityName, camelName, pkType, pkColumn)
+      : this.generateDeleteBasic(entityName, camelName, pkType);
+
     return `
-  /**
-   * Create a new ${camelName}
-   */
-  async create(createDto: Create${entityName}Dto): Promise<${entityName}> {
-    const ${camelName} = this.repository.create(createDto as DeepPartial<${entityName}>);
-    return this.repository.save(${camelName});
-  }
+${createMethod}
 
   /**
    * Find all ${camelName}s
@@ -175,24 +192,9 @@ export class ${repositoryName} {`;
     return this.repository.findOne({ where });
   }
 
-  /**
-   * Update a ${camelName}
-   */
-  async update(id: ${pkType}, updateDto: Update${entityName}Dto): Promise<${entityName}> {
-    const ${camelName} = await this.findOne(id);
-    if (!${camelName}) {
-      throw new Error('${entityName} not found');
-    }
-    Object.assign(${camelName}, updateDto);
-    return this.repository.save(${camelName});
-  }
+${updateMethod}
 
-  /**
-   * Delete a ${camelName}
-   */
-  async remove(id: ${pkType}): Promise<void> {
-    await this.repository.delete(id);
-  }
+${deleteMethod}
 
   /**
    * Count ${camelName}s
@@ -209,6 +211,160 @@ export class ${repositoryName} {`;
     return count > 0;
   }
 `;
+  }
+
+  /**
+   * Generate create method without audit
+   */
+  private generateCreateBasic(entityName: string, camelName: string): string {
+    return `  /**
+   * Create a new ${camelName}
+   */
+  async create(createDto: Create${entityName}Dto): Promise<${entityName}> {
+    const ${camelName} = this.repository.create(createDto as DeepPartial<${entityName}>);
+    return this.repository.save(${camelName});
+  }`;
+  }
+
+  /**
+   * Generate create method with audit logging
+   */
+  private generateCreateWithAudit(
+    entityName: string,
+    camelName: string,
+    pkColumn: ColumnMetadata | undefined,
+  ): string {
+    const pkField = pkColumn?.column_name || 'id';
+    return `  /**
+   * Create a new ${camelName} (with audit logging)
+   */
+  async create(createDto: Create${entityName}Dto, userId?: string): Promise<${entityName}> {
+    const ${camelName} = this.repository.create(createDto as DeepPartial<${entityName}>);
+    const saved = await this.repository.save(${camelName});
+
+    // Log creation
+    await this.auditLogService.log({
+      action: 'CREATE',
+      entity_type: '${this.options.tableName}',
+      entity_id: String(saved.${pkField}),
+      user_id: userId,
+      new_values: saved,
+    });
+
+    return saved;
+  }`;
+  }
+
+  /**
+   * Generate update method without audit
+   */
+  private generateUpdateBasic(
+    entityName: string,
+    camelName: string,
+    pkType: string,
+    pkColumn: ColumnMetadata | undefined,
+  ): string {
+    return `  /**
+   * Update a ${camelName}
+   */
+  async update(id: ${pkType}, updateDto: Update${entityName}Dto): Promise<${entityName}> {
+    const ${camelName} = await this.findOne(id);
+    if (!${camelName}) {
+      throw new Error('${entityName} not found');
+    }
+    Object.assign(${camelName}, updateDto);
+    return this.repository.save(${camelName});
+  }`;
+  }
+
+  /**
+   * Generate update method with audit logging
+   */
+  private generateUpdateWithAudit(
+    entityName: string,
+    camelName: string,
+    pkType: string,
+    pkColumn: ColumnMetadata | undefined,
+  ): string {
+    const pkField = pkColumn?.column_name || 'id';
+    return `  /**
+   * Update a ${camelName} (with audit logging)
+   */
+  async update(id: ${pkType}, updateDto: Update${entityName}Dto, userId?: string): Promise<${entityName}> {
+    const ${camelName} = await this.findOne(id);
+    if (!${camelName}) {
+      throw new Error('${entityName} not found');
+    }
+
+    // Capture old values
+    const oldValues = { ...${camelName} };
+
+    // Apply updates
+    Object.assign(${camelName}, updateDto);
+    const updated = await this.repository.save(${camelName});
+
+    // Log update
+    await this.auditLogService.log({
+      action: 'UPDATE',
+      entity_type: '${this.options.tableName}',
+      entity_id: String(updated.${pkField}),
+      user_id: userId,
+      old_values: oldValues,
+      new_values: updated,
+    });
+
+    return updated;
+  }`;
+  }
+
+  /**
+   * Generate delete method without audit
+   */
+  private generateDeleteBasic(
+    entityName: string,
+    camelName: string,
+    pkType: string,
+  ): string {
+    return `  /**
+   * Delete a ${camelName}
+   */
+  async remove(id: ${pkType}): Promise<void> {
+    await this.repository.delete(id);
+  }`;
+  }
+
+  /**
+   * Generate delete method with audit logging
+   */
+  private generateDeleteWithAudit(
+    entityName: string,
+    camelName: string,
+    pkType: string,
+    pkColumn: ColumnMetadata | undefined,
+  ): string {
+    const pkField = pkColumn?.column_name || 'id';
+    return `  /**
+   * Delete a ${camelName} (with audit logging)
+   */
+  async remove(id: ${pkType}, userId?: string): Promise<void> {
+    // Capture entity before deletion
+    const ${camelName} = await this.findOne(id);
+    if (!${camelName}) {
+      throw new Error('${entityName} not found');
+    }
+
+    // Delete the entity
+    await this.repository.delete(id);
+
+    // Log deletion
+    await this.auditLogService.log({
+      action: 'DELETE',
+      entity_type: '${this.options.tableName}',
+      entity_id: String(${camelName}.${pkField}),
+      user_id: userId,
+      old_values: ${camelName},
+    });
+  }`;
   }
 
   /**
@@ -548,5 +704,206 @@ export class ${repositoryName} {`;
       .replace(/([a-z])([A-Z])/g, '$1-$2')
       .replace(/[\s_]+/g, '-')
       .toLowerCase();
+  }
+
+  /**
+   * Generate README with audit logging examples
+   */
+  generateReadme(): string {
+    if (!this.options.auditLogging) {
+      return '';
+    }
+
+    const entityName =
+      this.options.entityName || toPascalCase(this.options.tableName);
+    const repositoryName = `${entityName}Repository`;
+    const camelName = toCamelCase(entityName);
+
+    return `# ${repositoryName} - Audit Logging Guide
+
+This repository has audit logging enabled. All CREATE, UPDATE, and DELETE operations are automatically logged.
+
+## Basic Usage
+
+### Create with Audit
+
+\`\`\`typescript
+// Pass userId as second parameter
+const ${camelName} = await ${camelName}Repository.create(createDto, 'user-123');
+
+// Audit log created:
+// {
+//   action: 'CREATE',
+//   entity_type: '${this.options.tableName}',
+//   entity_id: '${camelName}.id',
+//   user_id: 'user-123',
+//   new_values: ${camelName}
+// }
+\`\`\`
+
+### Update with Audit
+
+\`\`\`typescript
+// Pass userId as third parameter
+const updated = await ${camelName}Repository.update(id, updateDto, 'user-123');
+
+// Audit log created with change tracking:
+// {
+//   action: 'UPDATE',
+//   entity_type: '${this.options.tableName}',
+//   entity_id: id,
+//   user_id: 'user-123',
+//   old_values: { name: 'John', email: 'john@old.com' },
+//   new_values: { name: 'Jane', email: 'jane@new.com' },
+//   changes: [
+//     { field: 'name', old_value: 'John', new_value: 'Jane' },
+//     { field: 'email', old_value: 'john@old.com', new_value: 'jane@new.com' }
+//   ]
+// }
+\`\`\`
+
+### Delete with Audit
+
+\`\`\`typescript
+// Pass userId as second parameter
+await ${camelName}Repository.remove(id, 'user-123');
+
+// Audit log created:
+// {
+//   action: 'DELETE',
+//   entity_type: '${this.options.tableName}',
+//   entity_id: id,
+//   user_id: 'user-123',
+//   old_values: ${camelName} // Entity state before deletion
+// }
+\`\`\`
+
+## Using with Controllers
+
+### Extract userId from Request
+
+\`\`\`typescript
+import { Controller, Post, Put, Delete, Body, Param, Request } from '@nestjs/common';
+
+@Controller('${this.options.tableName}')
+export class ${entityName}Controller {
+  constructor(private readonly ${camelName}Repository: ${repositoryName}) {}
+
+  @Post()
+  async create(@Body() createDto: Create${entityName}Dto, @Request() req) {
+    const userId = req.user?.id; // Extract from authenticated user
+    return this.${camelName}Repository.create(createDto, userId);
+  }
+
+  @Put(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() updateDto: Update${entityName}Dto,
+    @Request() req,
+  ) {
+    const userId = req.user?.id;
+    return this.${camelName}Repository.update(id, updateDto, userId);
+  }
+
+  @Delete(':id')
+  async remove(@Param('id') id: string, @Request() req) {
+    const userId = req.user?.id;
+    return this.${camelName}Repository.remove(id, userId);
+  }
+}
+\`\`\`
+
+## Alternative: Using @AuditLog Decorator
+
+For automatic audit logging without passing userId manually:
+
+\`\`\`typescript
+import { Injectable } from '@nestjs/common';
+import { AuditLog } from '../audit/audit-log.decorator';
+
+@Injectable()
+export class ${entityName}Service {
+  constructor(private readonly ${camelName}Repository: ${repositoryName}) {}
+
+  @AuditLog({
+    action: 'CREATE',
+    entityType: '${this.options.tableName}',
+    entityIdParam: 'return', // Extract ID from return value
+    newValuesParam: 'return',
+  })
+  async create(createDto: Create${entityName}Dto) {
+    // Don't pass userId - decorator handles it
+    return this.${camelName}Repository.create(createDto);
+  }
+
+  @AuditLog({
+    action: 'UPDATE',
+    entityType: '${this.options.tableName}',
+    entityIdParam: 'id',
+    oldValuesParam: async (params) => this.${camelName}Repository.findOne(params[0]),
+    newValuesParam: 'return',
+  })
+  async update(id: string, updateDto: Update${entityName}Dto) {
+    return this.${camelName}Repository.update(id, updateDto);
+  }
+
+  @AuditLog({
+    action: 'DELETE',
+    entityType: '${this.options.tableName}',
+    entityIdParam: 0,
+    oldValuesParam: async (params) => this.${camelName}Repository.findOne(params[0]),
+  })
+  async remove(id: string) {
+    return this.${camelName}Repository.remove(id);
+  }
+}
+\`\`\`
+
+## Query Audit Logs
+
+### Get Entity History
+
+\`\`\`typescript
+import { AuditLogService } from '../audit/audit-log.service';
+
+const history = await auditLogService.getEntityHistory('${this.options.tableName}', entityId);
+\`\`\`
+
+### Get User Activity
+
+\`\`\`typescript
+const activity = await auditLogService.getUserActivity(userId, startDate, endDate);
+\`\`\`
+
+### Rollback Changes
+
+\`\`\`typescript
+const lastUpdate = history.find(log => log.action === 'UPDATE');
+await auditLogService.rollback({
+  audit_log_id: lastUpdate.id,
+  rolled_back_by: 'admin-user-id',
+  reason: 'Accidental change',
+});
+\`\`\`
+
+## Configuration
+
+Audit logging can be configured in \`audit.config.ts\`:
+
+\`\`\`typescript
+export const auditConfig = {
+  enabled: true,
+  log_reads: false,
+  excluded_fields: ['password', 'token', 'secret'],
+  retention_days: 90,
+};
+\`\`\`
+
+## See Also
+
+- Full audit documentation: \`audit/AUDIT_DOCUMENTATION.md\`
+- Audit service API: \`audit/audit-log.service.ts\`
+- Decorator usage: \`audit/audit-log.decorator.ts\`
+`;
   }
 }

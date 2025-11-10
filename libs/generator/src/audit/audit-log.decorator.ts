@@ -36,7 +36,10 @@ export interface AuditLogOptions {
    * - number: parameter index
    * - function: custom extractor
    */
-  oldValuesParam?: string | number | ((params: any[]) => Record<string, any> | undefined);
+  oldValuesParam?:
+    | string
+    | number
+    | ((params: any[]) => Record<string, any> | undefined);
 
   /**
    * Extract new values from method return or params (for CREATE/UPDATE)
@@ -46,7 +49,11 @@ export interface AuditLogOptions {
    * - number: parameter index
    * - function: custom extractor
    */
-  newValuesParam?: 'return' | string | number | ((params: any[], result?: any) => Record<string, any> | undefined);
+  newValuesParam?:
+    | 'return'
+    | string
+    | number
+    | ((params: any[], result?: any) => Record<string, any> | undefined);
 
   /**
    * Tags for filtering
@@ -116,7 +123,7 @@ export function AuditLog(options: AuditLogOptions): MethodDecorator {
     // Replace with wrapped method
     descriptor.value = async function (...args: any[]) {
       const auditLogService = (this as any).auditLogService;
-      
+
       if (!auditLogService) {
         console.warn(
           `@AuditLog decorator requires auditLogService to be injected in ${target.constructor.name}`,
@@ -137,10 +144,7 @@ export function AuditLog(options: AuditLogOptions): MethodDecorator {
         const entityId = extractEntityId(options.entityIdParam, args, result);
 
         // Extract old values
-        const oldValues = await extractOldValues(
-          options.oldValuesParam,
-          args,
-        );
+        const oldValues = await extractOldValues(options.oldValuesParam, args);
 
         // Extract new values
         const newValues = await extractNewValues(
@@ -176,18 +180,21 @@ export function AuditLog(options: AuditLogOptions): MethodDecorator {
         const entityId = extractEntityId(options.entityIdParam, args);
         const userContext = getUserContext(this);
 
-        await auditLogService.log({
-          action: options.action,
-          entity_type: options.entityType,
-          entity_id: entityId,
-          user_id: userContext.userId || 'system',
-          status: 'FAILED',
-          error_message: error instanceof Error ? error.message : String(error),
-          tags: options.tags,
-          metadata: options.metadata,
-        }).catch(() => {
-          // Silently fail audit logging to not break original operation
-        });
+        await auditLogService
+          .log({
+            action: options.action,
+            entity_type: options.entityType,
+            entity_id: entityId,
+            user_id: userContext.userId || 'system',
+            status: 'FAILED',
+            error_message:
+              error instanceof Error ? error.message : String(error),
+            tags: options.tags,
+            metadata: options.metadata,
+          })
+          .catch(() => {
+            // Silently fail audit logging to not break original operation
+          });
 
         throw error;
       }
@@ -215,7 +222,9 @@ function extractEntityId(
 
   if (typeof param === 'string') {
     // Find named parameter
-    const index = args.findIndex((arg) => arg && typeof arg === 'object' && arg[param]);
+    const index = args.findIndex(
+      (arg) => arg && typeof arg === 'object' && arg[param],
+    );
     return index >= 0 ? args[index][param] : undefined;
   }
 
@@ -234,7 +243,11 @@ function extractEntityId(
  * Extract old values from parameters
  */
 async function extractOldValues(
-  param: string | number | ((params: any[]) => Record<string, any> | undefined) | undefined,
+  param:
+    | string
+    | number
+    | ((params: any[]) => Record<string, any> | undefined)
+    | undefined,
   args: any[],
 ): Promise<Record<string, any> | undefined> {
   if (!param) {
@@ -262,7 +275,12 @@ async function extractOldValues(
  * Extract new values from parameters or result
  */
 async function extractNewValues(
-  param: 'return' | string | number | ((params: any[], result?: any) => Record<string, any> | undefined) | undefined,
+  param:
+    | 'return'
+    | string
+    | number
+    | ((params: any[], result?: any) => Record<string, any> | undefined)
+    | undefined,
   args: any[],
   result?: any,
 ): Promise<Record<string, any> | undefined> {

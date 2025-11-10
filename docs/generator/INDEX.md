@@ -97,20 +97,20 @@ Quick links to the most popular documentation:
 ### By Task
 
 **Setting Up:**
-1. [System Requirements](./REQUIREMENTS_COMPLIANCE.md)
+1. [System Requirements](./REQUIREMENTS.md)
 2. [Database Setup](./database/SCHEMAS.md)
 3. [Main README - Installation](../../libs/generator/README.md#installation)
 
 **Implementing Features:**
 1. [Audit Trail](./audit/AUDIT_DOCUMENTATION.md)
 2. [RBAC System](./rbac/RBAC_GUIDE.md)
-3. [File Upload](./FILE_UPLOAD_GUIDE.md)
-4. [Caching](./REDIS_CACHING_IMPLEMENTATION.md)
+3. [File Upload](./FILE_UPLOAD.md)
+4. [Caching](./CACHING.md)
 
 **Understanding Architecture:**
-1. [Prompt/Spec](./prompt.md)
-2. [Database Compatibility](./DATABASE_COMPATIBILITY.md)
-3. [Implementation Status](./IMPLEMENTATION_COMPLETE.md)
+1. [Original Spec](./archive/specs/prompt.md)
+2. [Database Compatibility](./DATABASE.md)
+3. [Implementation Status](./FEATURE_STATUS.md)
 
 ## 🔧 Development & Reference
 
@@ -163,20 +163,6 @@ When adding new documentation:
 - **Need a specific feature?** → Check [By Use Case](#-by-use-case) above
 - **Want to see all features?** → [Feature Scoring](./FEATURE_SCORING.md)
 - **Looking for API reference?** → [Main README](../../libs/generator/README.md)
-├── PROGRESS_REPORT.md
-├── DEEP_ANALYSIS_SCORE.md
-├── FILE_UPLOAD_GUIDE.md
-├── REDIS_CACHING_IMPLEMENTATION.md
-├── audit/
-│   ├── AUDIT_DOCUMENTATION.md
-│   ├── AUDIT_IMPLEMENTATION_SUMMARY.md
-│   ├── AUDIT_CLI_INTEGRATION.md
-│   └── AUDIT_CLI_INTEGRATION_COMPLETE.md
-├── database/
-│   └── SCHEMAS.md
-└── rbac/
-    └── RBAC_GUIDE.md
-```
 
 ## 📊 Statistics
 

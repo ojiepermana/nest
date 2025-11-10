@@ -115,8 +115,7 @@ export class RolesGuard implements CanActivate {
 
     if (!hasRole) {
       const errorMessage =
-        options.errorMessage ||
-        `Missing required role(s): ${roles.join(', ')}`;
+        options.errorMessage || `Missing required role(s): ${roles.join(', ')}`;
       throw new ForbiddenException(errorMessage);
     }
 

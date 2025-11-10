@@ -1,6 +1,6 @@
 /**
  * RBAC Decorators
- * 
+ *
  * Export all permission and role decorators
  */
 

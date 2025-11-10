@@ -10,7 +10,7 @@ export const PERMISSIONS_KEY = 'permissions';
  */
 export enum PermissionLogic {
   AND = 'AND', // User must have ALL permissions
-  OR = 'OR',   // User must have AT LEAST ONE permission
+  OR = 'OR', // User must have AT LEAST ONE permission
 }
 
 /**
@@ -51,31 +51,31 @@ export interface PermissionMetadata {
 
 /**
  * Decorator to require specific permissions for endpoint access
- * 
+ *
  * @param permissions - Permission name(s) in format "resource:action" (e.g., "users:create")
  * @param options - Additional options for permission checking
- * 
+ *
  * @example
  * ```typescript
  * // Single permission
  * @RequirePermission('users:create')
  * async createUser() { }
- * 
+ *
  * // Multiple permissions with AND logic (default)
  * @RequirePermission(['users:create', 'users:manage'])
  * async createUser() { }
- * 
+ *
  * // Multiple permissions with OR logic
  * @RequirePermission(['users:update', 'users:manage'], { logic: PermissionLogic.OR })
  * async updateUser() { }
- * 
+ *
  * // With ownership check
  * @RequirePermission('posts:update', { requireOwnership: true })
  * async updatePost(@Param('id') id: string) { }
- * 
+ *
  * // Custom error message
- * @RequirePermission('admin:access', { 
- *   errorMessage: 'Administrator access required' 
+ * @RequirePermission('admin:access', {
+ *   errorMessage: 'Administrator access required'
  * })
  * async adminPanel() { }
  * ```
@@ -84,8 +84,10 @@ export const RequirePermission = (
   permissions: string | string[],
   options: RequirePermissionOptions = {},
 ): MethodDecorator => {
-  const permissionArray = Array.isArray(permissions) ? permissions : [permissions];
-  
+  const permissionArray = Array.isArray(permissions)
+    ? permissions
+    : [permissions];
+
   const metadata: PermissionMetadata = {
     permissions: permissionArray,
     options: {
@@ -101,9 +103,9 @@ export const RequirePermission = (
 
 /**
  * Decorator to require ANY of the specified permissions (shorthand for OR logic)
- * 
+ *
  * @param permissions - Permission name(s)
- * 
+ *
  * @example
  * ```typescript
  * @RequireAnyPermission(['users:update', 'users:manage'])
@@ -122,9 +124,9 @@ export const RequireAnyPermission = (
 
 /**
  * Decorator to require ALL of the specified permissions (shorthand for AND logic)
- * 
+ *
  * @param permissions - Permission name(s)
- * 
+ *
  * @example
  * ```typescript
  * @RequireAllPermissions(['users:read', 'users:update'])
@@ -144,17 +146,17 @@ export const RequireAllPermissions = (
 /**
  * Decorator for resource ownership check
  * Requires user to own the resource being accessed
- * 
+ *
  * @param permission - Base permission required
  * @param ownershipField - Field name to check for ownership
- * 
+ *
  * @example
  * ```typescript
  * @RequireOwnership('posts:update')
  * async updatePost(@Param('id') id: string, @User() user: any) {
  *   // User must have 'posts:update' permission AND own the post
  * }
- * 
+ *
  * @RequireOwnership('profiles:update', 'user_id')
  * async updateProfile(@Param('id') id: string) {
  *   // Check 'user_id' field for ownership

@@ -11,7 +11,10 @@ import {
   PermissionMetadata,
   PermissionLogic,
 } from '../decorators/require-permission.decorator';
-import { IS_PUBLIC_KEY, SKIP_PERMISSION_KEY } from '../decorators/require-role.decorator';
+import {
+  IS_PUBLIC_KEY,
+  SKIP_PERMISSION_KEY,
+} from '../decorators/require-role.decorator';
 
 /**
  * Guard to check user permissions based on @RequirePermission decorator
@@ -63,10 +66,11 @@ export class PermissionsGuard implements CanActivate {
     }
 
     // Get permission metadata from decorator
-    const permissionMetadata = this.reflector.getAllAndOverride<PermissionMetadata>(
-      PERMISSIONS_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const permissionMetadata =
+      this.reflector.getAllAndOverride<PermissionMetadata>(PERMISSIONS_KEY, [
+        context.getHandler(),
+        context.getClass(),
+      ]);
 
     // No permission decorator = allow access
     if (!permissionMetadata) {

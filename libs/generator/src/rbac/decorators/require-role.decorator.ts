@@ -10,7 +10,7 @@ export const ROLES_KEY = 'roles';
  */
 export enum RoleLogic {
   AND = 'AND', // User must have ALL roles
-  OR = 'OR',   // User must have AT LEAST ONE role
+  OR = 'OR', // User must have AT LEAST ONE role
 }
 
 /**

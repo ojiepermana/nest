@@ -6,10 +6,7 @@
 
 import { ServiceGenerator } from '../../generators/service/service.generator';
 import { ModuleGenerator } from '../../generators/module/module.generator';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 describe('Audit Trail CLI Integration', () => {
   let tableMetadata: TableMetadata;
@@ -108,9 +105,7 @@ describe('Audit Trail CLI Integration', () => {
 
       const code = generator.generate();
 
-      expect(code).toContain(
-        'private readonly auditLogService: AuditLogService',
-      );
+      expect(code).toContain('private readonly auditLogService: AuditLogService');
     });
 
     it('should add audit logging in create method', () => {
@@ -191,9 +186,7 @@ describe('Audit Trail CLI Integration', () => {
 
       const code = generator.generate();
 
-      expect(code).toContain(
-        "import { AuditModule } from '@ojiepermana/nest-generator/audit';",
-      );
+      expect(code).toContain("import { AuditModule } from '@ojiepermana/nest-generator/audit';");
     });
 
     it('should include AuditModule in imports array', () => {

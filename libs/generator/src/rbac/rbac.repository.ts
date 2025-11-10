@@ -64,10 +64,7 @@ export class RBACRepository {
   /**
    * Check if user has specific permission
    */
-  async hasPermission(
-    userId: string,
-    permissionName: string,
-  ): Promise<boolean> {
+  async hasPermission(userId: string, permissionName: string): Promise<boolean> {
     const query = `
       SELECT EXISTS(
         SELECT 1
@@ -117,10 +114,7 @@ export class RBACRepository {
 
     query += `) as has_role`;
 
-    const result = await this.pool.query<{ has_role: boolean }>(query, [
-      userId,
-      roleName,
-    ]);
+    const result = await this.pool.query<{ has_role: boolean }>(query, [userId, roleName]);
     return result.rows[0]?.has_role || false;
   }
 
@@ -172,12 +166,7 @@ export class RBACRepository {
       RETURNING *
     `;
 
-    const result = await this.pool.query<UserRole>(query, [
-      userId,
-      roleId,
-      assignedBy,
-      expiresAt,
-    ]);
+    const result = await this.pool.query<UserRole>(query, [userId, roleId, assignedBy, expiresAt]);
     return result.rows[0];
   }
 
@@ -210,21 +199,14 @@ export class RBACRepository {
       RETURNING *
     `;
 
-    const result = await this.pool.query<RolePermission>(query, [
-      roleId,
-      permissionId,
-      grantedBy,
-    ]);
+    const result = await this.pool.query<RolePermission>(query, [roleId, permissionId, grantedBy]);
     return result.rows[0];
   }
 
   /**
    * Revoke permission from role
    */
-  async revokePermissionFromRole(
-    roleId: string,
-    permissionId: string,
-  ): Promise<void> {
+  async revokePermissionFromRole(roleId: string, permissionId: string): Promise<void> {
     const query = `
       DELETE FROM rbac.role_permissions
       WHERE role_id = $1 AND permission_id = $2
@@ -248,34 +230,21 @@ export class RBACRepository {
       RETURNING *
     `;
 
-    const result = await this.pool.query<Permission>(query, [
-      name,
-      resource,
-      action,
-      description,
-    ]);
+    const result = await this.pool.query<Permission>(query, [name, resource, action, description]);
     return result.rows[0];
   }
 
   /**
    * Create new role
    */
-  async createRole(
-    name: string,
-    description?: string,
-    isDefault: boolean = false,
-  ): Promise<Role> {
+  async createRole(name: string, description?: string, isDefault: boolean = false): Promise<Role> {
     const query = `
       INSERT INTO rbac.roles (name, description, is_default)
       VALUES ($1, $2, $3)
       RETURNING *
     `;
 
-    const result = await this.pool.query<Role>(query, [
-      name,
-      description,
-      isDefault,
-    ]);
+    const result = await this.pool.query<Role>(query, [name, description, isDefault]);
     return result.rows[0];
   }
 
@@ -313,10 +282,7 @@ export class RBACRepository {
       ) as is_owner
     `;
 
-    const result = await this.pool.query<{ is_owner: boolean }>(query, [
-      resourceId,
-      userId,
-    ]);
+    const result = await this.pool.query<{ is_owner: boolean }>(query, [resourceId, userId]);
     return result.rows[0]?.is_owner || false;
   }
 

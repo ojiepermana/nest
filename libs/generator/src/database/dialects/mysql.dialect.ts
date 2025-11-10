@@ -63,7 +63,6 @@ export class MySQLDialect implements IDatabaseDialect {
     return `JSON_CONTAINS(${column}, '"${value}"')`;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getParameterPlaceholder(_index: number): string {
     // MySQL uses ? for all placeholders
     return '?';

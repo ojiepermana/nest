@@ -84,9 +84,7 @@ export const RequirePermission = (
   permissions: string | string[],
   options: RequirePermissionOptions = {},
 ): MethodDecorator => {
-  const permissionArray = Array.isArray(permissions)
-    ? permissions
-    : [permissions];
+  const permissionArray = Array.isArray(permissions) ? permissions : [permissions];
 
   const metadata: PermissionMetadata = {
     permissions: permissionArray,

@@ -4,10 +4,7 @@
  * Generates unit test files for service classes with business logic validation
  */
 
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
 
 export interface ServiceTestGeneratorOptions {
@@ -33,19 +30,8 @@ export class ServiceTestGenerator {
     const repositoryName = `${entityName}Repository`;
 
     let testCode = this.generateFileHeader(table, serviceName);
-    testCode += this.generateImports(
-      entityName,
-      serviceName,
-      repositoryName,
-      table.table_name,
-    );
-    testCode += this.generateDescribeBlock(
-      serviceName,
-      repositoryName,
-      entityName,
-      table,
-      columns,
-    );
+    testCode += this.generateImports(entityName, serviceName, repositoryName, table.table_name);
+    testCode += this.generateDescribeBlock(serviceName, repositoryName, entityName, table, columns);
 
     return testCode;
   }
@@ -53,10 +39,7 @@ export class ServiceTestGenerator {
   /**
    * Generate file header comment
    */
-  private generateFileHeader(
-    table: TableMetadata,
-    serviceName: string,
-  ): string {
+  private generateFileHeader(table: TableMetadata, serviceName: string): string {
     return `/**
  * ${serviceName} Unit Tests
  * Auto-generated test file for ${table.table_name} service
@@ -136,19 +119,11 @@ import { ${repositoryName} } from './${tableName}.repository';
     }
 
     // Add findOne success test
-    code += this.generateFindOneSuccessTest(
-      entityName,
-      camelEntity,
-      table.primary_key_column,
-    );
+    code += this.generateFindOneSuccessTest(entityName, camelEntity, table.primary_key_column);
 
     // Add findOne not found test
     if (this.options.includeErrorHandlingTests) {
-      code += this.generateFindOneNotFoundTest(
-        entityName,
-        camelEntity,
-        table.primary_key_column,
-      );
+      code += this.generateFindOneNotFoundTest(entityName, camelEntity, table.primary_key_column);
     }
 
     // Add create test
@@ -160,19 +135,11 @@ import { ${repositoryName} } from './${tableName}.repository';
     }
 
     // Add update test
-    code += this.generateUpdateTest(
-      entityName,
-      camelEntity,
-      table.primary_key_column,
-    );
+    code += this.generateUpdateTest(entityName, camelEntity, table.primary_key_column);
 
     // Add update not found test
     if (this.options.includeErrorHandlingTests) {
-      code += this.generateUpdateNotFoundTest(
-        entityName,
-        camelEntity,
-        table.primary_key_column,
-      );
+      code += this.generateUpdateNotFoundTest(entityName, camelEntity, table.primary_key_column);
     }
 
     // Add delete test
@@ -185,11 +152,7 @@ import { ${repositoryName} } from './${tableName}.repository';
 
     // Add delete not found test
     if (this.options.includeErrorHandlingTests) {
-      code += this.generateDeleteNotFoundTest(
-        entityName,
-        camelEntity,
-        table.primary_key_column,
-      );
+      code += this.generateDeleteNotFoundTest(entityName, camelEntity, table.primary_key_column);
     }
 
     // Add custom tests section
@@ -229,10 +192,7 @@ import { ${repositoryName} } from './${tableName}.repository';
   /**
    * Generate findAll with pagination test
    */
-  private generateFindAllPaginationTest(
-    entityName: string,
-    camelEntity: string,
-  ): string {
+  private generateFindAllPaginationTest(entityName: string, camelEntity: string): string {
     return `  // GENERATED_TEST_START: find-all-pagination
   describe('findAll with pagination', () => {
     it('should return paginated ${camelEntity} records', async () => {
@@ -316,16 +276,10 @@ import { ${repositoryName} } from './${tableName}.repository';
   ): string {
     const sampleColumn = columns.find(
       (col) =>
-        !col.is_primary_key &&
-        col.column_name !== 'created_at' &&
-        col.column_name !== 'updated_at',
+        !col.is_primary_key && col.column_name !== 'created_at' && col.column_name !== 'updated_at',
     );
-    const fieldName = sampleColumn
-      ? toCamelCase(sampleColumn.column_name)
-      : 'name';
-    const fieldValue = sampleColumn
-      ? this.generateSampleValue(sampleColumn)
-      : "'test'";
+    const fieldName = sampleColumn ? toCamelCase(sampleColumn.column_name) : 'name';
+    const fieldValue = sampleColumn ? this.generateSampleValue(sampleColumn) : "'test'";
 
     return `  // GENERATED_TEST_START: create
   describe('create', () => {
@@ -348,10 +302,7 @@ import { ${repositoryName} } from './${tableName}.repository';
   /**
    * Generate create validation test
    */
-  private generateCreateValidationTest(
-    entityName: string,
-    camelEntity: string,
-  ): string {
+  private generateCreateValidationTest(entityName: string, camelEntity: string): string {
     return `  // GENERATED_TEST_START: create-validation
   describe('create validation', () => {
     it('should throw BadRequestException on validation error', async () => {

@@ -76,16 +76,10 @@ export class GenerateCommand {
     const { tableMetadata, columns } = await this.fetchMetadata(tableName);
 
     // Step 5: Prompt for features or use provided
-    const features = await this.promptFeatures(
-      options.features,
-      options.skipPrompts,
-    );
+    const features = await this.promptFeatures(options.features, options.skipPrompts);
 
     // Step 6: Prompt for output path or use provided
-    const outputPath = await this.promptOutputPath(
-      options.outputPath,
-      options.skipPrompts,
-    );
+    const outputPath = await this.promptOutputPath(options.outputPath, options.skipPrompts);
 
     // Step 7: Generate all files
     this.generateFiles(tableMetadata, columns, features, outputPath);
@@ -181,18 +175,13 @@ export class GenerateCommand {
 
     Logger.info(`\n📊 Fetching metadata for table: ${tableName}`);
 
-    const tableMetadata = await this.metadataRepo.getTableMetadata(
-      schema,
-      tableName,
-    );
+    const tableMetadata = await this.metadataRepo.getTableMetadata(schema, tableName);
     if (!tableMetadata) {
       Logger.error(`❌ Table metadata not found for: ${tableName}`);
       process.exit(1);
     }
 
-    const columns = await this.metadataRepo.getColumnsByTableId(
-      tableMetadata.id,
-    );
+    const columns = await this.metadataRepo.getColumnsByTableId(tableMetadata.id);
     if (columns.length === 0) {
       Logger.error(`❌ No columns found for table: ${tableName}`);
       process.exit(1);
@@ -254,8 +243,7 @@ export class GenerateCommand {
       {
         type: 'confirm',
         name: 'auditLog',
-        message:
-          '🔍 Enable audit logging? (tracks all CREATE/UPDATE/DELETE operations)',
+        message: '🔍 Enable audit logging? (tracks all CREATE/UPDATE/DELETE operations)',
         default: this.config?.features?.audit ?? false,
       },
       {
@@ -284,10 +272,7 @@ export class GenerateCommand {
   /**
    * Prompt for output path
    */
-  private async promptOutputPath(
-    providedPath?: string,
-    skipPrompts?: boolean,
-  ): Promise<string> {
+  private async promptOutputPath(providedPath?: string, skipPrompts?: boolean): Promise<string> {
     if (providedPath) {
       return providedPath;
     }
@@ -341,10 +326,7 @@ export class GenerateCommand {
       enableSoftDelete: features.softDelete,
     });
     const entityCode = entityGenerator.generate();
-    this.writeFile(
-      join(moduleDir, 'entities', `${moduleName}.entity.ts`),
-      entityCode,
-    );
+    this.writeFile(join(moduleDir, 'entities', `${moduleName}.entity.ts`), entityCode);
     Logger.info('   ✓ Entity generated');
 
     // 2. Generate DTOs
@@ -354,47 +336,31 @@ export class GenerateCommand {
       includeComments: true,
     });
     const createDtoResult = createDtoGenerator.generate(tableMetadata, columns);
-    this.writeFile(
-      join(moduleDir, 'dto', `create-${moduleName}.dto.ts`),
-      createDtoResult.code,
-    );
+    this.writeFile(join(moduleDir, 'dto', `create-${moduleName}.dto.ts`), createDtoResult.code);
 
     const updateDtoGenerator = new UpdateDtoGenerator({
       includeSwagger: features.swagger,
       includeComments: true,
     });
     const updateDtoResult = updateDtoGenerator.generate(tableMetadata, columns);
-    this.writeFile(
-      join(moduleDir, 'dto', `update-${moduleName}.dto.ts`),
-      updateDtoResult.code,
-    );
+    this.writeFile(join(moduleDir, 'dto', `update-${moduleName}.dto.ts`), updateDtoResult.code);
 
     const filterDtoGenerator = new FilterDtoGenerator({
       includeSwagger: features.swagger,
       includeComments: true,
     });
     const filterDtoResult = filterDtoGenerator.generate(tableMetadata, columns);
-    this.writeFile(
-      join(moduleDir, 'dto', `${moduleName}-filter.dto.ts`),
-      filterDtoResult.code,
-    );
+    this.writeFile(join(moduleDir, 'dto', `${moduleName}-filter.dto.ts`), filterDtoResult.code);
     Logger.info('   ✓ DTOs generated (Create, Update, Filter)');
 
     // 3. Generate Repository
     Logger.info('   ⏳ Generating repository...');
-    const repositoryGenerator = new RepositoryGenerator(
-      tableMetadata,
-      columns,
-      {
-        tableName,
-        entityName,
-      },
-    );
+    const repositoryGenerator = new RepositoryGenerator(tableMetadata, columns, {
+      tableName,
+      entityName,
+    });
     const repositoryCode = repositoryGenerator.generate();
-    this.writeFile(
-      join(moduleDir, 'repositories', `${moduleName}.repository.ts`),
-      repositoryCode,
-    );
+    this.writeFile(join(moduleDir, 'repositories', `${moduleName}.repository.ts`), repositoryCode);
     Logger.info('   ✓ Repository generated');
 
     // 4. Generate Service
@@ -408,34 +374,23 @@ export class GenerateCommand {
       enableTransactions: true,
     });
     const serviceCode = serviceGenerator.generate();
-    this.writeFile(
-      join(moduleDir, 'services', `${moduleName}.service.ts`),
-      serviceCode,
-    );
+    this.writeFile(join(moduleDir, 'services', `${moduleName}.service.ts`), serviceCode);
     Logger.info('   ✓ Service generated');
 
     // 5. Generate Controller
     Logger.info('   ⏳ Generating controller...');
-    const controllerGenerator = new ControllerGenerator(
-      tableMetadata,
-      columns,
-      {
-        tableName,
-        entityName,
-        enableSwagger: features.swagger,
-        enableValidation: features.validation,
-        enablePagination: features.pagination,
-        enableFileUpload: features.fileUpload,
-        storageProvider:
-          (process.env.STORAGE_PROVIDER as 'local' | 's3' | 'gcs' | 'azure') ||
-          'local',
-      },
-    );
+    const controllerGenerator = new ControllerGenerator(tableMetadata, columns, {
+      tableName,
+      entityName,
+      enableSwagger: features.swagger,
+      enableValidation: features.validation,
+      enablePagination: features.pagination,
+      enableFileUpload: features.fileUpload,
+      storageProvider:
+        (process.env.STORAGE_PROVIDER as 'local' | 's3' | 'gcs' | 'azure') || 'local',
+    });
     const controllerCode = controllerGenerator.generate();
-    this.writeFile(
-      join(moduleDir, 'controllers', `${moduleName}.controller.ts`),
-      controllerCode,
-    );
+    this.writeFile(join(moduleDir, 'controllers', `${moduleName}.controller.ts`), controllerCode);
     Logger.info('   ✓ Controller generated');
 
     // 6. Generate Module

@@ -3,10 +3,7 @@
  */
 
 import { ControllerGenerator } from './controller.generator';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 describe('ControllerGenerator', () => {
   const mockTableMetadata: TableMetadata = {
@@ -34,13 +31,9 @@ describe('ControllerGenerator', () => {
 
   describe('Basic Controller Generation', () => {
     it('should generate basic controller class', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -49,30 +42,20 @@ describe('ControllerGenerator', () => {
     });
 
     it('should generate constructor with service injection', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
-      expect(result).toContain(
-        'constructor(private readonly service: UsersService)',
-      );
+      expect(result).toContain('constructor(private readonly service: UsersService)');
     });
 
     it('should use custom entity name if provided', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          entityName: 'User',
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        entityName: 'User',
+      });
 
       const result = generator.generate();
 
@@ -81,14 +64,10 @@ describe('ControllerGenerator', () => {
     });
 
     it('should use custom base path if provided', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          basePath: 'api/users',
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        basePath: 'api/users',
+      });
 
       const result = generator.generate();
 
@@ -98,13 +77,9 @@ describe('ControllerGenerator', () => {
 
   describe('Import Generation', () => {
     it('should generate correct basic imports', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -112,32 +87,18 @@ describe('ControllerGenerator', () => {
       expect(result).toContain(
         "import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpStatus, HttpCode, ParseIntPipe, NotFoundException } from '@nestjs/common'",
       );
-      expect(result).toContain(
-        "import { UsersService } from '../services/users.service'",
-      );
-      expect(result).toContain(
-        "import { Users } from '../entities/users.entity'",
-      );
-      expect(result).toContain(
-        "import { CreateUsersDto } from '../dto/create-users.dto'",
-      );
-      expect(result).toContain(
-        "import { UpdateUsersDto } from '../dto/update-users.dto'",
-      );
-      expect(result).toContain(
-        "import { UsersFilterDto } from '../dto/users-filter.dto'",
-      );
+      expect(result).toContain("import { UsersService } from '../services/users.service'");
+      expect(result).toContain("import { Users } from '../entities/users.entity'");
+      expect(result).toContain("import { CreateUsersDto } from '../dto/create-users.dto'");
+      expect(result).toContain("import { UpdateUsersDto } from '../dto/update-users.dto'");
+      expect(result).toContain("import { UsersFilterDto } from '../dto/users-filter.dto'");
     });
 
     it('should include Swagger imports when enabled', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          enableSwagger: true,
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enableSwagger: true,
+      });
 
       const result = generator.generate();
 
@@ -147,14 +108,10 @@ describe('ControllerGenerator', () => {
     });
 
     it('should not include Swagger imports when disabled', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          enableSwagger: false,
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enableSwagger: false,
+      });
 
       const result = generator.generate();
 
@@ -164,14 +121,10 @@ describe('ControllerGenerator', () => {
 
   describe('Swagger Decorators', () => {
     it('should include @ApiTags when Swagger enabled', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          enableSwagger: true,
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enableSwagger: true,
+      });
 
       const result = generator.generate();
 
@@ -179,37 +132,25 @@ describe('ControllerGenerator', () => {
     });
 
     it('should include @ApiOperation for each endpoint when Swagger enabled', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          enableSwagger: true,
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enableSwagger: true,
+      });
 
       const result = generator.generate();
 
-      expect(result).toContain(
-        "@ApiOperation({ summary: 'Create a new users' })",
-      );
+      expect(result).toContain("@ApiOperation({ summary: 'Create a new users' })");
       expect(result).toContain("@ApiOperation({ summary: 'Get all userss' })");
-      expect(result).toContain(
-        "@ApiOperation({ summary: 'Get a users by ID' })",
-      );
+      expect(result).toContain("@ApiOperation({ summary: 'Get a users by ID' })");
       expect(result).toContain("@ApiOperation({ summary: 'Update a users' })");
       expect(result).toContain("@ApiOperation({ summary: 'Delete a users' })");
     });
 
     it('should include @ApiResponse decorators when Swagger enabled', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          enableSwagger: true,
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enableSwagger: true,
+      });
 
       const result = generator.generate();
 
@@ -220,14 +161,10 @@ describe('ControllerGenerator', () => {
     });
 
     it('should include @ApiParam decorators when Swagger enabled', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          enableSwagger: true,
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enableSwagger: true,
+      });
 
       const result = generator.generate();
 
@@ -235,14 +172,10 @@ describe('ControllerGenerator', () => {
     });
 
     it('should include @ApiBody decorators when Swagger enabled', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          enableSwagger: true,
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enableSwagger: true,
+      });
 
       const result = generator.generate();
 
@@ -251,14 +184,10 @@ describe('ControllerGenerator', () => {
     });
 
     it('should not include Swagger decorators when disabled', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          enableSwagger: false,
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enableSwagger: false,
+      });
 
       const result = generator.generate();
 
@@ -270,32 +199,22 @@ describe('ControllerGenerator', () => {
 
   describe('CRUD Endpoints', () => {
     it('should generate create endpoint', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
       expect(result).toContain('@Post()');
       expect(result).toContain('@HttpCode(HttpStatus.CREATED)');
-      expect(result).toContain(
-        'async create(@Body() createDto: CreateUsersDto)',
-      );
+      expect(result).toContain('async create(@Body() createDto: CreateUsersDto)');
       expect(result).toContain('return this.service.create(createDto)');
     });
 
     it('should generate findAll endpoint', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -305,13 +224,9 @@ describe('ControllerGenerator', () => {
     });
 
     it('should generate findOne endpoint with ParseIntPipe for number ID', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -322,13 +237,9 @@ describe('ControllerGenerator', () => {
     });
 
     it('should generate update endpoint', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -339,13 +250,9 @@ describe('ControllerGenerator', () => {
     });
 
     it('should generate delete endpoint', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -358,14 +265,10 @@ describe('ControllerGenerator', () => {
 
   describe('Validation', () => {
     it('should use ValidationPipe when validation enabled', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          enableValidation: true,
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enableValidation: true,
+      });
 
       const result = generator.generate();
 
@@ -374,14 +277,10 @@ describe('ControllerGenerator', () => {
     });
 
     it('should not use ValidationPipe when validation disabled', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          enableValidation: false,
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enableValidation: false,
+      });
 
       const result = generator.generate();
 
@@ -396,14 +295,10 @@ describe('ControllerGenerator', () => {
 
   describe('Pagination', () => {
     it('should generate findWithFilters endpoint when pagination enabled', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          enablePagination: true,
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enablePagination: true,
+      });
 
       const result = generator.generate();
 
@@ -416,14 +311,10 @@ describe('ControllerGenerator', () => {
     });
 
     it('should not generate findWithFilters when pagination disabled', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          enablePagination: false,
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enablePagination: false,
+      });
 
       const result = generator.generate();
 
@@ -431,15 +322,11 @@ describe('ControllerGenerator', () => {
     });
 
     it('should include pagination ApiQuery decorators when both Swagger and pagination enabled', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          enableSwagger: true,
-          enablePagination: true,
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enableSwagger: true,
+        enablePagination: true,
+      });
 
       const result = generator.generate();
 
@@ -449,14 +336,10 @@ describe('ControllerGenerator', () => {
     });
 
     it('should parse sort parameter correctly', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          enablePagination: true,
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enablePagination: true,
+      });
 
       const result = generator.generate();
 
@@ -478,13 +361,9 @@ describe('ControllerGenerator', () => {
         } as ColumnMetadata,
       ];
 
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        stringPkColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, stringPkColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -503,14 +382,10 @@ describe('ControllerGenerator', () => {
         } as ColumnMetadata,
       ];
 
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        stringPkColumns,
-        {
-          tableName: 'users',
-          enableSwagger: true,
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, stringPkColumns, {
+        tableName: 'users',
+        enableSwagger: true,
+      });
 
       const result = generator.generate();
 
@@ -520,16 +395,12 @@ describe('ControllerGenerator', () => {
 
   describe('Combined Features', () => {
     it('should generate controller with all features enabled', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          enableSwagger: true,
-          enableValidation: true,
-          enablePagination: true,
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enableSwagger: true,
+        enableValidation: true,
+        enablePagination: true,
+      });
 
       const result = generator.generate();
 
@@ -540,16 +411,12 @@ describe('ControllerGenerator', () => {
     });
 
     it('should generate minimal controller with no optional features', () => {
-      const generator = new ControllerGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          enableSwagger: false,
-          enableValidation: false,
-          enablePagination: false,
-        },
-      );
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enableSwagger: false,
+        enableValidation: false,
+        enablePagination: false,
+      });
 
       const result = generator.generate();
 

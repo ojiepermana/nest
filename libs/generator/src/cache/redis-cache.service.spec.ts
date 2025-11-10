@@ -59,11 +59,7 @@ describe('RedisCacheService', () => {
 
       await service.set('test-key', testValue);
 
-      expect(mockCacheManager.set).toHaveBeenCalledWith(
-        'test-key',
-        testValue,
-        300000,
-      );
+      expect(mockCacheManager.set).toHaveBeenCalledWith('test-key', testValue, 300000);
     });
 
     it('should set value with custom TTL', async () => {
@@ -72,11 +68,7 @@ describe('RedisCacheService', () => {
 
       await service.set('test-key', testValue, { ttl: 60000 });
 
-      expect(mockCacheManager.set).toHaveBeenCalledWith(
-        'test-key',
-        testValue,
-        60000,
-      );
+      expect(mockCacheManager.set).toHaveBeenCalledWith('test-key', testValue, 60000);
     });
 
     it('should handle errors gracefully', async () => {
@@ -237,10 +229,7 @@ describe('RedisCacheService', () => {
 describe('CacheKeyBuilder', () => {
   describe('build', () => {
     it('should build simple cache key', () => {
-      const key = CacheKeyBuilder.create('myapp')
-        .entity('users')
-        .operation('list')
-        .build();
+      const key = CacheKeyBuilder.create('myapp').entity('users').operation('list').build();
 
       expect(key).toBe('myapp:users:list');
     });
@@ -281,10 +270,7 @@ describe('CacheKeyBuilder', () => {
 
   describe('pattern', () => {
     it('should build pattern for deletion', () => {
-      const pattern = CacheKeyBuilder.create('myapp')
-        .entity('users')
-        .operation('list')
-        .pattern();
+      const pattern = CacheKeyBuilder.create('myapp').entity('users').operation('list').pattern();
 
       expect(pattern).toBe('myapp:users:list:*');
     });

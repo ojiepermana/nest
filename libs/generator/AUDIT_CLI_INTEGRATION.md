@@ -96,7 +96,7 @@ export class UsersService {
   async create(createDto: CreateUsersDto): Promise<Users> {
     try {
       const user = await this.repository.create(createDto);
-      
+
       // ✅ Auto-generated audit log
       await this.auditLogService.log({
         entity: 'Users',
@@ -104,7 +104,7 @@ export class UsersService {
         action: 'CREATE',
         data: createDto,
       });
-      
+
       return user;
     } catch (error) {
       throw new BadRequestException(`Failed to create user: ${error.message}`);
@@ -118,7 +118,7 @@ export class UsersService {
     }
 
     const updated = await this.repository.update(id, updateDto);
-    
+
     // ✅ Auto-generated audit log with old/new values
     await this.auditLogService.log({
       entity: 'Users',
@@ -127,7 +127,7 @@ export class UsersService {
       oldData: existing,
       data: updated,
     });
-    
+
     return updated;
   }
 
@@ -138,7 +138,7 @@ export class UsersService {
     }
 
     await this.repository.delete(id);
-    
+
     // ✅ Auto-generated audit log
     await this.auditLogService.log({
       entity: 'Users',
@@ -287,6 +287,7 @@ nest-generator generate user.users --features.auditLog=true
 ```
 
 The generator will:
+
 1. Detect existing custom code
 2. Preserve your custom methods
 3. Add audit logging to CRUD operations
@@ -301,7 +302,7 @@ The generator will:
 ```typescript
 async create(createDto: CreateUsersDto, currentUser: User): Promise<Users> {
   const user = await this.repository.create(createDto);
-  
+
   await this.auditLogService.log({
     entity: 'Users',
     entityId: user.id,
@@ -310,7 +311,7 @@ async create(createDto: CreateUsersDto, currentUser: User): Promise<Users> {
     userId: currentUser.id, // ✅ Track who created
     metadata: { role: currentUser.role },
   });
-  
+
   return user;
 }
 ```
@@ -373,6 +374,7 @@ Check:
 ### Rollback not working?
 
 Rollback requires:
+
 - Original values stored in `oldData`
 - Entity still exists
 - User has permission
@@ -387,20 +389,20 @@ If you have manual audit logging:
 // Before (manual)
 async create(createDto: CreateUsersDto): Promise<Users> {
   const user = await this.repository.create(createDto);
-  
+
   // Manual audit log
   await this.db.query(`
     INSERT INTO audit_logs (entity, entity_id, action)
     VALUES ('Users', $1, 'CREATE')
   `, [user.id]);
-  
+
   return user;
 }
 
 // After (auto-generated)
 async create(createDto: CreateUsersDto): Promise<Users> {
   const user = await this.repository.create(createDto);
-  
+
   // Auto-generated audit log
   await this.auditLogService.log({
     entity: 'Users',
@@ -408,7 +410,7 @@ async create(createDto: CreateUsersDto): Promise<Users> {
     action: 'CREATE',
     data: createDto,
   });
-  
+
   return user;
 }
 ```

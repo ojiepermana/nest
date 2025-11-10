@@ -5,10 +5,7 @@
  */
 
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 export interface EntityGeneratorOptions {
   tableName: string;
@@ -30,8 +27,7 @@ export class EntityGenerator {
    * Generate entity class
    */
   generate(): string {
-    const entityName =
-      this.options.entityName || toPascalCase(this.options.tableName);
+    const entityName = this.options.entityName || toPascalCase(this.options.tableName);
 
     const imports = this.generateImports();
     const classDeclaration = this.generateClassDeclaration(entityName);
@@ -119,14 +115,10 @@ export class ${entityName} {`;
    */
   private generateUniqueIndexes(): string[] {
     const indexes: string[] = [];
-    const uniqueColumns = this.columns.filter(
-      (col) => col.is_unique && !col.is_primary_key,
-    );
+    const uniqueColumns = this.columns.filter((col) => col.is_unique && !col.is_primary_key);
 
     for (const col of uniqueColumns) {
-      indexes.push(
-        `@Index('${col.column_name}_unique', ['${col.column_name}'], { unique: true })`,
-      );
+      indexes.push(`@Index('${col.column_name}_unique', ['${col.column_name}'], { unique: true })`);
     }
 
     return indexes;
@@ -191,9 +183,7 @@ export class ${entityName} {`;
   /**
    * Generate @PrimaryGeneratedColumn decorator
    */
-  private generatePrimaryGeneratedColumnDecorator(
-    column: ColumnMetadata,
-  ): string {
+  private generatePrimaryGeneratedColumnDecorator(column: ColumnMetadata): string {
     // UUID strategy
     if (column.data_type === 'uuid') {
       return "@PrimaryGeneratedColumn('uuid')";
@@ -244,8 +234,7 @@ export class ${entityName} {`;
     // Length for varchar/char (from max_length)
     if (
       column.max_length &&
-      (column.data_type === 'varchar' ||
-        column.data_type === 'character varying')
+      (column.data_type === 'varchar' || column.data_type === 'character varying')
     ) {
       options.push(`length: ${column.max_length}`);
     }
@@ -262,10 +251,7 @@ export class ${entityName} {`;
 
     // Default value
     if (column.default_value) {
-      const defaultValue = this.formatDefaultValue(
-        column.default_value,
-        column.data_type,
-      );
+      const defaultValue = this.formatDefaultValue(column.default_value, column.data_type);
       if (defaultValue) {
         options.push(`default: ${defaultValue}`);
       }
@@ -283,18 +269,12 @@ export class ${entityName} {`;
   private generateTimestampProperty(column: ColumnMetadata): string {
     const propertyName = this.toCamelCase(column.column_name);
 
-    if (
-      column.column_name === 'created_at' ||
-      column.column_name === 'createdAt'
-    ) {
+    if (column.column_name === 'created_at' || column.column_name === 'createdAt') {
       return `  @CreateDateColumn({ name: '${column.column_name}' })
   ${propertyName}: Date;`;
     }
 
-    if (
-      column.column_name === 'updated_at' ||
-      column.column_name === 'updatedAt'
-    ) {
+    if (column.column_name === 'updated_at' || column.column_name === 'updatedAt') {
       return `  @UpdateDateColumn({ name: '${column.column_name}' })
   ${propertyName}: Date;`;
     }
@@ -362,10 +342,7 @@ export class ${entityName} {`;
   /**
    * Format default value for TypeORM
    */
-  private formatDefaultValue(
-    defaultValue: string,
-    dataType: string,
-  ): string | null {
+  private formatDefaultValue(defaultValue: string, dataType: string): string | null {
     // Skip database functions
     if (
       defaultValue.includes('nextval') ||
@@ -383,9 +360,7 @@ export class ${entityName} {`;
     }
 
     // Numeric values
-    if (
-      ['integer', 'bigint', 'smallint', 'decimal', 'numeric'].includes(dataType)
-    ) {
+    if (['integer', 'bigint', 'smallint', 'decimal', 'numeric'].includes(dataType)) {
       const numMatch = defaultValue.match(/(-?\d+\.?\d*)/);
       if (numMatch) return numMatch[1];
     }
@@ -440,12 +415,7 @@ export class ${entityName} {`;
    * Check if column is a timestamp column
    */
   private isTimestampColumn(column: ColumnMetadata): boolean {
-    const timestampNames = [
-      'created_at',
-      'updated_at',
-      'createdAt',
-      'updatedAt',
-    ];
+    const timestampNames = ['created_at', 'updated_at', 'createdAt', 'updatedAt'];
     return timestampNames.includes(column.column_name);
   }
 

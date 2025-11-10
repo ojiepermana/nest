@@ -21,12 +21,14 @@ npm run build:all-libs
 ```
 
 Script akan menampilkan menu:
+
 - Pilih library yang ingin di-publish (1, 2, atau 3)
 - Script akan otomatis build dan publish
 
 ### ✅ Selesai!
 
 Packages Anda sudah public di npm:
+
 - **@ojiepermana/nest-generator** - https://npmjs.com/package/@ojiepermana/nest-generator
 - **@ojiepermana/nest** - https://npmjs.com/package/@ojiepermana/nest
 

@@ -1,8 +1,4 @@
-import {
-  ExecutionContext,
-  UnauthorizedException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PermissionsGuard } from './permissions.guard';
 import { RBACService } from '../rbac.service';
@@ -79,9 +75,7 @@ describe('PermissionsGuard', () => {
 
       mockContext.switchToHttp().getRequest.mockReturnValue({});
 
-      await expect(guard.canActivate(mockContext)).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(guard.canActivate(mockContext)).rejects.toThrow(UnauthorizedException);
     });
 
     it('should check single permission with AND logic', async () => {
@@ -99,9 +93,7 @@ describe('PermissionsGuard', () => {
       const result = await guard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(rbacService.hasAllPermissions).toHaveBeenCalledWith('user-123', [
-        'users.read',
-      ]);
+      expect(rbacService.hasAllPermissions).toHaveBeenCalledWith('user-123', ['users.read']);
     });
 
     it('should check multiple permissions with AND logic', async () => {
@@ -160,9 +152,7 @@ describe('PermissionsGuard', () => {
         missingPermissions: ['users.delete'],
       });
 
-      await expect(guard.canActivate(mockContext)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(guard.canActivate(mockContext)).rejects.toThrow(ForbiddenException);
     });
 
     it('should use custom error message when provided', async () => {
@@ -178,9 +168,7 @@ describe('PermissionsGuard', () => {
         granted: false,
       });
 
-      await expect(guard.canActivate(mockContext)).rejects.toThrow(
-        'Custom error message',
-      );
+      await expect(guard.canActivate(mockContext)).rejects.toThrow('Custom error message');
     });
 
     it('should check ownership when required', async () => {
@@ -220,9 +208,7 @@ describe('PermissionsGuard', () => {
 
       rbacService.checkOwnership.mockResolvedValue(false);
 
-      await expect(guard.canActivate(mockContext)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(guard.canActivate(mockContext)).rejects.toThrow(ForbiddenException);
     });
 
     it('should warn if RBACService not provided', async () => {

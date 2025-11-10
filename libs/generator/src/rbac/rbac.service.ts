@@ -56,17 +56,10 @@ export class RBACService {
       }
     }
 
-    const hasPermission = await this.repository.hasPermission(
-      userId,
-      permission,
-    );
+    const hasPermission = await this.repository.hasPermission(userId, permission);
 
     if (this.cacheEnabled && this.cacheManager) {
-      await this.cacheManager.set(
-        cacheKey,
-        hasPermission,
-        this.cacheTTL * 1000,
-      );
+      await this.cacheManager.set(cacheKey, hasPermission, this.cacheTTL * 1000);
     }
 
     return hasPermission;
@@ -75,10 +68,7 @@ export class RBACService {
   /**
    * Check if user has ALL specified permissions
    */
-  async hasAllPermissions(
-    userId: string,
-    permissions: string[],
-  ): Promise<PermissionCheckResult> {
+  async hasAllPermissions(userId: string, permissions: string[]): Promise<PermissionCheckResult> {
     const missingPermissions: string[] = [];
 
     for (const permission of permissions) {
@@ -92,9 +82,7 @@ export class RBACService {
 
     return {
       granted,
-      reason: granted
-        ? undefined
-        : `Missing permissions: ${missingPermissions.join(', ')}`,
+      reason: granted ? undefined : `Missing permissions: ${missingPermissions.join(', ')}`,
       missingPermissions: granted ? undefined : missingPermissions,
     };
   }
@@ -102,10 +90,7 @@ export class RBACService {
   /**
    * Check if user has ANY of the specified permissions
    */
-  async hasAnyPermission(
-    userId: string,
-    permissions: string[],
-  ): Promise<PermissionCheckResult> {
+  async hasAnyPermission(userId: string, permissions: string[]): Promise<PermissionCheckResult> {
     for (const permission of permissions) {
       const has = await this.hasPermission(userId, permission);
       if (has) {
@@ -138,12 +123,7 @@ export class RBACService {
       }
     }
 
-    const hasRole = await this.repository.hasRole(
-      userId,
-      roleName,
-      activeOnly,
-      checkExpiration,
-    );
+    const hasRole = await this.repository.hasRole(userId, roleName, activeOnly, checkExpiration);
 
     if (this.cacheEnabled && this.cacheManager) {
       await this.cacheManager.set(cacheKey, hasRole, this.cacheTTL * 1000);
@@ -271,13 +251,7 @@ export class RBACService {
       }
     }
 
-    return this.repository.checkOwnership(
-      schema,
-      table,
-      resourceId,
-      config.ownerField,
-      userId,
-    );
+    return this.repository.checkOwnership(schema, table, resourceId, config.ownerField, userId);
   }
 
   /**
@@ -292,10 +266,7 @@ export class RBACService {
     const filtered: Partial<T> = { ...data };
 
     for (const fieldPerm of fieldPermissions) {
-      const hasAccess = await this.hasPermission(
-        userId,
-        fieldPerm.requiredPermission,
-      );
+      const hasAccess = await this.hasPermission(userId, fieldPerm.requiredPermission);
 
       if (!hasAccess) {
         if (fieldPerm.defaultValue !== undefined) {
@@ -312,10 +283,7 @@ export class RBACService {
   /**
    * Build WHERE clause filters based on user permissions (row-level security)
    */
-  async buildRowFilters(
-    userId: string,
-    baseFilters: RowFilter[],
-  ): Promise<RowFilter[]> {
+  async buildRowFilters(userId: string, baseFilters: RowFilter[]): Promise<RowFilter[]> {
     const filters = [...baseFilters];
 
     // Example: If user is not admin, only show their own records
@@ -347,10 +315,7 @@ export class RBACService {
         // This is a simplified version - you may need a custom implementation
         await this.cacheManager.del(pattern);
       } catch (error) {
-        this.logger.warn(
-          `Failed to invalidate cache pattern: ${pattern}`,
-          error,
-        );
+        this.logger.warn(`Failed to invalidate cache pattern: ${pattern}`, error);
       }
     }
 
@@ -371,12 +336,7 @@ export class RBACService {
       throw new Error(`Role not found: ${roleName}`);
     }
 
-    await this.repository.assignRoleToUser(
-      userId,
-      role.id,
-      assignedBy,
-      expiresAt,
-    );
+    await this.repository.assignRoleToUser(userId, role.id, assignedBy, expiresAt);
     await this.invalidateUserCache(userId);
 
     this.logger.log(`Assigned role ${roleName} to user ${userId}`);
@@ -417,11 +377,7 @@ export class RBACService {
       throw new Error(`Permission not found: ${permissionName}`);
     }
 
-    await this.repository.grantPermissionToRole(
-      role.id,
-      permission.id,
-      grantedBy,
-    );
+    await this.repository.grantPermissionToRole(role.id, permission.id, grantedBy);
 
     // Invalidate cache for all users with this role
     this.logger.log(`Granted permission ${permissionName} to role ${roleName}`);
@@ -430,10 +386,7 @@ export class RBACService {
   /**
    * Revoke permission from role
    */
-  async revokePermission(
-    roleName: string,
-    permissionName: string,
-  ): Promise<void> {
+  async revokePermission(roleName: string, permissionName: string): Promise<void> {
     const [role, permission] = await Promise.all([
       this.repository.getRoleByName(roleName),
       this.repository.getPermissionByName(permissionName),
@@ -448,9 +401,7 @@ export class RBACService {
 
     await this.repository.revokePermissionFromRole(role.id, permission.id);
 
-    this.logger.log(
-      `Revoked permission ${permissionName} from role ${roleName}`,
-    );
+    this.logger.log(`Revoked permission ${permissionName} from role ${roleName}`);
   }
 
   /**

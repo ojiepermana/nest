@@ -38,10 +38,7 @@ export class MetadataService {
   /**
    * Get cached data or fetch from repository
    */
-  private async getCached<T>(
-    key: string,
-    fetcher: () => Promise<T>,
-  ): Promise<T> {
+  private async getCached<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
     const cached = this.cache.get(key);
 
     if (cached && Date.now() - cached.timestamp < this.cacheTTL) {
@@ -76,14 +73,9 @@ export class MetadataService {
   /**
    * Get table metadata with caching
    */
-  async getTableMetadata(
-    schema: string,
-    tableName: string,
-  ): Promise<TableMetadata | null> {
+  async getTableMetadata(schema: string, tableName: string): Promise<TableMetadata | null> {
     const cacheKey = `table:${schema}.${tableName}`;
-    return this.getCached(cacheKey, () =>
-      this.repository.getTableMetadata(schema, tableName),
-    );
+    return this.getCached(cacheKey, () => this.repository.getTableMetadata(schema, tableName));
   }
 
   /**
@@ -91,30 +83,21 @@ export class MetadataService {
    */
   async getAllTableMetadata(): Promise<TableMetadata[]> {
     const cacheKey = 'tables:all';
-    return this.getCached(cacheKey, () =>
-      this.repository.getAllTableMetadata(),
-    );
+    return this.getCached(cacheKey, () => this.repository.getAllTableMetadata());
   }
 
   /**
    * Get columns for a table with caching
    */
-  async getColumnsByTableId(
-    tableMetadataId: string,
-  ): Promise<ColumnMetadata[]> {
+  async getColumnsByTableId(tableMetadataId: string): Promise<ColumnMetadata[]> {
     const cacheKey = `columns:${tableMetadataId}`;
-    return this.getCached(cacheKey, () =>
-      this.repository.getColumnsByTableId(tableMetadataId),
-    );
+    return this.getCached(cacheKey, () => this.repository.getColumnsByTableId(tableMetadataId));
   }
 
   /**
    * Get columns by schema and table name with caching
    */
-  async getColumnsBySchemaAndTable(
-    schema: string,
-    tableName: string,
-  ): Promise<ColumnMetadata[]> {
+  async getColumnsBySchemaAndTable(schema: string, tableName: string): Promise<ColumnMetadata[]> {
     const cacheKey = `columns:${schema}.${tableName}`;
     return this.getCached(cacheKey, () =>
       this.repository.getColumnsBySchemaAndTable(schema, tableName),
@@ -124,13 +107,9 @@ export class MetadataService {
   /**
    * Get foreign key columns with caching
    */
-  async getForeignKeyColumns(
-    tableMetadataId: string,
-  ): Promise<ColumnMetadata[]> {
+  async getForeignKeyColumns(tableMetadataId: string): Promise<ColumnMetadata[]> {
     const cacheKey = `fk:${tableMetadataId}`;
-    return this.getCached(cacheKey, () =>
-      this.repository.getForeignKeyColumns(tableMetadataId),
-    );
+    return this.getCached(cacheKey, () => this.repository.getForeignKeyColumns(tableMetadataId));
   }
 
   /**
@@ -209,9 +188,7 @@ export class MetadataService {
   /**
    * Get generated file by path
    */
-  async getGeneratedFileByPath(
-    filePath: string,
-  ): Promise<GeneratedFile | null> {
+  async getGeneratedFileByPath(filePath: string): Promise<GeneratedFile | null> {
     return this.repository.getGeneratedFileByPath(filePath);
   }
 
@@ -228,48 +205,32 @@ export class MetadataService {
    */
   async getListColumns(tableMetadataId: string): Promise<ColumnMetadata[]> {
     const cacheKey = `list-cols:${tableMetadataId}`;
-    return this.getCached(cacheKey, () =>
-      this.repository.getListColumns(tableMetadataId),
-    );
+    return this.getCached(cacheKey, () => this.repository.getListColumns(tableMetadataId));
   }
 
   async getFormColumns(tableMetadataId: string): Promise<ColumnMetadata[]> {
     const cacheKey = `form-cols:${tableMetadataId}`;
-    return this.getCached(cacheKey, () =>
-      this.repository.getFormColumns(tableMetadataId),
-    );
+    return this.getCached(cacheKey, () => this.repository.getFormColumns(tableMetadataId));
   }
 
   async getDetailColumns(tableMetadataId: string): Promise<ColumnMetadata[]> {
     const cacheKey = `detail-cols:${tableMetadataId}`;
-    return this.getCached(cacheKey, () =>
-      this.repository.getDetailColumns(tableMetadataId),
-    );
+    return this.getCached(cacheKey, () => this.repository.getDetailColumns(tableMetadataId));
   }
 
-  async getFilterableColumns(
-    tableMetadataId: string,
-  ): Promise<ColumnMetadata[]> {
+  async getFilterableColumns(tableMetadataId: string): Promise<ColumnMetadata[]> {
     const cacheKey = `filter-cols:${tableMetadataId}`;
-    return this.getCached(cacheKey, () =>
-      this.repository.getFilterableColumns(tableMetadataId),
-    );
+    return this.getCached(cacheKey, () => this.repository.getFilterableColumns(tableMetadataId));
   }
 
-  async getSearchableColumns(
-    tableMetadataId: string,
-  ): Promise<ColumnMetadata[]> {
+  async getSearchableColumns(tableMetadataId: string): Promise<ColumnMetadata[]> {
     const cacheKey = `search-cols:${tableMetadataId}`;
-    return this.getCached(cacheKey, () =>
-      this.repository.getSearchableColumns(tableMetadataId),
-    );
+    return this.getCached(cacheKey, () => this.repository.getSearchableColumns(tableMetadataId));
   }
 
   async getSortableColumns(tableMetadataId: string): Promise<ColumnMetadata[]> {
     const cacheKey = `sort-cols:${tableMetadataId}`;
-    return this.getCached(cacheKey, () =>
-      this.repository.getSortableColumns(tableMetadataId),
-    );
+    return this.getCached(cacheKey, () => this.repository.getSortableColumns(tableMetadataId));
   }
 
   /**
@@ -325,10 +286,7 @@ export class MetadataService {
   /**
    * Get primary key column for a table
    */
-  async getPrimaryKeyColumn(
-    schema: string,
-    tableName: string,
-  ): Promise<string | null> {
+  async getPrimaryKeyColumn(schema: string, tableName: string): Promise<string | null> {
     const table = await this.getTableMetadata(schema, tableName);
     return table?.primary_key_column || null;
   }

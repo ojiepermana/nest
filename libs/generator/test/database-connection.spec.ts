@@ -73,9 +73,7 @@ describe('DatabaseConnectionManager', () => {
         'INSERT INTO users (name, email, age) VALUES ($1, $2, $3)',
       );
 
-      expect(converted).toBe(
-        'INSERT INTO users (name, email, age) VALUES (?, ?, ?)',
-      );
+      expect(converted).toBe('INSERT INTO users (name, email, age) VALUES (?, ?, ?)');
     });
   });
 

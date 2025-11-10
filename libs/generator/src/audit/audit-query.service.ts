@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AuditLogService } from './audit-log.service';
-import {
-  AuditLogEntry,
-  AuditLogFilter,
-  AuditAction,
-  AuditStatus,
-} from './audit-log.interface';
+import { AuditLogEntry, AuditLogFilter, AuditAction, AuditStatus } from './audit-log.interface';
 
 /**
  * Pagination result
@@ -151,11 +146,7 @@ export class AuditQueryService {
   /**
    * Search logs by text
    */
-  async search(
-    searchText: string,
-    page = 1,
-    limit = 50,
-  ): Promise<PaginatedResult<AuditLogEntry>> {
+  async search(searchText: string, page = 1, limit = 50): Promise<PaginatedResult<AuditLogEntry>> {
     const filter: AdvancedAuditFilter = {
       search: searchText,
     };
@@ -167,18 +158,14 @@ export class AuditQueryService {
    * Get logs for today
    */
   async getToday(): Promise<AuditLogEntry[]> {
-    return this.auditLogService.find(
-      this.applyAdvancedFilters({ today: true }),
-    );
+    return this.auditLogService.find(this.applyAdvancedFilters({ today: true }));
   }
 
   /**
    * Get logs for this week
    */
   async getThisWeek(): Promise<AuditLogEntry[]> {
-    return this.auditLogService.find(
-      this.applyAdvancedFilters({ this_week: true }),
-    );
+    return this.auditLogService.find(this.applyAdvancedFilters({ this_week: true }));
   }
 
   /**
@@ -273,18 +260,13 @@ export class AuditQueryService {
   /**
    * Get changes to specific field
    */
-  async getFieldChanges(
-    fieldName: string,
-    filter?: AdvancedAuditFilter,
-  ): Promise<AuditLogEntry[]> {
+  async getFieldChanges(fieldName: string, filter?: AdvancedAuditFilter): Promise<AuditLogEntry[]> {
     const enhancedFilter = filter ? this.applyAdvancedFilters(filter) : {};
 
     const logs = await this.auditLogService.find(enhancedFilter);
 
     // Filter logs that have changes to the specified field
-    return logs.filter((log) =>
-      log.changes?.some((change) => change.field === fieldName),
-    );
+    return logs.filter((log) => log.changes?.some((change) => change.field === fieldName));
   }
 
   /**
@@ -340,9 +322,7 @@ export class AuditQueryService {
    * Export logs
    */
   async export(options: ExportOptions): Promise<string | Buffer> {
-    const filter = options.filter
-      ? this.applyAdvancedFilters(options.filter)
-      : {};
+    const filter = options.filter ? this.applyAdvancedFilters(options.filter) : {};
 
     const logs = await this.auditLogService.find(filter);
 
@@ -472,9 +452,7 @@ export class AuditQueryService {
     // Build CSV
     const csvLines = [
       headers.join(','),
-      ...rows.map((row) =>
-        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','),
-      ),
+      ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
     ];
 
     return csvLines.join('\n');

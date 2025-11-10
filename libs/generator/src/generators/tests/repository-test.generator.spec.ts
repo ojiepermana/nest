@@ -3,10 +3,7 @@
  */
 
 import { RepositoryTestGenerator } from './repository-test.generator';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 describe('RepositoryTestGenerator', () => {
   let generator: RepositoryTestGenerator;
@@ -141,10 +138,7 @@ describe('RepositoryTestGenerator', () => {
         ...tableMetadata,
         has_soft_delete: false,
       };
-      const result = generator.generateRepositoryTest(
-        tableWithoutSoftDelete,
-        columns,
-      );
+      const result = generator.generateRepositoryTest(tableWithoutSoftDelete, columns);
 
       expect(result).not.toContain('GENERATED_TEST_START: soft-delete');
       expect(result).toContain('GENERATED_TEST_START: hard-delete');
@@ -188,9 +182,7 @@ describe('RepositoryTestGenerator', () => {
 
       expect(result).toContain('GENERATED_TEST_START: soft-delete');
       expect(result).toContain("describe('softDelete'");
-      expect(result).toContain(
-        'should soft delete users by setting deleted_at',
-      );
+      expect(result).toContain('should soft delete users by setting deleted_at');
     });
 
     it('should include custom tests section', () => {
@@ -206,10 +198,7 @@ describe('RepositoryTestGenerator', () => {
         ...tableMetadata,
         primary_key_column: 'user_id',
       };
-      const result = generator.generateRepositoryTest(
-        tableWithCustomPK,
-        columns,
-      );
+      const result = generator.generateRepositoryTest(tableWithCustomPK, columns);
 
       expect(result).toContain('WHERE user_id = $1');
     });
@@ -227,10 +216,7 @@ describe('RepositoryTestGenerator', () => {
         includeBulkOperationTests: true,
       });
 
-      const result = generatorWithBulk.generateRepositoryTest(
-        tableMetadata,
-        columns,
-      );
+      const result = generatorWithBulk.generateRepositoryTest(tableMetadata, columns);
 
       expect(result).toContain('GENERATED_TEST_START: bulk-create');
       expect(result).toContain('should insert multiple users records');

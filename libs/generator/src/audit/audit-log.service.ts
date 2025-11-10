@@ -141,9 +141,7 @@ export class AuditLogService implements IAuditLogService {
     }
 
     if (filter.tags && filter.tags.length > 0) {
-      results = results.filter((log) =>
-        log.tags?.some((tag) => filter.tags.includes(tag)),
-      );
+      results = results.filter((log) => log.tags?.some((tag) => filter.tags.includes(tag)));
     }
 
     // Ordering (newest first)
@@ -309,9 +307,7 @@ export class AuditLogService implements IAuditLogService {
     const count = logsToArchive.length;
 
     // Remove archived logs from memory
-    this.logs = this.logs.filter(
-      (log) => log.created_at >= beforeDate || log.is_rolled_back,
-    );
+    this.logs = this.logs.filter((log) => log.created_at >= beforeDate || log.is_rolled_back);
 
     return count;
   }
@@ -371,9 +367,7 @@ export class AuditLogService implements IAuditLogService {
   /**
    * Remove sensitive data from values
    */
-  private cleanSensitiveData(
-    values?: Record<string, any>,
-  ): Record<string, any> | undefined {
+  private cleanSensitiveData(values?: Record<string, any>): Record<string, any> | undefined {
     if (!values) {
       return values;
     }

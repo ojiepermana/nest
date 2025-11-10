@@ -5,10 +5,7 @@
  */
 
 import { EntityGenerator } from './entity.generator';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 describe('EntityGenerator', () => {
   let mockTableMetadata: TableMetadata;
@@ -147,13 +144,9 @@ describe('EntityGenerator', () => {
         } as ColumnMetadata,
       ];
 
-      const generator = new EntityGenerator(
-        mockTableMetadata,
-        columnsWithTimestamps,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new EntityGenerator(mockTableMetadata, columnsWithTimestamps, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -204,13 +197,9 @@ describe('EntityGenerator', () => {
         ...mockColumns.slice(1),
       ];
 
-      const generator = new EntityGenerator(
-        mockTableMetadata,
-        columnsWithUuid,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new EntityGenerator(mockTableMetadata, columnsWithUuid, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -238,13 +227,9 @@ describe('EntityGenerator', () => {
         ...mockColumns.slice(1),
       ];
 
-      const generator = new EntityGenerator(
-        mockTableMetadata,
-        columnsWithManualPk,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new EntityGenerator(mockTableMetadata, columnsWithManualPk, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -285,13 +270,9 @@ describe('EntityGenerator', () => {
         } as ColumnMetadata,
       ];
 
-      const generator = new EntityGenerator(
-        mockTableMetadata,
-        columnsWithSnakeCase,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new EntityGenerator(mockTableMetadata, columnsWithSnakeCase, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -351,13 +332,9 @@ describe('EntityGenerator', () => {
         } as ColumnMetadata,
       ];
 
-      const generator = new EntityGenerator(
-        mockTableMetadata,
-        columnsWithTimestamps,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new EntityGenerator(mockTableMetadata, columnsWithTimestamps, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -385,13 +362,9 @@ describe('EntityGenerator', () => {
         } as ColumnMetadata,
       ];
 
-      const generator = new EntityGenerator(
-        mockTableMetadata,
-        columnsWithTimestamps,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new EntityGenerator(mockTableMetadata, columnsWithTimestamps, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -421,14 +394,10 @@ describe('EntityGenerator', () => {
         } as ColumnMetadata,
       ];
 
-      const generator = new EntityGenerator(
-        mockTableMetadata,
-        columnsWithSoftDelete,
-        {
-          tableName: 'users',
-          enableSoftDelete: true,
-        },
-      );
+      const generator = new EntityGenerator(mockTableMetadata, columnsWithSoftDelete, {
+        tableName: 'users',
+        enableSoftDelete: true,
+      });
 
       const result = generator.generate();
 
@@ -492,13 +461,9 @@ describe('EntityGenerator', () => {
         } as ColumnMetadata,
       ];
 
-      const generator = new EntityGenerator(
-        mockTableMetadata,
-        columnsWithTimestamp,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new EntityGenerator(mockTableMetadata, columnsWithTimestamp, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -525,13 +490,9 @@ describe('EntityGenerator', () => {
         } as ColumnMetadata,
       ];
 
-      const generator = new EntityGenerator(
-        mockTableMetadata,
-        columnsWithBoolean,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new EntityGenerator(mockTableMetadata, columnsWithBoolean, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -560,13 +521,9 @@ describe('EntityGenerator', () => {
         } as ColumnMetadata,
       ];
 
-      const generator = new EntityGenerator(
-        mockTableMetadata,
-        columnsWithDefaults,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new EntityGenerator(mockTableMetadata, columnsWithDefaults, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 

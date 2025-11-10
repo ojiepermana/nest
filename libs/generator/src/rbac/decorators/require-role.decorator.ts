@@ -143,21 +143,15 @@ export const RequireAllRoles = (
  * Common role decorators for convenience
  */
 
-export const RequireAdmin = (
-  options: RequireRoleOptions = {},
-): MethodDecorator => {
+export const RequireAdmin = (options: RequireRoleOptions = {}): MethodDecorator => {
   return RequireRole('admin', options);
 };
 
-export const RequireSuperAdmin = (
-  options: RequireRoleOptions = {},
-): MethodDecorator => {
+export const RequireSuperAdmin = (options: RequireRoleOptions = {}): MethodDecorator => {
   return RequireRole('super_admin', options);
 };
 
-export const RequireModerator = (
-  options: RequireRoleOptions = {},
-): MethodDecorator => {
+export const RequireModerator = (options: RequireRoleOptions = {}): MethodDecorator => {
   return RequireRole('moderator', options);
 };
 

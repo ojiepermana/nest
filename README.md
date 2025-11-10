@@ -25,6 +25,7 @@ npm install @ojiepermana/nest-generator
 ```
 
 **Features:**
+
 - ✅ **Core CRUD** - Create, Read, Update, Delete with validation
 - ✅ **Advanced Queries** - JOINs, CTEs, Aggregations, Recaps (daily/monthly/yearly)
 - ✅ **Caching** - Redis integration with smart invalidation
@@ -36,6 +37,7 @@ npm install @ojiepermana/nest-generator
 - ✅ **Multi-Architecture** - Standalone, Monorepo, Microservices
 
 **RBAC Features:**
+
 - 🔐 Permission-based & Role-based access control
 - 🔐 Ownership verification (row-level security)
 - 🔐 Field-level permissions
@@ -128,6 +130,7 @@ export class UsersController {
 ```
 
 📖 **Documentation:**
+
 - [Generator Deep Analysis](./libs/generator/DEEP_ANALYSIS_SCORE.md)
 - [RBAC Complete Guide](./libs/generator/src/rbac/RBAC_GUIDE.md)
 - [Publishing Guide](./PUBLISHING.md)
@@ -165,38 +168,38 @@ npm run publish:all-libs
 
 ## � Feature Comparison
 
-| Feature | Status | Tests | Documentation |
-|---------|--------|-------|---------------|
-| **Core CRUD** | ✅ Complete | 585 passing | ✅ |
-| **Advanced Queries** | ✅ Complete | Included | ✅ |
-| **JOINs (Auto-detect)** | ✅ Complete | Included | ✅ |
-| **Aggregations** | ✅ Complete | Included | ✅ |
-| **Recaps (Daily/Monthly/Yearly)** | ✅ Complete | Included | ✅ |
-| **Caching (Redis)** | ✅ Complete | Included | ✅ |
-| **Audit Trail** | ✅ Complete | Included | ✅ |
-| **File Upload** | ✅ Complete | 40 tests | ✅ |
-| **- Local Storage** | ✅ Complete | ✅ | ✅ |
-| **- AWS S3** | ✅ Complete | ✅ | ✅ |
-| **- Google Cloud Storage** | ✅ Complete | ✅ | ✅ |
-| **- Azure Blob Storage** | ✅ Complete | ✅ | ✅ |
-| **Export (CSV/Excel)** | ✅ Complete | Included | ✅ |
-| **Swagger Documentation** | ✅ Complete | Included | ✅ |
-| **RBAC** | ✅ Complete | 92 tests | ✅ 1432 lines |
-| **- Permission-based** | ✅ Complete | 22 tests | ✅ |
-| **- Role-based** | ✅ Complete | 28 tests | ✅ |
-| **- Ownership verification** | ✅ Complete | Included | ✅ |
-| **- Field-level permissions** | ✅ Complete | Included | ✅ |
-| **Architecture Support** | ✅ Complete | Included | ✅ |
-| **- Standalone** | ✅ Complete | ✅ | ✅ |
-| **- Monorepo** | ✅ Complete | ✅ | ✅ |
-| **- Microservices** | ✅ Complete | ✅ | ✅ |
-| **Database Support** | ✅ Complete | Included | ✅ |
-| **- PostgreSQL** | ✅ Complete | ✅ | ✅ |
-| **- MySQL** | ✅ Complete | ✅ | ✅ |
+| Feature                           | Status      | Tests       | Documentation |
+| --------------------------------- | ----------- | ----------- | ------------- |
+| **Core CRUD**                     | ✅ Complete | 585 passing | ✅            |
+| **Advanced Queries**              | ✅ Complete | Included    | ✅            |
+| **JOINs (Auto-detect)**           | ✅ Complete | Included    | ✅            |
+| **Aggregations**                  | ✅ Complete | Included    | ✅            |
+| **Recaps (Daily/Monthly/Yearly)** | ✅ Complete | Included    | ✅            |
+| **Caching (Redis)**               | ✅ Complete | Included    | ✅            |
+| **Audit Trail**                   | ✅ Complete | Included    | ✅            |
+| **File Upload**                   | ✅ Complete | 40 tests    | ✅            |
+| **- Local Storage**               | ✅ Complete | ✅          | ✅            |
+| **- AWS S3**                      | ✅ Complete | ✅          | ✅            |
+| **- Google Cloud Storage**        | ✅ Complete | ✅          | ✅            |
+| **- Azure Blob Storage**          | ✅ Complete | ✅          | ✅            |
+| **Export (CSV/Excel)**            | ✅ Complete | Included    | ✅            |
+| **Swagger Documentation**         | ✅ Complete | Included    | ✅            |
+| **RBAC**                          | ✅ Complete | 92 tests    | ✅ 1432 lines |
+| **- Permission-based**            | ✅ Complete | 22 tests    | ✅            |
+| **- Role-based**                  | ✅ Complete | 28 tests    | ✅            |
+| **- Ownership verification**      | ✅ Complete | Included    | ✅            |
+| **- Field-level permissions**     | ✅ Complete | Included    | ✅            |
+| **Architecture Support**          | ✅ Complete | Included    | ✅            |
+| **- Standalone**                  | ✅ Complete | ✅          | ✅            |
+| **- Monorepo**                    | ✅ Complete | ✅          | ✅            |
+| **- Microservices**               | ✅ Complete | ✅          | ✅            |
+| **Database Support**              | ✅ Complete | Included    | ✅            |
+| **- PostgreSQL**                  | ✅ Complete | ✅          | ✅            |
+| **- MySQL**                       | ✅ Complete | ✅          | ✅            |
 
 **Overall Score:** 104.5/100 🎉
 
-##  Documentation
+## Documentation
 
 ### Generator Documentation
 
@@ -215,11 +218,13 @@ npm run publish:all-libs
 ### Examples & Tutorials
 
 **Basic CRUD Module:**
+
 ```bash
 nest-generator generate products.categories
 ```
 
 **With All Features:**
+
 ```bash
 nest-generator generate users.profile \
   --features.audit=true \
@@ -232,6 +237,7 @@ nest-generator generate users.profile \
 ```
 
 **Microservices Architecture:**
+
 ```bash
 nest-generator init --architecture=microservices
 nest-generator generate orders.transactions

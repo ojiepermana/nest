@@ -54,11 +54,7 @@ export class QueryBuilder {
   private groupByColumns?: string[];
   private havingConditions: WhereCondition[] = [];
 
-  constructor(
-    tableName: string,
-    dbType: DatabaseType = 'postgresql',
-    alias?: string,
-  ) {
+  constructor(tableName: string, dbType: DatabaseType = 'postgresql', alias?: string) {
     this.tableName = tableName;
     this.tableAlias = alias;
     this.generator = new QueryGenerator(dbType);
@@ -75,9 +71,7 @@ export class QueryBuilder {
       }
 
       // Check if it's an operator-based filter (e.g., name_eq, age_gt)
-      const operatorMatch = key.match(
-        /^(.+)_(eq|ne|gt|gte|lt|lte|like|in|between|null)$/,
-      );
+      const operatorMatch = key.match(/^(.+)_(eq|ne|gt|gte|lt|lte|like|in|between|null)$/);
 
       if (operatorMatch) {
         const [, columnName, operatorStr] = operatorMatch;
@@ -147,24 +141,14 @@ export class QueryBuilder {
   /**
    * Add INNER JOIN
    */
-  innerJoin(
-    table: string,
-    leftColumn: string,
-    rightColumn: string,
-    alias?: string,
-  ): this {
+  innerJoin(table: string, leftColumn: string, rightColumn: string, alias?: string): this {
     return this.join('INNER', table, leftColumn, rightColumn, alias);
   }
 
   /**
    * Add LEFT JOIN
    */
-  leftJoin(
-    table: string,
-    leftColumn: string,
-    rightColumn: string,
-    alias?: string,
-  ): this {
+  leftJoin(table: string, leftColumn: string, rightColumn: string, alias?: string): this {
     return this.join('LEFT', table, leftColumn, rightColumn, alias);
   }
 
@@ -256,8 +240,7 @@ export class QueryBuilder {
       orderBy: this.orderByClauses.length > 0 ? this.orderByClauses : undefined,
       pagination: this.paginationOptions,
       groupBy: this.groupByColumns,
-      having:
-        this.havingConditions.length > 0 ? this.havingConditions : undefined,
+      having: this.havingConditions.length > 0 ? this.havingConditions : undefined,
     };
 
     return this.generator.generateSelect(options);

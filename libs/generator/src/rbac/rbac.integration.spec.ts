@@ -30,10 +30,7 @@ describe('RBAC Integration Tests', () => {
       const result = await service.hasPermission('user-123', 'users.create');
 
       expect(result).toBe(true);
-      expect(repository.hasPermission).toHaveBeenCalledWith(
-        'user-123',
-        'users.create',
-      );
+      expect(repository.hasPermission).toHaveBeenCalledWith('user-123', 'users.create');
     });
 
     it('should return false when user lacks permission', async () => {
@@ -52,12 +49,7 @@ describe('RBAC Integration Tests', () => {
       const result = await service.hasRole('user-123', 'admin');
 
       expect(result).toBe(true);
-      expect(repository.hasRole).toHaveBeenCalledWith(
-        'user-123',
-        'admin',
-        true,
-        true,
-      );
+      expect(repository.hasRole).toHaveBeenCalledWith('user-123', 'admin', true, true);
     });
 
     it('should return false when user lacks role', async () => {
@@ -87,14 +79,9 @@ describe('RBAC Integration Tests', () => {
     });
 
     it('should handle multiple permissions with OR logic', async () => {
-      repository.hasPermission
-        .mockResolvedValueOnce(false)
-        .mockResolvedValueOnce(true);
+      repository.hasPermission.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
 
-      const result = await service.hasAnyPermission('user-123', [
-        'users.delete',
-        'users.update',
-      ]);
+      const result = await service.hasAnyPermission('user-123', ['users.delete', 'users.update']);
 
       expect(result.granted).toBe(true);
     });
@@ -102,27 +89,17 @@ describe('RBAC Integration Tests', () => {
 
   describe('Combined Checks - Multiple Roles', () => {
     it('should handle multiple roles with AND logic', async () => {
-      repository.hasRole
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(true);
+      repository.hasRole.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
 
-      const result = await service.hasAllRoles('user-123', [
-        'admin',
-        'moderator',
-      ]);
+      const result = await service.hasAllRoles('user-123', ['admin', 'moderator']);
 
       expect(result.granted).toBe(true);
     });
 
     it('should handle multiple roles with OR logic', async () => {
-      repository.hasRole
-        .mockResolvedValueOnce(false)
-        .mockResolvedValueOnce(true);
+      repository.hasRole.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
 
-      const result = await service.hasAnyRole('user-123', [
-        'admin',
-        'moderator',
-      ]);
+      const result = await service.hasAnyRole('user-123', ['admin', 'moderator']);
 
       expect(result.granted).toBe(true);
     });
@@ -164,10 +141,7 @@ describe('RBAC Integration Tests', () => {
       await service.removeRole('user-123', 'admin');
 
       expect(repository.getRoleByName).toHaveBeenCalledWith('admin');
-      expect(repository.removeRoleFromUser).toHaveBeenCalledWith(
-        'user-123',
-        'role-1',
-      );
+      expect(repository.removeRoleFromUser).toHaveBeenCalledWith('user-123', 'role-1');
     });
   });
 
@@ -176,13 +150,10 @@ describe('RBAC Integration Tests', () => {
       repository.isSuperAdmin.mockResolvedValue(false);
       repository.checkOwnership.mockResolvedValue(true);
 
-      const result = await service.checkOwnership(
-        'user-123',
-        'app',
-        'posts',
-        'post-1',
-        { ownerField: 'user_id', allowAdminOverride: false },
-      );
+      const result = await service.checkOwnership('user-123', 'app', 'posts', 'post-1', {
+        ownerField: 'user_id',
+        allowAdminOverride: false,
+      });
 
       expect(result).toBe(true);
       expect(repository.checkOwnership).toHaveBeenCalledWith(
@@ -198,13 +169,10 @@ describe('RBAC Integration Tests', () => {
       repository.isSuperAdmin.mockResolvedValue(false);
       repository.checkOwnership.mockResolvedValue(false);
 
-      const result = await service.checkOwnership(
-        'user-123',
-        'app',
-        'posts',
-        'post-2',
-        { ownerField: 'user_id', allowAdminOverride: false },
-      );
+      const result = await service.checkOwnership('user-123', 'app', 'posts', 'post-2', {
+        ownerField: 'user_id',
+        allowAdminOverride: false,
+      });
 
       expect(result).toBe(false);
     });

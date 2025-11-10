@@ -6,10 +6,7 @@
 
 import { FileUploadGenerator } from './file-upload.generator';
 import { StorageServiceGenerator } from './storage-service.generator';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 describe('FileUploadGenerator', () => {
   let tableMetadata: TableMetadata;
@@ -508,12 +505,7 @@ describe('StorageServiceGenerator', () => {
 
   describe('Common Features', () => {
     it('should include ConfigService in all providers', () => {
-      const providers: Array<'local' | 's3' | 'gcs' | 'azure'> = [
-        'local',
-        's3',
-        'gcs',
-        'azure',
-      ];
+      const providers: Array<'local' | 's3' | 'gcs' | 'azure'> = ['local', 's3', 'gcs', 'azure'];
 
       providers.forEach((provider) => {
         const generator = new StorageServiceGenerator({
@@ -527,12 +519,7 @@ describe('StorageServiceGenerator', () => {
     });
 
     it('should include upload method in all providers', () => {
-      const providers: Array<'local' | 's3' | 'gcs' | 'azure'> = [
-        'local',
-        's3',
-        'gcs',
-        'azure',
-      ];
+      const providers: Array<'local' | 's3' | 'gcs' | 'azure'> = ['local', 's3', 'gcs', 'azure'];
 
       providers.forEach((provider) => {
         const generator = new StorageServiceGenerator({
@@ -546,12 +533,7 @@ describe('StorageServiceGenerator', () => {
     });
 
     it('should include delete method in all providers', () => {
-      const providers: Array<'local' | 's3' | 'gcs' | 'azure'> = [
-        'local',
-        's3',
-        'gcs',
-        'azure',
-      ];
+      const providers: Array<'local' | 's3' | 'gcs' | 'azure'> = ['local', 's3', 'gcs', 'azure'];
 
       providers.forEach((provider) => {
         const generator = new StorageServiceGenerator({

@@ -267,17 +267,13 @@ describe('DTO Generators', () => {
       const result = generator.generate(mockTable, mockColumns);
 
       expect(result.code).toContain('@ApiProperty');
-      expect(result.imports).toContain(
-        "import { ApiProperty } from '@nestjs/swagger';",
-      );
+      expect(result.imports).toContain("import { ApiProperty } from '@nestjs/swagger';");
     });
 
     it('should generate imports for class-validator', () => {
       const result = generator.generate(mockTable, mockColumns);
 
-      expect(
-        result.imports.some((imp) => imp.includes('class-validator')),
-      ).toBe(true);
+      expect(result.imports.some((imp) => imp.includes('class-validator'))).toBe(true);
     });
 
     it('should handle optional fields', () => {
@@ -336,8 +332,7 @@ describe('DTO Generators', () => {
     it('should add @IsOptional to all fields', () => {
       const result = generator.generate(mockTable, mockColumns);
 
-      const optionalCount = (result.code.match(/@IsOptional\(\)/g) || [])
-        .length;
+      const optionalCount = (result.code.match(/@IsOptional\(\)/g) || []).length;
       expect(optionalCount).toBeGreaterThan(0);
     });
 
@@ -418,9 +413,7 @@ describe('DTO Generators', () => {
       const result = generator.generate(mockTable, mockColumns);
 
       // Find lines with _like operator
-      const likeLines = result.code
-        .split('\n')
-        .filter((line) => line.includes('_like'));
+      const likeLines = result.code.split('\n').filter((line) => line.includes('_like'));
       expect(likeLines.length).toBeGreaterThan(0);
 
       // Check that @IsString appears in the section before _like properties

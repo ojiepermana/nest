@@ -247,13 +247,7 @@ export function shouldExcludeFromCreate(column: ColumnMetadata): boolean {
   if (column.is_primary_key) return true;
 
   // Exclude timestamp columns (auto-managed)
-  const autoColumns = [
-    'created_at',
-    'updated_at',
-    'deleted_at',
-    'created_by',
-    'updated_by',
-  ];
+  const autoColumns = ['created_at', 'updated_at', 'deleted_at', 'created_by', 'updated_by'];
   if (autoColumns.includes(column.column_name.toLowerCase())) return true;
 
   // Exclude if not in form

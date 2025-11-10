@@ -65,16 +65,7 @@ export const SQL_OPERATORS = {
  */
 export const DATA_TYPES = {
   STRING: ['varchar', 'text', 'char', 'string'],
-  NUMBER: [
-    'integer',
-    'int',
-    'bigint',
-    'smallint',
-    'decimal',
-    'numeric',
-    'float',
-    'double',
-  ],
+  NUMBER: ['integer', 'int', 'bigint', 'smallint', 'decimal', 'numeric', 'float', 'double'],
   BOOLEAN: ['boolean', 'bool'],
   DATE: ['date', 'timestamp', 'datetime', 'time'],
   UUID: ['uuid'],

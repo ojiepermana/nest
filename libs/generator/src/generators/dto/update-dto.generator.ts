@@ -4,10 +4,7 @@
  * Generates Update DTO classes from table metadata
  */
 
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
 import {
   mapToTypeScriptType,
@@ -36,10 +33,7 @@ export class UpdateDtoGenerator {
   /**
    * Generate Update DTO class
    */
-  generate(
-    table: TableMetadata,
-    columns: ColumnMetadata[],
-  ): { code: string; imports: string[] } {
+  generate(table: TableMetadata, columns: ColumnMetadata[]): { code: string; imports: string[] } {
     const className = `Update${toPascalCase(table.table_name)}Dto`;
     const formColumns = columns.filter((col) => !shouldExcludeFromUpdate(col));
 
@@ -51,9 +45,7 @@ export class UpdateDtoGenerator {
     formColumns.forEach((col) => {
       if (col.enum_values && col.enum_values.length > 0) {
         const enumName = `${toPascalCase(col.column_name)}Enum`;
-        const enumValues = col.enum_values
-          .map((val) => `  ${val} = '${val}'`)
-          .join(',\n');
+        const enumValues = col.enum_values.map((val) => `  ${val} = '${val}'`).join(',\n');
         enumDefinitions.push(`export enum ${enumName} {\n${enumValues}\n}`);
       }
     });
@@ -173,17 +165,13 @@ export class UpdateDtoGenerator {
       const validatorDecorators = decorators
         .filter((d) => {
           const baseDecorator = d.split('(')[0];
-          return (
-            baseDecorator.startsWith('@Is') || baseDecorator.startsWith('@M')
-          );
+          return baseDecorator.startsWith('@Is') || baseDecorator.startsWith('@M');
         })
         .map((d) => d.split('(')[0].substring(1))
         .filter((d, i, arr) => arr.indexOf(d) === i);
 
       if (validatorDecorators.length > 0) {
-        imports.push(
-          `import { ${validatorDecorators.join(', ')} } from 'class-validator';`,
-        );
+        imports.push(`import { ${validatorDecorators.join(', ')} } from 'class-validator';`);
       }
     }
 
@@ -193,10 +181,7 @@ export class UpdateDtoGenerator {
     }
 
     // Swagger imports
-    if (
-      this.options.includeSwagger &&
-      decorators.some((d) => d.includes('@ApiProperty'))
-    ) {
+    if (this.options.includeSwagger && decorators.some((d) => d.includes('@ApiProperty'))) {
       imports.push(`import { ApiProperty } from '@nestjs/swagger';`);
     }
 

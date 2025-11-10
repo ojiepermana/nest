@@ -23,10 +23,8 @@ export interface ParsedFile {
 
 export class BlockMarkerParser {
   // Default markers
-  private readonly customStartPattern =
-    /\/\/\s*CUSTOM(?:_CODE)?_START:\s*(\S+)/;
-  private readonly customEndPattern =
-    /\/\/\s*CUSTOM(?:_CODE)?_END(?::\s*(\S+))?/;
+  private readonly customStartPattern = /\/\/\s*CUSTOM(?:_CODE)?_START:\s*(\S+)/;
+  private readonly customEndPattern = /\/\/\s*CUSTOM(?:_CODE)?_END(?::\s*(\S+))?/;
   private readonly generatedStartPattern =
     /\/\/\s*GENERATED(?:_(?:CODE|METHOD|FILE))?(?:_START)?:\s*(\S+)/;
   private readonly generatedEndPattern =
@@ -53,14 +51,7 @@ export class BlockMarkerParser {
       if (customStartMatch) {
         if (currentBlock) {
           // Close previous block if not properly closed
-          this.finalizeBlock(
-            currentBlock,
-            blockLines,
-            i,
-            blocks,
-            customBlocks,
-            generatedBlocks,
-          );
+          this.finalizeBlock(currentBlock, blockLines, i, blocks, customBlocks, generatedBlocks);
         }
 
         currentBlock = {
@@ -91,14 +82,7 @@ export class BlockMarkerParser {
       const generatedStartMatch = line.match(this.generatedStartPattern);
       if (generatedStartMatch) {
         if (currentBlock) {
-          this.finalizeBlock(
-            currentBlock,
-            blockLines,
-            i,
-            blocks,
-            customBlocks,
-            generatedBlocks,
-          );
+          this.finalizeBlock(currentBlock, blockLines, i, blocks, customBlocks, generatedBlocks);
         }
 
         currentBlock = {
@@ -286,9 +270,7 @@ export class BlockMarkerParser {
 
     // Check for unclosed blocks
     openBlocks.forEach((block) => {
-      errors.push(
-        `Line ${block.line}: Unclosed ${block.type} block '${block.marker}'`,
-      );
+      errors.push(`Line ${block.line}: Unclosed ${block.type} block '${block.marker}'`);
     });
 
     return {

@@ -155,19 +155,12 @@ export interface IAuditLogService {
   /**
    * Get audit logs for specific entity
    */
-  getEntityHistory(
-    entity_type: string,
-    entity_id: string,
-  ): Promise<AuditLogEntry[]>;
+  getEntityHistory(entity_type: string, entity_id: string): Promise<AuditLogEntry[]>;
 
   /**
    * Get user activity
    */
-  getUserActivity(
-    user_id: string,
-    start_date?: Date,
-    end_date?: Date,
-  ): Promise<AuditLogEntry[]>;
+  getUserActivity(user_id: string, start_date?: Date, end_date?: Date): Promise<AuditLogEntry[]>;
 
   /**
    * Rollback to previous state
@@ -177,10 +170,7 @@ export interface IAuditLogService {
   /**
    * Get rollback history for entity
    */
-  getRollbackHistory(
-    entity_type: string,
-    entity_id: string,
-  ): Promise<AuditLogEntry[]>;
+  getRollbackHistory(entity_type: string, entity_id: string): Promise<AuditLogEntry[]>;
 
   /**
    * Get audit statistics
@@ -195,10 +185,7 @@ export interface IAuditLogService {
   /**
    * Export audit logs
    */
-  export(
-    filter: AuditLogFilter,
-    format: 'json' | 'csv',
-  ): Promise<string | Buffer>;
+  export(filter: AuditLogFilter, format: 'json' | 'csv'): Promise<string | Buffer>;
 }
 
 /**

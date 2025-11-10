@@ -273,14 +273,7 @@ GET http://localhost:3000/users/recap?year=2024&group_by=department&is_active_eq
 ```typescript
 // users.dto.ts
 
-import {
-  IsOptional,
-  IsString,
-  IsInt,
-  Min,
-  Max,
-  Matches,
-} from 'class-validator';
+import { IsOptional, IsString, IsInt, Min, Max, Matches } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class UserRecapDto {
@@ -293,8 +286,7 @@ export class UserRecapDto {
   @IsOptional()
   @IsString()
   @Matches(/^[a-z_]+(?:,[a-z_]+)?$/, {
-    message:
-      'group_by must be 1 or 2 comma-separated field names (e.g., "department" or "department,role")',
+    message: 'group_by must be 1 or 2 comma-separated field names (e.g., "department" or "department,role")',
   })
   group_by?: string = 'department'; // Default to single field
 
@@ -612,9 +604,7 @@ async function fetchUserRecap(year: number, groupBy: string[]) {
 
   // Transform for chart library (Chart.js, ApexCharts, etc.)
   return {
-    categories: data.map((d) =>
-      groupBy.length === 1 ? d.main : `${d.main} - ${d.sub}`,
-    ),
+    categories: data.map((d) => (groupBy.length === 1 ? d.main : `${d.main} - ${d.sub}`)),
     series: [
       { name: 'Jan', data: data.map((d) => d.jan) },
       { name: 'Feb', data: data.map((d) => d.feb) },
@@ -643,9 +633,7 @@ const chartData = await fetchUserRecap(2024, ['department', 'role']);
 import * as XLSX from 'xlsx';
 
 async function exportRecapToExcel(year: number, groupBy: string[]) {
-  const response = await fetch(
-    `/users/recap?year=${year}&group_by=${groupBy.join(',')}`,
-  );
+  const response = await fetch(`/users/recap?year=${year}&group_by=${groupBy.join(',')}`);
   const data: RecapResult[] = await response.json();
 
   // Transform to Excel format
@@ -909,37 +897,16 @@ export class UsersModule {}
 
 ```typescript
 // apps/gateway/src/modules/users/users.controller.ts
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-  Inject,
-} from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import {
-  CreateUserDto,
-  UpdateUserDto,
-  UserFilterDto,
-  UserRecapDto,
-} from './users.dto';
+import { CreateUserDto, UpdateUserDto, UserFilterDto, UserRecapDto } from './users.dto';
 
 @Controller('users')
 export class UsersController {
-  constructor(
-    @Inject('USER_SERVICE') private readonly userService: ClientProxy,
-  ) {}
+  constructor(@Inject('USER_SERVICE') private readonly userService: ClientProxy) {}
 
   @Get()
-  async findAll(
-    @Query() filters: UserFilterDto,
-    @Query('page') page = 1,
-    @Query('limit') limit = 10,
-  ) {
+  async findAll(@Query() filters: UserFilterDto, @Query('page') page = 1, @Query('limit') limit = 10) {
     return this.userService.send('users.findAll', { filters, page, limit });
   }
 
@@ -981,16 +948,13 @@ import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-    AppModule,
-    {
-      transport: Transport.TCP,
-      options: {
-        host: 'localhost',
-        port: 3001,
-      },
+  const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
+    transport: Transport.TCP,
+    options: {
+      host: 'localhost',
+      port: 3001,
     },
-  );
+  });
 
   await app.listen();
   console.log('User Service is listening on port 3001');
@@ -1244,9 +1208,7 @@ The generator validates group_by fields against metadata:
 
 ```typescript
 // Only columns with is_filterable = true can be grouped
-const validGroupByFields = columns
-  .filter((col) => col.is_filterable === true)
-  .map((col) => col.column_name);
+const validGroupByFields = columns.filter((col) => col.is_filterable === true).map((col) => col.column_name);
 
 // User input
 const requestedFields = ['department', 'role'];
@@ -1884,15 +1846,11 @@ function generateValidators(column: ColumnMetadata): string[] {
   // 2. From validation_rules JSON field
   if (column.validation_rules) {
     const rules =
-      typeof column.validation_rules === 'string'
-        ? JSON.parse(column.validation_rules)
-        : column.validation_rules;
+      typeof column.validation_rules === 'string' ? JSON.parse(column.validation_rules) : column.validation_rules;
 
     // Pattern validation
     if (rules.pattern) {
-      validators.push(
-        `@Matches(/${rules.pattern}/, { message: '${rules.custom_message || 'Invalid format'}' })`,
-      );
+      validators.push(`@Matches(/${rules.pattern}/, { message: '${rules.custom_message || 'Invalid format'}' })`);
     }
 
     // Min length
@@ -2214,10 +2172,7 @@ export const UsersQueries = {
 // libs/generator/src/generators/query/query.generator.ts
 
 class QueryGenerator {
-  generateQueries(
-    tableMetadata: TableMetadata,
-    columns: ColumnMetadata[],
-  ): string {
+  generateQueries(tableMetadata: TableMetadata, columns: ColumnMetadata[]): string {
     const queries: string[] = [];
 
     // 1. Generate SELECT columns for list view
@@ -2294,9 +2249,7 @@ class QueryGenerator {
     `);
 
     // 8. Build update query
-    const updateColumns = formColumns.map(
-      (col, i) => `${col.column_name} = $${i + 1}`,
-    );
+    const updateColumns = formColumns.map((col, i) => `${col.column_name} = $${i + 1}`);
     updateColumns.push('updated_at = CURRENT_TIMESTAMP');
 
     const updateParamIndex = formColumns.length + 1;
@@ -2339,9 +2292,7 @@ class QueryGenerator {
 
     // 10. Build search query if searchable columns exist
     if (searchableColumns.length > 0) {
-      const searchConditions = searchableColumns
-        .map((col) => `${col} ILIKE $1`)
-        .join(' OR ');
+      const searchConditions = searchableColumns.map((col) => `${col} ILIKE $1`).join(' OR ');
 
       queries.push(`
   // GENERATED_QUERY_START: search
@@ -2370,9 +2321,7 @@ ${queries.join('\n')}
 
   private getOrderByClause(columns: ColumnMetadata[]): string {
     // Default order by created_at if exists, otherwise primary key
-    const createdAtCol = columns.find(
-      (col) => col.column_name === 'created_at',
-    );
+    const createdAtCol = columns.find((col) => col.column_name === 'created_at');
     if (createdAtCol) {
       return 'created_at DESC';
     }
@@ -2555,14 +2504,9 @@ interface JoinConfig {
 }
 
 class JoinQueryGenerator {
-  generateQueriesWithJoins(
-    tableMetadata: TableMetadata,
-    columns: ColumnMetadata[],
-  ): string {
+  generateQueriesWithJoins(tableMetadata: TableMetadata, columns: ColumnMetadata[]): string {
     // Detect foreign key columns
-    const fkColumns = columns.filter(
-      (col) => col.ref_schema && col.ref_table && col.ref_column,
-    );
+    const fkColumns = columns.filter((col) => col.ref_schema && col.ref_table && col.ref_column);
 
     // Build JOIN configurations
     const joins = this.buildJoinConfigs(fkColumns);
@@ -2617,11 +2561,7 @@ class JoinQueryGenerator {
     return ['name']; // Simplified
   }
 
-  private generateSelectWithJoins(
-    mainTable: string,
-    columns: ColumnMetadata[],
-    joins: JoinConfig[],
-  ): string {
+  private generateSelectWithJoins(mainTable: string, columns: ColumnMetadata[], joins: JoinConfig[]): string {
     const selectParts: string[] = [];
 
     // Main table columns (non-FK columns or FK IDs if needed)
@@ -3112,13 +3052,7 @@ export class UsersRepository {
   // GENERATED_METHOD_START: create
   async create(dto: CreateUserDto, createdBy: string) {
     const { username, email, full_name, is_active } = dto;
-    const result = await this.pool.query(UsersQueries.create, [
-      username,
-      email,
-      full_name,
-      is_active,
-      createdBy,
-    ]);
+    const result = await this.pool.query(UsersQueries.create, [username, email, full_name, is_active, createdBy]);
     return result.rows[0];
   }
   // GENERATED_METHOD_END: create
@@ -3126,13 +3060,7 @@ export class UsersRepository {
   // GENERATED_METHOD_START: update
   async update(id: string, dto: UpdateUserDto) {
     const { username, email, full_name, is_active } = dto;
-    const result = await this.pool.query(UsersQueries.update, [
-      username,
-      email,
-      full_name,
-      is_active,
-      id,
-    ]);
+    const result = await this.pool.query(UsersQueries.update, [username, email, full_name, is_active, id]);
     return result.rows[0];
   }
   // GENERATED_METHOD_END: update
@@ -3210,23 +3138,8 @@ export class UsersService {
 #### Standalone/Monorepo (`users.controller.ts`)
 
 ```typescript
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto, UserFilterDto } from './users.dto';
@@ -3248,11 +3161,7 @@ export class UsersController {
     type: [CreateUserDto],
   })
   @Throttle({ default: { limit: 100, ttl: 60000 } }) // 100 requests per minute
-  async findAll(
-    @Query() filters: UserFilterDto,
-    @Query('page') page = 1,
-    @Query('limit') limit = 10,
-  ) {
+  async findAll(@Query() filters: UserFilterDto, @Query('page') page = 1, @Query('limit') limit = 10) {
     return this.service.findAll(filters, page, limit);
   }
   // GENERATED_ENDPOINT_END: find-all
@@ -3322,24 +3231,9 @@ export class UsersController {
 #### Microservices Gateway (`apps/gateway/src/modules/users/users.controller.ts`)
 
 ```typescript
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-  Inject,
-} from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { CreateUserDto, UpdateUserDto, UserFilterDto } from './users.dto';
 
@@ -3360,11 +3254,7 @@ export class UsersController {
     type: [CreateUserDto],
   })
   @Throttle({ default: { limit: 100, ttl: 60000 } })
-  async findAll(
-    @Query() filters: UserFilterDto,
-    @Query('page') page = 1,
-    @Query('limit') limit = 10,
-  ) {
+  async findAll(@Query() filters: UserFilterDto, @Query('page') page = 1, @Query('limit') limit = 10) {
     return this.client.send('users.findAll', { filters, page, limit });
   }
   // GENERATED_ENDPOINT_END: find-all
@@ -3596,11 +3486,7 @@ export interface DatabaseDialect {
   // Date/time functions
   extractYear(column: string, timezone?: string): string;
   extractMonth(column: string, timezone?: string): string;
-  dateTrunc(
-    unit: 'day' | 'month' | 'year',
-    column: string,
-    timezone?: string,
-  ): string;
+  dateTrunc(unit: 'day' | 'month' | 'year', column: string, timezone?: string): string;
 
   // JSON operations
   jsonExtract(column: string, path: string): string;
@@ -3611,11 +3497,7 @@ export interface DatabaseDialect {
   castToUUID(value: string): string;
 
   // Upsert support
-  buildUpsert(
-    table: string,
-    columns: string[],
-    conflictColumns: string[],
-  ): string;
+  buildUpsert(table: string, columns: string[], conflictColumns: string[]): string;
 
   // Limit/offset
   buildPagination(limit: number, offset: number): string;
@@ -3671,19 +3553,12 @@ export class PostgresDialect implements DatabaseDialect {
     return `$${value}::uuid`;
   }
 
-  buildUpsert(
-    table: string,
-    columns: string[],
-    conflictColumns: string[],
-  ): string {
+  buildUpsert(table: string, columns: string[], conflictColumns: string[]): string {
     const quoted = columns.map((c) => this.quoteIdentifier(c));
     const params = columns.map((_, i) => `$${i + 1}`);
     const updates = columns
       .filter((c) => !conflictColumns.includes(c))
-      .map(
-        (c) =>
-          `${this.quoteIdentifier(c)} = EXCLUDED.${this.quoteIdentifier(c)}`,
-      )
+      .map((c) => `${this.quoteIdentifier(c)} = EXCLUDED.${this.quoteIdentifier(c)}`)
       .join(', ');
 
     return `
@@ -3757,19 +3632,12 @@ export class MySQLDialect implements DatabaseDialect {
     return `CAST(? AS CHAR(36))`;
   }
 
-  buildUpsert(
-    table: string,
-    columns: string[],
-    conflictColumns: string[],
-  ): string {
+  buildUpsert(table: string, columns: string[], conflictColumns: string[]): string {
     const quoted = columns.map((c) => this.quoteIdentifier(c));
     const params = columns.map(() => '?');
     const updates = columns
       .filter((c) => !conflictColumns.includes(c))
-      .map(
-        (c) =>
-          `${this.quoteIdentifier(c)} = VALUES(${this.quoteIdentifier(c)})`,
-      )
+      .map((c) => `${this.quoteIdentifier(c)} = VALUES(${this.quoteIdentifier(c)})`)
       .join(', ');
 
     return `
@@ -3850,11 +3718,7 @@ export class UsersRepository {
 // GENERATED_FILTER_COMPILER_START
 export interface FilterOperator {
   operator: string; // eq, ne, gt, like, in, between, etc.
-  sqlTemplate: (
-    dialect: DatabaseDialect,
-    column: string,
-    paramIndex: number,
-  ) => string;
+  sqlTemplate: (dialect: DatabaseDialect, column: string, paramIndex: number) => string;
   paramCount: number; // 1 for most, 2 for between
   validator: (value: any) => boolean;
 }
@@ -3931,8 +3795,7 @@ export class FilterCompiler {
         'in',
         {
           operator: 'in',
-          sqlTemplate: (d, col, idx) =>
-            `${d.quoteIdentifier(col)} = ANY($${idx})`,
+          sqlTemplate: (d, col, idx) => `${d.quoteIdentifier(col)} = ANY($${idx})`,
           paramCount: 1,
           validator: (v) => Array.isArray(v) && v.length > 0,
         },
@@ -3941,8 +3804,7 @@ export class FilterCompiler {
         'nin',
         {
           operator: 'nin',
-          sqlTemplate: (d, col, idx) =>
-            `${d.quoteIdentifier(col)} != ALL($${idx})`,
+          sqlTemplate: (d, col, idx) => `${d.quoteIdentifier(col)} != ALL($${idx})`,
           paramCount: 1,
           validator: (v) => Array.isArray(v) && v.length > 0,
         },
@@ -3951,8 +3813,7 @@ export class FilterCompiler {
         'between',
         {
           operator: 'between',
-          sqlTemplate: (d, col, idx) =>
-            `${d.quoteIdentifier(col)} BETWEEN $${idx} AND $${idx + 1}`,
+          sqlTemplate: (d, col, idx) => `${d.quoteIdentifier(col)} BETWEEN $${idx} AND $${idx + 1}`,
           paramCount: 2,
           validator: (v) => Array.isArray(v) && v.length === 2,
         },
@@ -4001,11 +3862,7 @@ export class FilterCompiler {
         const op = this.operators.get(opName);
         if (!op || !op.validator(value)) continue;
 
-        const clause = op.sqlTemplate(
-          this.dialect,
-          column.column_name,
-          paramIndex,
-        );
+        const clause = op.sqlTemplate(this.dialect, column.column_name, paramIndex);
         clauses.push(clause);
 
         if (op.paramCount === 1) {
@@ -4034,24 +3891,8 @@ export class FilterCompiler {
   private getAllowedOperators(dataType: string): string[] {
     const type = dataType.toLowerCase();
 
-    if (
-      type.includes('int') ||
-      type.includes('numeric') ||
-      type.includes('decimal')
-    ) {
-      return [
-        'eq',
-        'ne',
-        'gt',
-        'gte',
-        'lt',
-        'lte',
-        'in',
-        'nin',
-        'between',
-        'null',
-        'nnull',
-      ];
+    if (type.includes('int') || type.includes('numeric') || type.includes('decimal')) {
+      return ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'nin', 'between', 'null', 'nnull'];
     }
 
     if (type.includes('char') || type.includes('text') || type === 'string') {
@@ -4062,11 +3903,7 @@ export class FilterCompiler {
       return ['eq', 'ne'];
     }
 
-    if (
-      type.includes('date') ||
-      type.includes('timestamp') ||
-      type.includes('time')
-    ) {
+    if (type.includes('date') || type.includes('timestamp') || type.includes('time')) {
       return ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'between', 'null', 'nnull'];
     }
 
@@ -4238,17 +4075,7 @@ function generateFilterDto(columns: ColumnMetadata[]): string {
 }
 
 function getOperatorsForType(dataType: string): string[] {
-  const numericOps = [
-    'eq',
-    'ne',
-    'gt',
-    'lt',
-    'gte',
-    'lte',
-    'in',
-    'nin',
-    'between',
-  ];
+  const numericOps = ['eq', 'ne', 'gt', 'lt', 'gte', 'lte', 'in', 'nin', 'between'];
   const stringOps = ['eq', 'ne', 'like', 'in', 'nin'];
   const boolOps = ['eq', 'ne'];
   const dateOps = ['eq', 'ne', 'gt', 'lt', 'gte', 'lte', 'between'];
@@ -4288,31 +4115,21 @@ export class SecurityValidator {
    * Validate identifier against allowed list
    * Prevents SQL injection through dynamic identifiers
    */
-  static validateIdentifier(
-    identifier: string,
-    allowedIdentifiers: string[],
-    context: string,
-  ): string {
+  static validateIdentifier(identifier: string, allowedIdentifiers: string[], context: string): string {
     if (!identifier) {
       throw new BadRequestException(`${context}: identifier is required`);
     }
 
     if (!this.IDENTIFIER_PATTERN.test(identifier)) {
-      throw new BadRequestException(
-        `${context}: identifier contains invalid characters`,
-      );
+      throw new BadRequestException(`${context}: identifier contains invalid characters`);
     }
 
     if (identifier.length > this.MAX_IDENTIFIER_LENGTH) {
-      throw new BadRequestException(
-        `${context}: identifier exceeds maximum length`,
-      );
+      throw new BadRequestException(`${context}: identifier exceeds maximum length`);
     }
 
     if (!allowedIdentifiers.includes(identifier)) {
-      throw new BadRequestException(
-        `${context}: '${identifier}' is not an allowed field`,
-      );
+      throw new BadRequestException(`${context}: '${identifier}' is not an allowed field`);
     }
 
     return identifier;
@@ -4328,20 +4145,14 @@ export class SecurityValidator {
     maxCount = 2,
   ): string[] {
     if (!Array.isArray(identifiers) || identifiers.length === 0) {
-      throw new BadRequestException(
-        `${context}: at least one identifier required`,
-      );
+      throw new BadRequestException(`${context}: at least one identifier required`);
     }
 
     if (identifiers.length > maxCount) {
-      throw new BadRequestException(
-        `${context}: maximum ${maxCount} identifiers allowed`,
-      );
+      throw new BadRequestException(`${context}: maximum ${maxCount} identifiers allowed`);
     }
 
-    return identifiers.map((id) =>
-      this.validateIdentifier(id, allowedIdentifiers, context),
-    );
+    return identifiers.map((id) => this.validateIdentifier(id, allowedIdentifiers, context));
   }
 
   /**
@@ -4379,8 +4190,7 @@ export class SecurityValidator {
         throw new BadRequestException(`Invalid boolean value: ${value}`);
 
       case 'uuid':
-        const uuidPattern =
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         if (!uuidPattern.test(value)) {
           throw new BadRequestException(`Invalid UUID value: ${value}`);
         }
@@ -4502,11 +4312,7 @@ const query = `SELECT * FROM users WHERE username = '${username}'`;
 
 // ✅ CORRECT - Identifier from whitelist + quoting
 const allowedFields = ['username', 'email', 'age'];
-const field = SecurityValidator.validateIdentifier(
-  userInput,
-  allowedFields,
-  'sort',
-);
+const field = SecurityValidator.validateIdentifier(userInput, allowedFields, 'sort');
 const query = `SELECT * FROM users ORDER BY ${dialect.quoteIdentifier(field)}`;
 
 // ❌ WRONG - Raw identifier
@@ -4524,16 +4330,10 @@ import { Injectable } from '@nestjs/common';
 export class IpThrottlerGuard extends ThrottlerGuard {
   protected async getTracker(req: Record<string, any>): Promise<string> {
     // Get real IP from headers (behind proxy)
-    return req.ips.length > 0
-      ? req.ips[0]
-      : req.ip || req.connection.remoteAddress;
+    return req.ips.length > 0 ? req.ips[0] : req.ip || req.connection.remoteAddress;
   }
 
-  protected async handleRequest(
-    context: ExecutionContext,
-    limit: number,
-    ttl: number,
-  ): Promise<boolean> {
+  protected async handleRequest(context: ExecutionContext, limit: number, ttl: number): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const tracker = await this.getTracker(request);
 
@@ -4556,11 +4356,7 @@ export class IpThrottlerGuard extends ThrottlerGuard {
 
 ```typescript
 // GENERATED_INPUT_VALIDATION_START
-import {
-  ValidatorConstraint,
-  ValidatorConstraintInterface,
-  ValidationArguments,
-} from 'class-validator';
+import { ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments } from 'class-validator';
 
 @ValidatorConstraint({ name: 'isSafeString', async: false })
 export class IsSafeStringConstraint implements ValidatorConstraintInterface {
@@ -5226,18 +5022,10 @@ export class DatabaseSetupService {
     }
   }
 
-  private async createMetadataTables(
-    config: DatabaseConfig,
-  ): Promise<SetupStep> {
-    const sqlFile =
-      config.type === 'postgresql'
-        ? 'postgresql/01_metadata_tables.sql'
-        : 'mysql/01_metadata_tables.sql';
+  private async createMetadataTables(config: DatabaseConfig): Promise<SetupStep> {
+    const sqlFile = config.type === 'postgresql' ? 'postgresql/01_metadata_tables.sql' : 'mysql/01_metadata_tables.sql';
 
-    const sql = fs.readFileSync(
-      path.join(this.sqlScriptsPath, sqlFile),
-      'utf-8',
-    );
+    const sql = fs.readFileSync(path.join(this.sqlScriptsPath, sqlFile), 'utf-8');
 
     await this.executeSQL(config, sql);
 
@@ -5250,10 +5038,7 @@ export class DatabaseSetupService {
 
   async checkExistingSetup(config: DatabaseConfig): Promise<SetupStatus> {
     try {
-      const pool =
-        config.type === 'postgresql'
-          ? new Pool(config)
-          : await mysql.createPool(config);
+      const pool = config.type === 'postgresql' ? new Pool(config) : await mysql.createPool(config);
 
       // Check if meta schema exists
       const schemaQuery =
@@ -5262,8 +5047,7 @@ export class DatabaseSetupService {
           : `SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = 'meta'`;
 
       const schemaResult = await pool.query(schemaQuery);
-      const schemaExists =
-        schemaResult.rows?.length > 0 || schemaResult[0]?.length > 0;
+      const schemaExists = schemaResult.rows?.length > 0 || schemaResult[0]?.length > 0;
 
       if (!schemaExists) {
         return {
@@ -5283,8 +5067,7 @@ export class DatabaseSetupService {
            AND TABLE_NAME IN ('table_metadata', 'column_metadata', 'generated_files')`;
 
       const tablesResult = await pool.query(tablesQuery);
-      const tableCount =
-        tablesResult.rows?.length || tablesResult[0]?.length || 0;
+      const tableCount = tablesResult.rows?.length || tablesResult[0]?.length || 0;
 
       if (tableCount < 3) {
         return {
@@ -5355,8 +5138,7 @@ export class InitCommand {
         type: 'input',
         name: 'port',
         message: 'Database port:',
-        default: (answers: any) =>
-          answers.database === 'PostgreSQL' ? '5432' : '3306',
+        default: (answers: any) => (answers.database === 'PostgreSQL' ? '5432' : '3306'),
       },
       {
         type: 'input',
@@ -5448,9 +5230,7 @@ export class InitCommand {
     console.log(chalk.bold.cyan('\n📋 Setup Complete!\n'));
     console.log(chalk.white('Next steps:'));
     console.log(chalk.gray('1. Populate metadata tables:'));
-    console.log(
-      chalk.yellow('   INSERT INTO meta.table_metadata (...) VALUES (...);'),
-    );
+    console.log(chalk.yellow('   INSERT INTO meta.table_metadata (...) VALUES (...);'));
     console.log(chalk.gray('\n2. Generate your first module:'));
     console.log(chalk.yellow('   nest-generator generate <schema>.<table>'));
     console.log(chalk.gray('\n3. View generated files in: src/modules/'));
@@ -5724,10 +5504,7 @@ export class UsersRepository {
     if (cached) return cached;
 
     // Query database
-    const result = await this.pool.query(UsersQueries.findAll, [
-      limit,
-      (page - 1) * limit,
-    ]);
+    const result = await this.pool.query(UsersQueries.findAll, [limit, (page - 1) * limit]);
 
     // Cache result for 5 minutes
     await this.cacheManager.set(cacheKey, result.rows, 300000);
@@ -5755,11 +5532,7 @@ export class UsersRepository {
 
   // GENERATED_METHOD_START: create-with-cache-invalidation
   async create(dto: CreateUserDto, userId: string) {
-    const result = await this.pool.query(UsersQueries.create, [
-      dto.username,
-      dto.email,
-      userId,
-    ]);
+    const result = await this.pool.query(UsersQueries.create, [dto.username, dto.email, userId]);
 
     // Invalidate list cache
     await this.invalidateListCache();
@@ -5770,11 +5543,7 @@ export class UsersRepository {
 
   // GENERATED_METHOD_START: update-with-cache-invalidation
   async update(id: string, dto: UpdateUserDto) {
-    const result = await this.pool.query(UsersQueries.update, [
-      dto.username,
-      dto.email,
-      id,
-    ]);
+    const result = await this.pool.query(UsersQueries.update, [dto.username, dto.email, id]);
 
     // Invalidate specific cache and list cache
     await this.cacheManager.del(`users:detail:${id}`);
@@ -5979,11 +5748,7 @@ export class AuditService {
 
     try {
       // Restore old data
-      const restoreQuery = this.buildRestoreQuery(
-        activityLog.table_name,
-        activityLog.record_id,
-        activityLog.old_data,
-      );
+      const restoreQuery = this.buildRestoreQuery(activityLog.table_name, activityLog.record_id, activityLog.old_data);
 
       await this.pool.query(restoreQuery);
 
@@ -6009,16 +5774,10 @@ export class AuditService {
   private getChangedFields(oldData: any, newData: any): string[] {
     if (!oldData || !newData) return [];
 
-    return Object.keys(newData).filter(
-      (key) => JSON.stringify(oldData[key]) !== JSON.stringify(newData[key]),
-    );
+    return Object.keys(newData).filter((key) => JSON.stringify(oldData[key]) !== JSON.stringify(newData[key]));
   }
 
-  private buildRestoreQuery(
-    tableName: string,
-    recordId: string,
-    oldData: any,
-  ): string {
+  private buildRestoreQuery(tableName: string, recordId: string, oldData: any): string {
     const columns = Object.keys(oldData);
     const values = Object.values(oldData);
 
@@ -6028,10 +5787,7 @@ export class AuditService {
   }
 
   private async getActivityLog(id: string) {
-    const result = await this.pool.query(
-      'SELECT * FROM audit.activity_logs WHERE id = $1',
-      [id],
-    );
+    const result = await this.pool.query('SELECT * FROM audit.activity_logs WHERE id = $1', [id]);
     return result.rows[0];
   }
 }
@@ -6142,13 +5898,7 @@ WHERE table_id = 'users-table' AND column_name = 'avatar_url';
 
 ```typescript
 // GENERATED_FILE_UPLOAD_INTERCEPTOR_START
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler, BadRequestException } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -6162,16 +5912,12 @@ export class FileUploadInterceptor implements NestInterceptor {
 
     // Validate file size
     if (request.file && request.file.size > config.maxSize) {
-      throw new BadRequestException(
-        `File size exceeds ${config.maxSize} bytes`,
-      );
+      throw new BadRequestException(`File size exceeds ${config.maxSize} bytes`);
     }
 
     // Validate MIME type
     if (request.file && !config.mimeTypes.includes(request.file.mimetype)) {
-      throw new BadRequestException(
-        `File type ${request.file.mimetype} not allowed`,
-      );
+      throw new BadRequestException(`File type ${request.file.mimetype} not allowed`);
     }
 
     return next.handle();
@@ -6530,8 +6276,7 @@ CREATE TABLE rbac.field_permissions (
 import { SetMetadata } from '@nestjs/common';
 
 export const PERMISSIONS_KEY = 'permissions';
-export const RequirePermission = (...permissions: string[]) =>
-  SetMetadata(PERMISSIONS_KEY, permissions);
+export const RequirePermission = (...permissions: string[]) => SetMetadata(PERMISSIONS_KEY, permissions);
 // GENERATED_PERMISSION_DECORATOR_END
 ```
 
@@ -6551,10 +6296,10 @@ export class PermissionsGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(
-      PERMISSIONS_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
     if (!requiredPermissions) {
       return true;
@@ -6567,13 +6312,9 @@ export class PermissionsGuard implements CanActivate {
       return false;
     }
 
-    const userPermissions = await this.permissionService.getUserPermissions(
-      user.id,
-    );
+    const userPermissions = await this.permissionService.getUserPermissions(user.id);
 
-    return requiredPermissions.every((permission) =>
-      userPermissions.includes(permission),
-    );
+    return requiredPermissions.every((permission) => userPermissions.includes(permission));
   }
 }
 // GENERATED_PERMISSION_GUARD_END
@@ -6622,16 +6363,8 @@ export class PermissionService {
     }));
   }
 
-  async filterFields(
-    userId: string,
-    resource: string,
-    data: any,
-    action: 'read' | 'write',
-  ) {
-    const fieldPermissions = await this.getUserFieldPermissions(
-      userId,
-      resource,
-    );
+  async filterFields(userId: string, resource: string, data: any, action: 'read' | 'write') {
+    const fieldPermissions = await this.getUserFieldPermissions(userId, resource);
 
     const allowedFields = fieldPermissions
       .filter((fp) => (action === 'read' ? fp.canRead : fp.canWrite))
@@ -6782,10 +6515,7 @@ export class NotificationService {
     });
 
     // SMS setup (Twilio)
-    this.smsClient = twilio(
-      process.env.TWILIO_ACCOUNT_SID,
-      process.env.TWILIO_AUTH_TOKEN,
-    );
+    this.smsClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
   }
 
   async sendNotification(params: {
@@ -6803,11 +6533,7 @@ export class NotificationService {
     }
 
     // Check user preferences
-    const canSend = await this.checkUserPreference(
-      params.recipient,
-      params.channel,
-      params.templateCode,
-    );
+    const canSend = await this.checkUserPreference(params.recipient, params.channel, params.templateCode);
 
     if (!canSend) {
       return { status: 'skipped', reason: 'User preference disabled' };
@@ -6815,9 +6541,7 @@ export class NotificationService {
 
     // Replace variables in template
     const body = this.replaceVariables(template.body, params.data);
-    const subject = template.subject
-      ? this.replaceVariables(template.subject, params.data)
-      : null;
+    const subject = template.subject ? this.replaceVariables(template.subject, params.data) : null;
 
     // Queue notification
     const queueId = await this.queueNotification({
@@ -6913,18 +6637,13 @@ export class NotificationService {
   }
 
   private async getTemplate(code: string) {
-    const result = await this.pool.query(
-      'SELECT * FROM notifications.templates WHERE code = $1 AND is_active = TRUE',
-      [code],
-    );
+    const result = await this.pool.query('SELECT * FROM notifications.templates WHERE code = $1 AND is_active = TRUE', [
+      code,
+    ]);
     return result.rows[0];
   }
 
-  private async checkUserPreference(
-    recipient: string,
-    channel: string,
-    eventType: string,
-  ): Promise<boolean> {
+  private async checkUserPreference(recipient: string, channel: string, eventType: string): Promise<boolean> {
     const result = await this.pool.query(
       `SELECT enabled FROM notifications.user_preferences 
        WHERE user_id = (SELECT id FROM user.users WHERE email = $1)
@@ -6956,17 +6675,11 @@ export class NotificationService {
   }
 
   private async getQueuedNotification(id: string) {
-    const result = await this.pool.query(
-      'SELECT * FROM notifications.queue WHERE id = $1',
-      [id],
-    );
+    const result = await this.pool.query('SELECT * FROM notifications.queue WHERE id = $1', [id]);
     return result.rows[0];
   }
 
-  private replaceVariables(
-    template: string,
-    data: Record<string, any>,
-  ): string {
+  private replaceVariables(template: string, data: Record<string, any>): string {
     let result = template;
 
     for (const [key, value] of Object.entries(data || {})) {
@@ -7957,8 +7670,7 @@ import { PrometheusExporter } from '@opentelemetry/exporter-prometheus';
 
 const sdk = new NodeSDK({
   traceExporter: new JaegerExporter({
-    endpoint:
-      process.env.JAEGER_ENDPOINT || 'http://localhost:14268/api/traces',
+    endpoint: process.env.JAEGER_ENDPOINT || 'http://localhost:14268/api/traces',
   }),
   metricReader: new PrometheusExporter({ port: 9464 }),
   instrumentations: [getNodeAutoInstrumentations()],
@@ -7974,11 +7686,7 @@ sdk.start();
 
 ```typescript
 // GENERATED_HEALTH_ENDPOINTS_START
-import {
-  HealthCheckService,
-  HttpHealthIndicator,
-  TypeOrmHealthIndicator,
-} from '@nestjs/terminus';
+import { HealthCheckService, HttpHealthIndicator, TypeOrmHealthIndicator } from '@nestjs/terminus';
 
 @Controller('health')
 export class HealthController {
@@ -8018,10 +7726,7 @@ export class HealthController {
 
 ```typescript
 // GENERATED_PROMETHEUS_METRICS_START
-import {
-  makeCounterProvider,
-  makeHistogramProvider,
-} from '@willsoto/nestjs-prometheus';
+import { makeCounterProvider, makeHistogramProvider } from '@willsoto/nestjs-prometheus';
 
 @Module({
   providers: [
@@ -8920,20 +8625,10 @@ import { generateFilterClause } from './helpers/filter-helper.mjs';
 import { generateJoinClause } from './helpers/join-helper.mjs';
 
 export default function generateRepository(data) {
-  const {
-    tableName,
-    schemaName,
-    columns,
-    foreignKeys,
-    hasSoftDelete,
-    dialectType,
-  } = data;
+  const { tableName, schemaName, columns, foreignKeys, hasSoftDelete, dialectType } = data;
 
   // Dynamic import based on dialect
-  const quoteIdentifier =
-    dialectType === 'postgres'
-      ? (name) => `"${name}"`
-      : (name) => `\`${name}\``;
+  const quoteIdentifier = dialectType === 'postgres' ? (name) => `"${name}"` : (name) => `\`${name}\``;
 
   // Generate filter methods
   const filterMethods = columns
@@ -8942,10 +8637,7 @@ export default function generateRepository(data) {
     .join('\n\n');
 
   // Generate JOIN queries if has foreign keys
-  const joinMethods =
-    foreignKeys.length > 0
-      ? generateJoinClause(foreignKeys, quoteIdentifier)
-      : '';
+  const joinMethods = foreignKeys.length > 0 ? generateJoinClause(foreignKeys, quoteIdentifier) : '';
 
   return `
 // GENERATED_FILE_START
@@ -9020,11 +8712,7 @@ export class TemplateLoaderService {
     }
 
     // Try .mjs first (preferred)
-    const mjsPath = join(
-      __dirname,
-      '../templates',
-      `${templateName}.template.mjs`,
-    );
+    const mjsPath = join(__dirname, '../templates', `${templateName}.template.mjs`);
     try {
       const mjsTemplate = await import(mjsPath);
       const templateFn = mjsTemplate.default;
@@ -9032,11 +8720,7 @@ export class TemplateLoaderService {
       return templateFn;
     } catch (mjsError) {
       // Fallback to .hbs
-      const hbsPath = join(
-        __dirname,
-        '../templates',
-        `${templateName}.template.hbs`,
-      );
+      const hbsPath = join(__dirname, '../templates', `${templateName}.template.hbs`);
       try {
         const hbsContent = await readFile(hbsPath, 'utf-8');
         const compiled = Handlebars.compile(hbsContent);
@@ -9498,10 +9182,7 @@ describe('UsersRepository', () => {
       const result = await repository.findAll();
 
       expect(result).toEqual(mockUsers);
-      expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('SELECT * FROM "user"."users"'),
-        [],
-      );
+      expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('SELECT * FROM "user"."users"'), []);
     });
 
     it('should apply filters correctly', async () => {
@@ -9523,10 +9204,7 @@ describe('UsersRepository', () => {
 
       await repository.findAll();
 
-      expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('deleted_at IS NULL'),
-        expect.any(Array),
-      );
+      expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('deleted_at IS NULL'), expect.any(Array));
     });
   });
   // GENERATED_TEST_END: find-all
@@ -9540,10 +9218,7 @@ describe('UsersRepository', () => {
       const result = await repository.findOne('1');
 
       expect(result).toEqual(mockUser);
-      expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('WHERE id = $1'),
-        ['1'],
-      );
+      expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('WHERE id = $1'), ['1']);
     });
 
     it('should return null when user not found', async () => {
@@ -9637,10 +9312,7 @@ describe('UsersService', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        UsersService,
-        { provide: UsersRepository, useValue: mockRepository },
-      ],
+      providers: [UsersService, { provide: UsersRepository, useValue: mockRepository }],
     }).compile();
 
     service = module.get<UsersService>(UsersService);
@@ -9678,9 +9350,7 @@ describe('UsersService', () => {
     it('should throw NotFoundException when user not found', async () => {
       repository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('non-existent')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findOne('non-existent')).rejects.toThrow(NotFoundException);
     });
   });
   // GENERATED_TEST_END: find-one-success
@@ -9717,9 +9387,7 @@ describe('UsersService', () => {
     it('should throw NotFoundException when updating non-existent user', async () => {
       repository.findOne.mockResolvedValue(null);
 
-      await expect(service.update('non-existent', {})).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.update('non-existent', {})).rejects.toThrow(NotFoundException);
     });
   });
   // GENERATED_TEST_END: update
@@ -9738,9 +9406,7 @@ describe('UsersService', () => {
     it('should throw NotFoundException when deleting non-existent user', async () => {
       repository.findOne.mockResolvedValue(null);
 
-      await expect(service.delete('non-existent')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.delete('non-existent')).rejects.toThrow(NotFoundException);
     });
   });
   // GENERATED_TEST_END: delete
@@ -9969,12 +9635,7 @@ module.exports = {
   transform: {
     '^.+\\.(t|j)s$': 'ts-jest',
   },
-  collectCoverageFrom: [
-    '**/*.ts',
-    '!**/*.spec.ts',
-    '!**/*.e2e-spec.ts',
-    '!**/node_modules/**',
-  ],
+  collectCoverageFrom: ['**/*.ts', '!**/*.spec.ts', '!**/*.e2e-spec.ts', '!**/node_modules/**'],
   coverageDirectory: './coverage',
   testEnvironment: 'node',
   coverageThresholds: {

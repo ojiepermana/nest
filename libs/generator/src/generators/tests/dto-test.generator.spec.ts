@@ -3,10 +3,7 @@
  */
 
 import { DtoTestGenerator } from './dto-test.generator';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 describe('DtoTestGenerator', () => {
   let generator: DtoTestGenerator;
@@ -106,12 +103,8 @@ describe('DtoTestGenerator', () => {
     it('should include required fields validation test', () => {
       const result = generator.generateCreateDtoTest(tableMetadata, columns);
 
-      expect(result).toContain(
-        'GENERATED_TEST_START: validation-required-fields',
-      );
-      expect(result).toContain(
-        'should fail validation when required fields are missing',
-      );
+      expect(result).toContain('GENERATED_TEST_START: validation-required-fields');
+      expect(result).toContain('should fail validation when required fields are missing');
     });
 
     it('should include email validation test for email fields', () => {
@@ -124,23 +117,17 @@ describe('DtoTestGenerator', () => {
     it('should include max length validation test', () => {
       const result = generator.generateCreateDtoTest(tableMetadata, columns);
 
-      expect(result).toContain(
-        'GENERATED_TEST_START: validation-max-length-username',
-      );
+      expect(result).toContain('GENERATED_TEST_START: validation-max-length-username');
       expect(result).toContain('should fail validation when username exceeds');
     });
 
     it('should include numeric range validation tests', () => {
       const result = generator.generateCreateDtoTest(tableMetadata, columns);
 
-      expect(result).toContain(
-        'GENERATED_TEST_START: validation-min-value-age',
-      );
+      expect(result).toContain('GENERATED_TEST_START: validation-min-value-age');
       expect(result).toContain('should fail validation when age is below');
 
-      expect(result).toContain(
-        'GENERATED_TEST_START: validation-max-value-age',
-      );
+      expect(result).toContain('GENERATED_TEST_START: validation-max-value-age');
       expect(result).toContain('should fail validation when age is above');
     });
 
@@ -180,9 +167,7 @@ describe('DtoTestGenerator', () => {
       const result = generator.generateUpdateDtoTest(tableMetadata, columns);
 
       expect(result).toContain('GENERATED_TEST_START: empty-update');
-      expect(result).toContain(
-        'should pass validation with no fields specified',
-      );
+      expect(result).toContain('should pass validation with no fields specified');
     });
   });
 
@@ -212,9 +197,7 @@ describe('DtoTestGenerator', () => {
       const result = generator.generateFilterDtoTest(tableMetadata, columns);
 
       expect(result).toContain('GENERATED_TEST_START: optional-filters');
-      expect(result).toContain(
-        'should pass validation with no filters specified',
-      );
+      expect(result).toContain('should pass validation with no filters specified');
     });
   });
 
@@ -232,9 +215,7 @@ describe('DtoTestGenerator', () => {
         column_order: 1,
       } as ColumnMetadata;
 
-      const result = generator.generateCreateDtoTest(tableMetadata, [
-        emailColumn,
-      ]);
+      const result = generator.generateCreateDtoTest(tableMetadata, [emailColumn]);
 
       expect(result).toContain('test@example.com');
     });
@@ -252,9 +233,7 @@ describe('DtoTestGenerator', () => {
         column_order: 1,
       } as ColumnMetadata;
 
-      const result = generator.generateCreateDtoTest(tableMetadata, [
-        enumColumn,
-      ]);
+      const result = generator.generateCreateDtoTest(tableMetadata, [enumColumn]);
 
       expect(result).toContain("'active'");
     });
@@ -273,9 +252,7 @@ describe('DtoTestGenerator', () => {
         column_order: 1,
       } as ColumnMetadata;
 
-      const result = generator.generateCreateDtoTest(tableMetadata, [
-        numericColumn,
-      ]);
+      const result = generator.generateCreateDtoTest(tableMetadata, [numericColumn]);
 
       expect(result).toMatch(/quantity: \d+/);
     });
@@ -287,10 +264,7 @@ describe('DtoTestGenerator', () => {
         includeEdgeCases: false,
       });
 
-      const result = generatorWithoutEdgeCases.generateCreateDtoTest(
-        tableMetadata,
-        columns,
-      );
+      const result = generatorWithoutEdgeCases.generateCreateDtoTest(tableMetadata, columns);
 
       expect(result).toBeDefined();
       expect(result).toContain('CreateUsersDto');

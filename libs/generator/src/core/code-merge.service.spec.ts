@@ -291,14 +291,8 @@ new generated
 
   describe('clearChecksums', () => {
     it('should clear checksums for specific file', () => {
-      service.storeChecksums(
-        'file1.ts',
-        '// GENERATED_START: test\ncode\n// GENERATED_END: test',
-      );
-      service.storeChecksums(
-        'file2.ts',
-        '// GENERATED_START: test\ncode\n// GENERATED_END: test',
-      );
+      service.storeChecksums('file1.ts', '// GENERATED_START: test\ncode\n// GENERATED_END: test');
+      service.storeChecksums('file2.ts', '// GENERATED_START: test\ncode\n// GENERATED_END: test');
 
       service.clearChecksums('file1.ts');
 
@@ -308,14 +302,8 @@ new generated
     });
 
     it('should clear all checksums when no file specified', () => {
-      service.storeChecksums(
-        'file1.ts',
-        '// GENERATED_START: test\ncode\n// GENERATED_END: test',
-      );
-      service.storeChecksums(
-        'file2.ts',
-        '// GENERATED_START: test\ncode\n// GENERATED_END: test',
-      );
+      service.storeChecksums('file1.ts', '// GENERATED_START: test\ncode\n// GENERATED_END: test');
+      service.storeChecksums('file2.ts', '// GENERATED_START: test\ncode\n// GENERATED_END: test');
 
       service.clearChecksums();
 

@@ -1,8 +1,4 @@
-import {
-  ExecutionContext,
-  UnauthorizedException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { RolesGuard } from './roles.guard';
 import { RBACService } from '../rbac.service';
@@ -73,9 +69,7 @@ describe('RolesGuard', () => {
 
       mockContext.switchToHttp().getRequest.mockReturnValue({});
 
-      await expect(guard.canActivate(mockContext)).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(guard.canActivate(mockContext)).rejects.toThrow(UnauthorizedException);
     });
 
     it('should check single role with AND logic', async () => {
@@ -95,12 +89,7 @@ describe('RolesGuard', () => {
       const result = await guard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(rbacService.hasAllRoles).toHaveBeenCalledWith(
-        'user-123',
-        ['admin'],
-        true,
-        true,
-      );
+      expect(rbacService.hasAllRoles).toHaveBeenCalledWith('user-123', ['admin'], true, true);
     });
 
     it('should check multiple roles with AND logic', async () => {
@@ -152,9 +141,7 @@ describe('RolesGuard', () => {
         missingRoles: ['admin'],
       });
 
-      await expect(guard.canActivate(mockContext)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(guard.canActivate(mockContext)).rejects.toThrow(ForbiddenException);
     });
 
     it('should use custom error message when provided', async () => {
@@ -170,9 +157,7 @@ describe('RolesGuard', () => {
         granted: false,
       });
 
-      await expect(guard.canActivate(mockContext)).rejects.toThrow(
-        'Admin access required',
-      );
+      await expect(guard.canActivate(mockContext)).rejects.toThrow('Admin access required');
     });
 
     it('should respect activeOnly option', async () => {
@@ -190,12 +175,7 @@ describe('RolesGuard', () => {
 
       await guard.canActivate(mockContext);
 
-      expect(rbacService.hasAllRoles).toHaveBeenCalledWith(
-        'user-123',
-        ['admin'],
-        false,
-        true,
-      );
+      expect(rbacService.hasAllRoles).toHaveBeenCalledWith('user-123', ['admin'], false, true);
     });
 
     it('should respect checkExpiration option', async () => {
@@ -213,12 +193,7 @@ describe('RolesGuard', () => {
 
       await guard.canActivate(mockContext);
 
-      expect(rbacService.hasAllRoles).toHaveBeenCalledWith(
-        'user-123',
-        ['admin'],
-        true,
-        false,
-      );
+      expect(rbacService.hasAllRoles).toHaveBeenCalledWith('user-123', ['admin'], true, false);
     });
 
     it('should warn if RBACService not provided', async () => {

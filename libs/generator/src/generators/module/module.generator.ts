@@ -5,10 +5,7 @@
  */
 
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 export interface ModuleGeneratorOptions {
   tableName: string;
@@ -34,8 +31,7 @@ export class ModuleGenerator {
    * Generate module class
    */
   generate(): string {
-    const entityName =
-      this.options.entityName || toPascalCase(this.options.tableName);
+    const entityName = this.options.entityName || toPascalCase(this.options.tableName);
     const moduleName = `${entityName}Module`;
 
     const imports = this.generateImports(entityName);
@@ -59,10 +55,7 @@ ${classDeclaration}
     imports.push("import { Module } from '@nestjs/common';");
 
     // TypeORM import if repository enabled
-    if (
-      this.options.includeRepository !== false &&
-      this.options.includeService !== false
-    ) {
+    if (this.options.includeRepository !== false && this.options.includeService !== false) {
       imports.push("import { TypeOrmModule } from '@nestjs/typeorm';");
     }
 
@@ -147,10 +140,7 @@ ${moduleConfig.join(',\n')}
     const imports: string[] = [];
 
     // TypeOrmModule.forFeature if repository enabled
-    if (
-      this.options.includeRepository !== false &&
-      this.options.includeService !== false
-    ) {
+    if (this.options.includeRepository !== false && this.options.includeService !== false) {
       imports.push(`TypeOrmModule.forFeature([${entityName}])`);
     }
 

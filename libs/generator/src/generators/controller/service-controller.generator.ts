@@ -6,10 +6,7 @@
  */
 
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 export interface ServiceControllerGeneratorOptions {
   tableName: string;
@@ -36,9 +33,7 @@ export class ServiceControllerGenerator {
     const classDeclaration = this.generateClassDeclaration(controllerName);
     const constructor = this.generateConstructor(serviceName);
     const messagePatterns = this.generateMessagePatterns(entityName);
-    const eventPatterns = this.options.enableEvents
-      ? this.generateEventPatterns(entityName)
-      : '';
+    const eventPatterns = this.options.enableEvents ? this.generateEventPatterns(entityName) : '';
 
     return `${imports}
 

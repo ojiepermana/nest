@@ -127,9 +127,7 @@ export class FilterCompiler {
     operator: QueryFilterOperator;
   } | null {
     // Match operator suffix pattern: field_operator
-    const operatorMatch = key.match(
-      /^(.+)_(eq|ne|gt|gte|lt|lte|like|in|between|null)$/,
-    );
+    const operatorMatch = key.match(/^(.+)_(eq|ne|gt|gte|lt|lte|like|in|between|null)$/);
 
     if (operatorMatch) {
       const [, field, operatorStr] = operatorMatch;
@@ -178,20 +176,13 @@ export class FilterCompiler {
     }
 
     // Validate operator for data type
-    const typeValidation = this.validateOperatorForType(
-      column.data_type,
-      operator,
-    );
+    const typeValidation = this.validateOperatorForType(column.data_type, operator);
     if (!typeValidation.isValid) {
       return typeValidation;
     }
 
     // Validate value type
-    const valueValidation = this.validateValueType(
-      column.data_type,
-      operator,
-      value,
-    );
+    const valueValidation = this.validateValueType(column.data_type, operator, value);
     if (!valueValidation.isValid) {
       return valueValidation;
     }
@@ -212,9 +203,7 @@ export class FilterCompiler {
             error: `IN operator requires array value`,
           };
         }
-        const invalidValues = value.filter(
-          (v) => !column.enum_values!.includes(v),
-        );
+        const invalidValues = value.filter((v) => !column.enum_values!.includes(v));
         if (invalidValues.length > 0) {
           return {
             isValid: false,
@@ -268,13 +257,7 @@ export class FilterCompiler {
       'tinyint',
       'mediumint',
     ];
-    const stringTypes = [
-      'varchar',
-      'char',
-      'text',
-      'string',
-      'character varying',
-    ];
+    const stringTypes = ['varchar', 'char', 'text', 'string', 'character varying'];
     const dateTypes = ['date', 'timestamp', 'datetime', 'time'];
     const booleanTypes = ['boolean', 'bool'];
 
@@ -385,10 +368,7 @@ export class FilterCompiler {
       'tinyint',
       'mediumint',
     ];
-    if (
-      this.options.strictTypeChecking &&
-      numericTypes.includes(dataType.toLowerCase())
-    ) {
+    if (this.options.strictTypeChecking && numericTypes.includes(dataType.toLowerCase())) {
       if (
         operator !== QueryFilterOperator.IN &&
         operator !== QueryFilterOperator.BETWEEN &&
@@ -405,14 +385,8 @@ export class FilterCompiler {
 
     // Type checking for boolean types
     const booleanTypes = ['boolean', 'bool'];
-    if (
-      this.options.strictTypeChecking &&
-      booleanTypes.includes(dataType.toLowerCase())
-    ) {
-      if (
-        operator !== QueryFilterOperator.IN &&
-        operator !== QueryFilterOperator.IS_NULL
-      ) {
+    if (this.options.strictTypeChecking && booleanTypes.includes(dataType.toLowerCase())) {
+      if (operator !== QueryFilterOperator.IN && operator !== QueryFilterOperator.IS_NULL) {
         if (typeof value !== 'boolean') {
           return {
             isValid: false,
@@ -509,13 +483,7 @@ export class FilterCompiler {
       'tinyint',
       'mediumint',
     ];
-    const stringTypes = [
-      'varchar',
-      'char',
-      'text',
-      'string',
-      'character varying',
-    ];
+    const stringTypes = ['varchar', 'char', 'text', 'string', 'character varying'];
     const dateTypes = ['date', 'timestamp', 'datetime', 'time'];
 
     if (stringTypes.includes(dataType)) {

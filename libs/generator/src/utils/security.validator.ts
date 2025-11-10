@@ -47,9 +47,7 @@ export class SecurityValidator {
     // Check against whitelist if provided
     if (whitelist && whitelist.length > 0) {
       if (!whitelist.includes(trimmed.toLowerCase())) {
-        throw new Error(
-          `Invalid ${context}: "${trimmed}" not in allowed values`,
-        );
+        throw new Error(`Invalid ${context}: "${trimmed}" not in allowed values`);
       }
       return trimmed;
     }
@@ -63,16 +61,12 @@ export class SecurityValidator {
 
     // Check for SQL keywords
     if (this.SQL_KEYWORDS.has(trimmed.toUpperCase())) {
-      throw new Error(
-        `Invalid ${context}: "${trimmed}" is a reserved SQL keyword`,
-      );
+      throw new Error(`Invalid ${context}: "${trimmed}" is a reserved SQL keyword`);
     }
 
     // Max length check (PostgreSQL/MySQL limit)
     if (trimmed.length > 63) {
-      throw new Error(
-        `Invalid ${context}: "${trimmed}" exceeds maximum length of 63 characters`,
-      );
+      throw new Error(`Invalid ${context}: "${trimmed}" exceeds maximum length of 63 characters`);
     }
 
     return trimmed;
@@ -105,10 +99,7 @@ export class SecurityValidator {
     }
 
     // Remove any SQL comment patterns
-    let sanitized = input
-      .replace(/--/g, '')
-      .replace(/\/\*/g, '')
-      .replace(/\*\//g, '');
+    let sanitized = input.replace(/--/g, '').replace(/\/\*/g, '').replace(/\*\//g, '');
 
     // Remove common SQL injection patterns
     sanitized = sanitized
@@ -134,10 +125,7 @@ export class SecurityValidator {
   /**
    * Validate numeric input
    */
-  static validateNumeric(
-    input: any,
-    context: string = 'numeric value',
-  ): number {
+  static validateNumeric(input: any, context: string = 'numeric value'): number {
     const num = Number(input);
 
     if (isNaN(num) || !isFinite(num)) {
@@ -163,10 +151,7 @@ export class SecurityValidator {
   /**
    * Validate positive integer
    */
-  static validatePositiveInteger(
-    input: any,
-    context: string = 'positive integer',
-  ): number {
+  static validatePositiveInteger(input: any, context: string = 'positive integer'): number {
     const num = this.validateInteger(input, context);
 
     if (num <= 0) {
@@ -179,10 +164,7 @@ export class SecurityValidator {
   /**
    * Validate pagination parameters
    */
-  static validatePagination(
-    page: any,
-    limit: any,
-  ): { page: number; limit: number } {
+  static validatePagination(page: any, limit: any): { page: number; limit: number } {
     const validPage = this.validatePositiveInteger(page, 'page');
     const validLimit = this.validatePositiveInteger(limit, 'limit');
 
@@ -202,9 +184,7 @@ export class SecurityValidator {
     const upper = direction.toUpperCase();
 
     if (upper !== 'ASC' && upper !== 'DESC') {
-      throw new Error(
-        `Invalid sort direction: must be 'ASC' or 'DESC', got '${direction}'`,
-      );
+      throw new Error(`Invalid sort direction: must be 'ASC' or 'DESC', got '${direction}'`);
     }
 
     return upper;
@@ -214,8 +194,7 @@ export class SecurityValidator {
    * Validate UUID format
    */
   static validateUUID(uuid: string, context: string = 'UUID'): string {
-    const uuidPattern =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
     if (!uuidPattern.test(uuid)) {
       throw new Error(`Invalid ${context}: not a valid UUID format`);
@@ -240,11 +219,7 @@ export class SecurityValidator {
   /**
    * Validate array of values
    */
-  static validateArray<T>(
-    input: any,
-    validator: (item: any) => T,
-    context: string = 'array',
-  ): T[] {
+  static validateArray<T>(input: any, validator: (item: any) => T, context: string = 'array'): T[] {
     if (!Array.isArray(input)) {
       throw new Error(`Invalid ${context}: must be an array`);
     }
@@ -255,9 +230,7 @@ export class SecurityValidator {
 
     // Limit array size to prevent DoS
     if (input.length > 100) {
-      throw new Error(
-        `Invalid ${context}: maximum 100 items allowed, got ${input.length}`,
-      );
+      throw new Error(`Invalid ${context}: maximum 100 items allowed, got ${input.length}`);
     }
 
     return input.map((item, index) => {
@@ -274,9 +247,7 @@ export class SecurityValidator {
   /**
    * Create whitelist from column metadata
    */
-  static createColumnWhitelist(
-    columns: Array<{ column_name: string }>,
-  ): string[] {
+  static createColumnWhitelist(columns: Array<{ column_name: string }>): string[] {
     return columns.map((col) => col.column_name.toLowerCase());
   }
 

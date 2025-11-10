@@ -91,9 +91,7 @@ describe('QueryGenerator', () => {
 
         const result = generator.generateSelect(options);
 
-        expect(result.sql).toBe(
-          'SELECT * FROM users WHERE status = $param1 AND age > $param2',
-        );
+        expect(result.sql).toBe('SELECT * FROM users WHERE status = $param1 AND age > $param2');
         expect(result.params).toEqual({ param1: 'active', param2: 18 });
       });
 
@@ -193,9 +191,7 @@ describe('QueryGenerator', () => {
 
         const result = generator.generateSelect(options);
 
-        expect(result.sql).toBe(
-          'SELECT * FROM users WHERE email_verified_at IS NOT NULL',
-        );
+        expect(result.sql).toBe('SELECT * FROM users WHERE email_verified_at IS NOT NULL');
       });
 
       it('should generate SELECT with JOIN', () => {
@@ -252,9 +248,7 @@ describe('QueryGenerator', () => {
         const result = generator.generateSelect(options);
 
         expect(result.sql).toContain('LEFT JOIN posts p ON u.id = p.user_id');
-        expect(result.sql).toContain(
-          'LEFT JOIN comments c ON p.id = c.post_id',
-        );
+        expect(result.sql).toContain('LEFT JOIN comments c ON p.id = c.post_id');
       });
 
       it('should generate SELECT with ORDER BY', () => {
@@ -268,9 +262,7 @@ describe('QueryGenerator', () => {
 
         const result = generator.generateSelect(options);
 
-        expect(result.sql).toBe(
-          'SELECT * FROM users ORDER BY created_at DESC, name ASC',
-        );
+        expect(result.sql).toBe('SELECT * FROM users ORDER BY created_at DESC, name ASC');
       });
 
       it('should generate SELECT with pagination', () => {
@@ -490,9 +482,7 @@ describe('QueryGenerator', () => {
 
         const result = generator.generateDelete(options);
 
-        expect(result.sql).toBe(
-          'DELETE FROM users WHERE status = $param1 AND last_login IS NULL',
-        );
+        expect(result.sql).toBe('DELETE FROM users WHERE status = $param1 AND last_login IS NULL');
       });
 
       it('should generate DELETE with RETURNING clause', () => {
@@ -529,9 +519,7 @@ describe('QueryGenerator', () => {
 
         const result = generator.generateCount(options);
 
-        expect(result.sql).toBe(
-          'SELECT COUNT(*) as total FROM users WHERE status = $param1',
-        );
+        expect(result.sql).toBe('SELECT COUNT(*) as total FROM users WHERE status = $param1');
         expect(result.params).toEqual({ param1: 'active' });
       });
     });

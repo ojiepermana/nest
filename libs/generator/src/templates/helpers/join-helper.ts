@@ -57,9 +57,7 @@ export function generateJoinClauses(
     joinType?: 'LEFT' | 'INNER' | 'RIGHT';
   },
 ): JoinClause[] {
-  const foreignKeyColumns = columns.filter(
-    (col) => col.ref_table && col.ref_column,
-  );
+  const foreignKeyColumns = columns.filter((col) => col.ref_table && col.ref_column);
 
   return foreignKeyColumns
     .map((col, index) =>
@@ -76,20 +74,14 @@ export function generateJoinClauses(
  */
 export function buildJoinSQL(joins: JoinClause[]): string {
   return joins
-    .map(
-      (join) =>
-        `${join.type} JOIN ${join.table} ${join.alias} ON ${join.condition}`,
-    )
+    .map((join) => `${join.type} JOIN ${join.table} ${join.alias} ON ${join.condition}`)
     .join('\n      ');
 }
 
 /**
  * Generate method name for joined query
  */
-export function generateJoinMethodName(
-  tableName: string,
-  refTable: string,
-): string {
+export function generateJoinMethodName(tableName: string, refTable: string): string {
   // Convert to camelCase
   const toPascalCase = (str: string) =>
     str

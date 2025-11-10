@@ -6,10 +6,7 @@
 
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
 import { FileUploadGenerator } from '../features/file-upload.generator';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 export interface ControllerGeneratorOptions {
   tableName: string;
@@ -34,17 +31,13 @@ export class ControllerGenerator {
    * Generate controller class
    */
   generate(): string {
-    const entityName =
-      this.options.entityName || toPascalCase(this.options.tableName);
+    const entityName = this.options.entityName || toPascalCase(this.options.tableName);
     const controllerName = `${entityName}Controller`;
     const serviceName = `${entityName}Service`;
     const basePath = this.options.basePath || this.toKebabCase(entityName);
 
     const imports = this.generateImports(entityName, serviceName);
-    const classDeclaration = this.generateClassDeclaration(
-      controllerName,
-      basePath,
-    );
+    const classDeclaration = this.generateClassDeclaration(controllerName, basePath);
     const constructor = this.generateConstructor(serviceName);
     const crudEndpoints = this.generateCRUDEndpoints(entityName, serviceName);
     const fileUploadEndpoints = this.generateFileUploadEndpoints();
@@ -106,12 +99,8 @@ ${crudEndpoints}${fileUploadEndpoints}
 
     // Add file upload imports
     if (this.options.enableFileUpload && this.hasFileUploadColumns()) {
-      imports.push(
-        "import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';",
-      );
-      imports.push(
-        "import { StorageService } from '../services/storage.service';",
-      );
+      imports.push("import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';");
+      imports.push("import { StorageService } from '../services/storage.service';");
     }
 
     if (this.options.enableSwagger) {
@@ -128,9 +117,7 @@ ${crudEndpoints}${fileUploadEndpoints}
         swaggerImports.push('ApiConsumes');
       }
 
-      imports.push(
-        `import { ${swaggerImports.join(', ')} } from '@nestjs/swagger';`,
-      );
+      imports.push(`import { ${swaggerImports.join(', ')} } from '@nestjs/swagger';`);
     }
 
     return imports.join('\n');
@@ -139,10 +126,7 @@ ${crudEndpoints}${fileUploadEndpoints}
   /**
    * Generate class declaration
    */
-  private generateClassDeclaration(
-    controllerName: string,
-    basePath: string,
-  ): string {
+  private generateClassDeclaration(controllerName: string, basePath: string): string {
     const decorators = [`@Controller('${basePath}')`];
 
     if (this.options.enableSwagger) {
@@ -170,10 +154,7 @@ export class ${controllerName} {`;
   /**
    * Generate CRUD endpoints
    */
-  private generateCRUDEndpoints(
-    entityName: string,
-    serviceName: string,
-  ): string {
+  private generateCRUDEndpoints(entityName: string, serviceName: string): string {
     const camelName = toCamelCase(entityName);
     const pkColumn = this.getPrimaryKeyColumn();
     const pkType = this.getTypeScriptType(pkColumn?.data_type || 'integer');
@@ -206,10 +187,7 @@ export class ${controllerName} {`;
   /**
    * Generate CREATE endpoint
    */
-  private generateCreateEndpoint(
-    entityName: string,
-    camelName: string,
-  ): string {
+  private generateCreateEndpoint(entityName: string, camelName: string): string {
     let endpoint = '';
 
     if (this.options.enableSwagger) {
@@ -243,10 +221,7 @@ export class ${controllerName} {`;
   /**
    * Generate FIND ALL endpoint
    */
-  private generateFindAllEndpoint(
-    entityName: string,
-    camelName: string,
-  ): string {
+  private generateFindAllEndpoint(entityName: string, camelName: string): string {
     let endpoint = '';
 
     if (this.options.enableSwagger) {
@@ -268,10 +243,7 @@ export class ${controllerName} {`;
   /**
    * Generate FIND WITH FILTERS endpoint
    */
-  private generateFindWithFiltersEndpoint(
-    entityName: string,
-    camelName: string,
-  ): string {
+  private generateFindWithFiltersEndpoint(entityName: string, camelName: string): string {
     let endpoint = '';
 
     if (this.options.enableSwagger) {
@@ -312,11 +284,7 @@ export class ${controllerName} {`;
   /**
    * Generate FIND ONE endpoint
    */
-  private generateFindOneEndpoint(
-    entityName: string,
-    camelName: string,
-    pkType: string,
-  ): string {
+  private generateFindOneEndpoint(entityName: string, camelName: string, pkType: string): string {
     let endpoint = '';
 
     if (this.options.enableSwagger) {
@@ -353,11 +321,7 @@ export class ${controllerName} {`;
   /**
    * Generate UPDATE endpoint
    */
-  private generateUpdateEndpoint(
-    entityName: string,
-    camelName: string,
-    pkType: string,
-  ): string {
+  private generateUpdateEndpoint(entityName: string, camelName: string, pkType: string): string {
     let endpoint = '';
 
     if (this.options.enableSwagger) {
@@ -414,11 +378,7 @@ export class ${controllerName} {`;
   /**
    * Generate DELETE endpoint
    */
-  private generateDeleteEndpoint(
-    entityName: string,
-    camelName: string,
-    pkType: string,
-  ): string {
+  private generateDeleteEndpoint(entityName: string, camelName: string, pkType: string): string {
     let endpoint = '';
 
     if (this.options.enableSwagger) {
@@ -457,17 +417,13 @@ export class ${controllerName} {`;
       return '';
     }
 
-    const fileUploadGenerator = new FileUploadGenerator(
-      this.tableMetadata,
-      this.columns,
-      {
-        tableName: this.options.tableName,
-        entityName: this.options.entityName,
-        storageProvider: this.options.storageProvider || 'local',
-        enableValidation: this.options.enableValidation,
-        enableSwagger: this.options.enableSwagger,
-      },
-    );
+    const fileUploadGenerator = new FileUploadGenerator(this.tableMetadata, this.columns, {
+      tableName: this.options.tableName,
+      entityName: this.options.entityName,
+      storageProvider: this.options.storageProvider || 'local',
+      enableValidation: this.options.enableValidation,
+      enableSwagger: this.options.enableSwagger,
+    });
 
     if (!fileUploadGenerator.hasFileUploadColumns()) {
       return '';
@@ -496,11 +452,7 @@ export class ${controllerName} {`;
   private getTypeScriptType(dbType: string): string {
     const lowerType = dbType.toLowerCase();
 
-    if (
-      lowerType.includes('int') ||
-      lowerType.includes('serial') ||
-      lowerType.includes('number')
-    ) {
+    if (lowerType.includes('int') || lowerType.includes('serial') || lowerType.includes('number')) {
       return 'number';
     }
 

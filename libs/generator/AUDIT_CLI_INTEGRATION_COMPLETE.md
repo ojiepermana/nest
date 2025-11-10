@@ -17,11 +17,13 @@ Successfully implemented automatic audit trail integration for NestJS Generator 
 **File**: `libs/generator/src/cli/commands/generate.command.ts`
 
 **Changes**:
+
 - Added `enableAudit` option to `GenerateCommandOptions`
 - Enhanced audit prompt with descriptive message
 - Pass `auditLog` feature flag to generators
 
 **Usage**:
+
 ```bash
 # Interactive mode (prompts for audit)
 nest-generator generate
@@ -37,11 +39,13 @@ nest-generator generate user.users --features.auditLog=true
 **File**: `libs/generator/src/generators/service/service.generator.ts`
 
 **Changes**:
+
 - Import `AuditLogService` from `@ojiepermana/nest-generator/audit`
 - Inject `AuditLogService` in constructor when `enableAuditLog: true`
 - Add audit log calls in CREATE/UPDATE/DELETE methods
 
 **Generated Code Example**:
+
 ```typescript
 import { AuditLogService } from '@ojiepermana/nest-generator/audit';
 
@@ -55,7 +59,7 @@ export class UsersService {
   async create(createDto: CreateUsersDto): Promise<Users> {
     try {
       const user = await this.repository.create(createDto);
-      
+
       // ✅ Auto-generated audit log
       await this.auditLogService.log({
         entity: 'Users',
@@ -63,7 +67,7 @@ export class UsersService {
         action: 'CREATE',
         data: createDto,
       });
-      
+
       return user;
     } catch (error) {
       throw new BadRequestException(`Failed to create user: ${error.message}`);
@@ -73,7 +77,7 @@ export class UsersService {
   async update(id: string, updateDto: UpdateUsersDto): Promise<Users> {
     try {
       const user = await this.repository.update(id, updateDto);
-      
+
       // ✅ Auto-generated audit log
       await this.auditLogService.log({
         entity: 'Users',
@@ -81,7 +85,7 @@ export class UsersService {
         action: 'UPDATE',
         data: updateDto,
       });
-      
+
       return user;
     } catch (error) {
       throw new BadRequestException(`Failed to update user: ${error.message}`);
@@ -91,7 +95,7 @@ export class UsersService {
   async remove(id: string): Promise<void> {
     try {
       await this.repository.remove(id);
-      
+
       // ✅ Auto-generated audit log
       await this.auditLogService.log({
         entity: 'Users',
@@ -112,11 +116,13 @@ export class UsersService {
 **File**: `libs/generator/src/generators/module/module.generator.ts`
 
 **Changes**:
+
 - Import `AuditModule` from `@ojiepermana/nest-generator/audit`
 - Add `AuditModule` to module imports when `enableAuditLog: true`
 - Remove `AuditLogService` from providers (provided by AuditModule)
 
 **Generated Code Example**:
+
 ```typescript
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -146,11 +152,13 @@ export class UsersModule {}
 **File**: `libs/generator/src/audit/audit.module.ts` (NEW)
 
 **Features**:
+
 - Global module for audit services
 - Exports `AuditLogService` and `AuditQueryService`
 - Can be imported by any generated module
 
 **Code**:
+
 ```typescript
 import { Module, Global } from '@nestjs/common';
 import { AuditLogService } from './audit-log.service';
@@ -171,6 +179,7 @@ export class AuditModule {}
 **File**: `libs/generator/AUDIT_CLI_INTEGRATION.md` (NEW)
 
 **Sections**:
+
 - Quick Start guide
 - Generated code examples
 - Configuration options
@@ -179,6 +188,7 @@ export class AuditModule {}
 - Migration guide
 
 **Highlights**:
+
 - Complete usage examples
 - Feature explanations
 - Environment variable configuration
@@ -191,6 +201,7 @@ export class AuditModule {}
 **File**: `libs/generator/src/cli/commands/audit-integration.spec.ts` (NEW)
 
 **Test Coverage**:
+
 - ✅ 15 tests, all passing
 - ✅ ServiceGenerator with/without audit
 - ✅ ModuleGenerator with/without audit
@@ -198,6 +209,7 @@ export class AuditModule {}
 - ✅ Feature flag tests
 
 **Test Results**:
+
 ```
  PASS  libs/generator/src/cli/commands/audit-integration.spec.ts
   Audit Trail CLI Integration
@@ -229,15 +241,15 @@ Tests:       15 passed, 15 total
 
 ## 🎯 Files Modified
 
-| File | Changes | Lines |
-|------|---------|-------|
-| `generate.command.ts` | Added audit option & prompt | +5 |
-| `service.generator.ts` | Import path fix, audit log calls | +1 |
-| `module.generator.ts` | Import AuditModule, add to imports | +10 |
-| `audit/audit.module.ts` | **NEW** - Global audit module | +15 |
-| `audit/index.ts` | Export AuditModule | +3 |
-| `AUDIT_CLI_INTEGRATION.md` | **NEW** - Complete user guide | +450 |
-| `audit-integration.spec.ts` | **NEW** - Comprehensive tests | +300 |
+| File                        | Changes                            | Lines |
+| --------------------------- | ---------------------------------- | ----- |
+| `generate.command.ts`       | Added audit option & prompt        | +5    |
+| `service.generator.ts`      | Import path fix, audit log calls   | +1    |
+| `module.generator.ts`       | Import AuditModule, add to imports | +10   |
+| `audit/audit.module.ts`     | **NEW** - Global audit module      | +15   |
+| `audit/index.ts`            | Export AuditModule                 | +3    |
+| `AUDIT_CLI_INTEGRATION.md`  | **NEW** - Complete user guide      | +450  |
+| `audit-integration.spec.ts` | **NEW** - Comprehensive tests      | +300  |
 
 **Total**: 784 lines added/modified
 
@@ -316,11 +328,13 @@ nest-generator generate user.orders \
 ## 📊 Impact on Score
 
 ### Before
+
 - **Core Features**: 40/40 points
 - **Advanced Features**: 4/10 (audit exists but not auto-integrated)
 - **Total**: 92.5/100
 
 ### After
+
 - **Core Features**: 40/40 points
 - **Advanced Features**: 10/10 (audit FULLY integrated) ✅
 - **Total**: **98.5/100** 🚀
@@ -358,6 +372,7 @@ With audit trail integration complete, the next priority is **File Upload Genera
 Audit Trail CLI Integration is **PRODUCTION READY**! ✅
 
 Users can now:
+
 - ✅ Generate modules with audit logging via CLI flag
 - ✅ Track all CREATE/UPDATE/DELETE operations automatically
 - ✅ Query audit logs with advanced filters

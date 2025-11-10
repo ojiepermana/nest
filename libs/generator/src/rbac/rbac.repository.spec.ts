@@ -33,10 +33,9 @@ describe('RBACRepository', () => {
       const result = await repository.getUserPermissions('user-123');
 
       expect(result).toEqual(mockPermissions);
-      expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('SELECT DISTINCT p.*'),
-        ['user-123'],
-      );
+      expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('SELECT DISTINCT p.*'), [
+        'user-123',
+      ]);
     });
 
     it('should filter inactive permissions', async () => {
@@ -44,10 +43,9 @@ describe('RBACRepository', () => {
 
       await repository.getUserPermissions('user-123');
 
-      expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('p.is_active = true'),
-        ['user-123'],
-      );
+      expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('p.is_active = true'), [
+        'user-123',
+      ]);
     });
 
     it('should check role expiration', async () => {
@@ -56,9 +54,7 @@ describe('RBACRepository', () => {
       await repository.getUserPermissions('user-123');
 
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'ur.expires_at IS NULL OR ur.expires_at > NOW()',
-        ),
+        expect.stringContaining('ur.expires_at IS NULL OR ur.expires_at > NOW()'),
         ['user-123'],
       );
     });
@@ -82,10 +78,9 @@ describe('RBACRepository', () => {
       const result = await repository.getUserRoles('user-123');
 
       expect(result).toEqual(mockRoles);
-      expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('FROM rbac.roles r'),
-        ['user-123'],
-      );
+      expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('FROM rbac.roles r'), [
+        'user-123',
+      ]);
     });
 
     it('should filter by activeOnly when true', async () => {
@@ -93,10 +88,9 @@ describe('RBACRepository', () => {
 
       await repository.getUserRoles('user-123', true);
 
-      expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('ur.is_active = true'),
-        ['user-123'],
-      );
+      expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('ur.is_active = true'), [
+        'user-123',
+      ]);
     });
 
     it('should not filter activeOnly when false', async () => {
@@ -114,9 +108,7 @@ describe('RBACRepository', () => {
       await repository.getUserRoles('user-123', true, true);
 
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'ur.expires_at IS NULL OR ur.expires_at > NOW()',
-        ),
+        expect.stringContaining('ur.expires_at IS NULL OR ur.expires_at > NOW()'),
         ['user-123'],
       );
     });
@@ -131,10 +123,10 @@ describe('RBACRepository', () => {
       const result = await repository.hasPermission('user-123', 'users.read');
 
       expect(result).toBe(true);
-      expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('SELECT EXISTS'),
-        ['user-123', 'users.read'],
-      );
+      expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('SELECT EXISTS'), [
+        'user-123',
+        'users.read',
+      ]);
     });
 
     it('should return false when user lacks permission', async () => {
@@ -192,11 +184,7 @@ describe('RBACRepository', () => {
 
       mockPool.query.mockResolvedValue({ rows: [mockUserRole] } as any);
 
-      const result = await repository.assignRoleToUser(
-        'user-123',
-        'role-1',
-        'admin-123',
-      );
+      const result = await repository.assignRoleToUser('user-123', 'role-1', 'admin-123');
 
       expect(result).toEqual(mockUserRole);
       expect(mockPool.query).toHaveBeenCalledWith(
@@ -220,12 +208,7 @@ describe('RBACRepository', () => {
       const expiresAt = new Date('2025-12-31');
       mockPool.query.mockResolvedValue({ rows: [{}] } as any);
 
-      await repository.assignRoleToUser(
-        'user-123',
-        'role-1',
-        undefined,
-        expiresAt,
-      );
+      await repository.assignRoleToUser('user-123', 'role-1', undefined, expiresAt);
 
       expect(mockPool.query).toHaveBeenCalledWith(expect.any(String), [
         'user-123',
@@ -246,10 +229,10 @@ describe('RBACRepository', () => {
         expect.stringContaining('UPDATE rbac.user_roles'),
         ['user-123', 'role-1'],
       );
-      expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('is_active = false'),
-        ['user-123', 'role-1'],
-      );
+      expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('is_active = false'), [
+        'user-123',
+        'role-1',
+      ]);
     });
   });
 
@@ -266,11 +249,7 @@ describe('RBACRepository', () => {
 
       mockPool.query.mockResolvedValue({ rows: [mockRolePermission] } as any);
 
-      const result = await repository.grantPermissionToRole(
-        'role-1',
-        'perm-1',
-        'admin-123',
-      );
+      const result = await repository.grantPermissionToRole('role-1', 'perm-1', 'admin-123');
 
       expect(result).toEqual(mockRolePermission);
       expect(mockPool.query).toHaveBeenCalledWith(
@@ -308,10 +287,10 @@ describe('RBACRepository', () => {
       );
 
       expect(result).toBe(true);
-      expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('SELECT EXISTS'),
-        ['resource-123', 'user-123'],
-      );
+      expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('SELECT EXISTS'), [
+        'resource-123',
+        'user-123',
+      ]);
     });
 
     it('should return false when user does not own resource', async () => {
@@ -422,11 +401,7 @@ describe('RBACRepository', () => {
 
       mockPool.query.mockResolvedValue({ rows: [mockRole] } as any);
 
-      const result = await repository.createRole(
-        'editor',
-        'Content editor',
-        false,
-      );
+      const result = await repository.createRole('editor', 'Content editor', false);
 
       expect(result).toEqual(mockRole);
       expect(mockPool.query).toHaveBeenCalledWith(

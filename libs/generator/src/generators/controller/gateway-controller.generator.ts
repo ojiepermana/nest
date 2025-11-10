@@ -6,10 +6,7 @@
  */
 
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 export interface GatewayControllerGeneratorOptions {
   tableName: string;
@@ -37,10 +34,7 @@ export class GatewayControllerGenerator {
     const basePath = this.toKebabCase(entityName);
 
     const imports = this.generateImports(entityName);
-    const classDeclaration = this.generateClassDeclaration(
-      controllerName,
-      basePath,
-    );
+    const classDeclaration = this.generateClassDeclaration(controllerName, basePath);
     const constructor = this.generateConstructor();
     const endpoints = this.generateProxyEndpoints(entityName);
 
@@ -67,9 +61,7 @@ ${endpoints}
     ];
 
     if (this.options.enableSwagger) {
-      imports.push(
-        "import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';",
-      );
+      imports.push("import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';");
     }
 
     if (this.options.enableRateLimit) {
@@ -82,10 +74,7 @@ ${endpoints}
   /**
    * Generate class declaration
    */
-  private generateClassDeclaration(
-    controllerName: string,
-    basePath: string,
-  ): string {
+  private generateClassDeclaration(controllerName: string, basePath: string): string {
     const decorators: string[] = [];
 
     if (this.options.enableSwagger) {

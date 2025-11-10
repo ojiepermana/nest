@@ -3,10 +3,7 @@
  */
 
 import { ServiceTestGenerator } from './service-test.generator';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 describe('ServiceTestGenerator', () => {
   let generator: ServiceTestGenerator;
@@ -165,10 +162,7 @@ describe('ServiceTestGenerator', () => {
         ...tableMetadata,
         has_soft_delete: false,
       };
-      const result = generator.generateServiceTest(
-        tableWithoutSoftDelete,
-        columns,
-      );
+      const result = generator.generateServiceTest(tableWithoutSoftDelete, columns);
 
       expect(result).toContain("describe('delete'");
       expect(result).toContain('should delete users');
@@ -207,10 +201,7 @@ describe('ServiceTestGenerator', () => {
         includePaginationTests: false,
       });
 
-      const result = generatorWithoutPagination.generateServiceTest(
-        tableMetadata,
-        columns,
-      );
+      const result = generatorWithoutPagination.generateServiceTest(tableMetadata, columns);
 
       expect(result).not.toContain('GENERATED_TEST_START: find-all-pagination');
     });
@@ -220,10 +211,7 @@ describe('ServiceTestGenerator', () => {
         includeErrorHandlingTests: false,
       });
 
-      const result = generatorWithoutErrors.generateServiceTest(
-        tableMetadata,
-        columns,
-      );
+      const result = generatorWithoutErrors.generateServiceTest(tableMetadata, columns);
 
       expect(result).not.toContain('GENERATED_TEST_START: find-one-not-found');
       expect(result).not.toContain('GENERATED_TEST_START: create-validation');

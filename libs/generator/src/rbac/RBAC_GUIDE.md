@@ -45,7 +45,7 @@ The RBAC system provides comprehensive authorization for NestJS applications wit
 ✅ Expiration support for temporary role assignments  
 ✅ Active/inactive role status  
 ✅ Database-driven with metadata tables  
-✅ Integration with generated CRUD modules  
+✅ Integration with generated CRUD modules
 
 ---
 
@@ -62,11 +62,13 @@ nest-generator generate <schema>.<table> --features.rbac=true
 If you need to add RBAC to an existing project:
 
 1. Copy RBAC files to your project:
+
 ```bash
 cp -r libs/generator/src/rbac src/rbac
 ```
 
 2. Install dependencies (if not already present):
+
 ```bash
 npm install @nestjs/cache-manager cache-manager
 npm install -D @types/cache-manager
@@ -285,15 +287,12 @@ import { RolesGuard } from './rbac/guards/roles.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   const reflector = app.get(Reflector);
-  
+
   // Register guards globally
-  app.useGlobalGuards(
-    new PermissionsGuard(reflector),
-    new RolesGuard(reflector),
-  );
-  
+  app.useGlobalGuards(new PermissionsGuard(reflector), new RolesGuard(reflector));
+
   await app.listen(3000);
 }
 bootstrap();
@@ -305,12 +304,14 @@ bootstrap();
 
 ### Permission vs Role
 
-**Permission**: Specific action on a resource  
+**Permission**: Specific action on a resource
+
 - Format: `<resource>.<action>` (e.g., `users.create`, `posts.delete`)
 - Fine-grained control
 - Can be assigned directly to users or via roles
 
-**Role**: Collection of permissions  
+**Role**: Collection of permissions
+
 - Examples: `admin`, `moderator`, `user`, `guest`
 - Simplifies permission management
 - Supports hierarchy (role inheritance)
@@ -330,11 +331,13 @@ bootstrap();
 ### Caching Strategy
 
 **Cache Keys:**
+
 - Permission: `rbac:user:{userId}:permission:{permission}`
 - Role: `rbac:user:{userId}:role:{roleName}`
 - User context: `rbac:user:{userId}:context`
 
 **Cache Invalidation:**
+
 - Automatic on role assignment/removal
 - Automatic on permission changes
 - Manual via service methods
@@ -633,7 +636,7 @@ export class UsersService {
   async sensitiveAction(userId: string) {
     // Check permission programmatically
     const hasPermission = await this.rbac.hasPermission(userId, 'users.delete');
-    
+
     if (!hasPermission) {
       throw new ForbiddenException('Permission denied');
     }
@@ -659,11 +662,7 @@ const canDelete = await this.rbac.hasPermission('user-123', 'users.delete');
 Check if user has ALL specified permissions (AND logic).
 
 ```typescript
-const result = await this.rbac.hasAllPermissions('user-123', [
-  'users.create',
-  'users.update',
-  'users.delete',
-]);
+const result = await this.rbac.hasAllPermissions('user-123', ['users.create', 'users.update', 'users.delete']);
 
 /*
 Returns:
@@ -686,10 +685,7 @@ if (result.granted) {
 Check if user has ANY of the specified permissions (OR logic).
 
 ```typescript
-const result = await this.rbac.hasAnyPermission('user-123', [
-  'posts.update',
-  'posts.delete',
-]);
+const result = await this.rbac.hasAnyPermission('user-123', ['posts.update', 'posts.delete']);
 
 if (result.granted) {
   // User has at least one permission
@@ -762,7 +758,7 @@ Returns:
 */
 
 console.log(`User has ${context.permissions.length} permissions`);
-console.log(`Roles: ${context.roles.map(r => r.name).join(', ')}`);
+console.log(`Roles: ${context.roles.map((r) => r.name).join(', ')}`);
 ```
 
 ### Role Management
@@ -796,16 +792,10 @@ await this.rbac.removeRole('user-123', 'admin');
 Check if user owns a resource.
 
 ```typescript
-const ownsPost = await this.rbac.checkOwnership(
-  'user-123',
-  'app',
-  'posts',
-  'post-456',
-  {
-    ownerField: 'user_id',
-    allowAdminOverride: true,
-  },
-);
+const ownsPost = await this.rbac.checkOwnership('user-123', 'app', 'posts', 'post-456', {
+  ownerField: 'user_id',
+  allowAdminOverride: true,
+});
 
 if (ownsPost) {
   // User owns the post or is super admin
@@ -877,6 +867,7 @@ Follow consistent naming patterns:
 - **Action:** Verb (create, read, update, delete, manage, approve)
 
 **Examples:**
+
 - `users.create`
 - `posts.publish`
 - `orders.approve`
@@ -904,7 +895,7 @@ super_admin → ALL permissions
 admin → Most permissions
   ↓
 moderator → Content management permissions
-  ↓  
+  ↓
 user → Basic permissions
   ↓
 guest → Read-only permissions
@@ -1036,7 +1027,7 @@ RBACModule.register({
     host: 'localhost',
     port: 6379,
   },
-})
+});
 ```
 
 ### Cache Keys
@@ -1103,15 +1094,15 @@ async adminEndpoint(@Request() req) {
 // ✅ Good - Dynamic business logic
 async deletePost(userId: string, postId: string) {
   const post = await this.findPost(postId);
-  
+
   // Check ownership OR admin status
   const isOwner = post.user_id === userId;
   const isAdmin = await this.rbac.hasRole(userId, 'admin');
-  
+
   if (!isOwner && !isAdmin) {
     throw new ForbiddenException();
   }
-  
+
   return this.repository.delete(postId);
 }
 ```
@@ -1210,7 +1201,7 @@ async dashboard() {
 @Get('beta-feature')
 async betaFeature(@Request() req) {
   const hasBetaAccess = await this.rbac.hasRole(req.user.id, 'beta_tester');
-  
+
   return {
     feature: hasBetaAccess ? this.getBetaContent() : this.getStandardContent(),
   };
@@ -1223,22 +1214,22 @@ async betaFeature(@Request() req) {
 async complexBusinessLogic(userId: string, resourceId: string) {
   // Get full user context
   const userContext = await this.rbac.getUserContext(userId);
-  
+
   if (userContext.isSuperAdmin) {
     // Super admin bypass
     return this.performAction(resourceId);
   }
-  
+
   // Check multiple conditions
   const hasPermission = await this.rbac.hasPermission(userId, 'resource.action');
   const ownsResource = await this.rbac.checkOwnership(userId, 'app', 'resources', resourceId, {
     ownerField: 'user_id',
   });
-  
+
   if (!hasPermission && !ownsResource) {
     throw new ForbiddenException();
   }
-  
+
   return this.performAction(resourceId);
 }
 ```
@@ -1248,13 +1239,13 @@ async complexBusinessLogic(userId: string, resourceId: string) {
 ```typescript
 async getUserProfile(viewerId: string, targetUserId: string) {
   const user = await this.findUser(targetUserId);
-  
+
   // Check if viewer can see sensitive data
   const canViewSensitive = await this.rbac.hasAnyPermission(viewerId, [
     'users.view_all_fields',
     'admin.view_users',
   ]);
-  
+
   return {
     id: user.id,
     name: user.name,
@@ -1276,12 +1267,14 @@ async getUserProfile(viewerId: string, targetUserId: string) {
 **Solutions:**
 
 1. **Check guard registration:**
+
 ```typescript
 // Make sure guards are registered globally
 app.useGlobalGuards(new PermissionsGuard(reflector));
 ```
 
 2. **Check guard order:**
+
 ```typescript
 // AuthGuard must run before PermissionsGuard
 app.useGlobalGuards(
@@ -1291,6 +1284,7 @@ app.useGlobalGuards(
 ```
 
 3. **Verify decorator usage:**
+
 ```typescript
 // Make sure decorator is applied
 @RequirePermission('users.create') // ← This must be present
@@ -1304,6 +1298,7 @@ async createUser() {}
 **Solutions:**
 
 1. **Check user authentication:**
+
 ```typescript
 // Verify req.user exists and has id
 const user = request.user;
@@ -1313,6 +1308,7 @@ if (!user || !user.id) {
 ```
 
 2. **Verify permissions in database:**
+
 ```sql
 -- Check if user has permission
 SELECT p.name
@@ -1324,6 +1320,7 @@ WHERE ur.user_id = 'user-123' OR up.user_id = 'user-123';
 ```
 
 3. **Check cache staleness:**
+
 ```typescript
 // Clear user cache
 await cacheManager.del(`rbac:user:${userId}:*`);
@@ -1336,6 +1333,7 @@ await cacheManager.del(`rbac:user:${userId}:*`);
 **Solutions:**
 
 1. **Verify Redis connection:**
+
 ```typescript
 // Test Redis connectivity
 await cacheManager.set('test', 'value');
@@ -1344,6 +1342,7 @@ console.log(value); // Should print 'value'
 ```
 
 2. **Check cache configuration:**
+
 ```typescript
 RBACModule.register({
   cache: {
@@ -1353,10 +1352,11 @@ RBACModule.register({
     host: process.env.REDIS_HOST,
     port: parseInt(process.env.REDIS_PORT),
   },
-})
+});
 ```
 
 3. **Monitor cache keys:**
+
 ```bash
 # Redis CLI
 redis-cli KEYS "rbac:*"
@@ -1369,12 +1369,14 @@ redis-cli KEYS "rbac:*"
 **Solutions:**
 
 1. **Verify owner field:**
+
 ```typescript
 // Make sure ownerField matches database column
 @RequireOwnership({ ownerField: 'user_id' }) // ← Check column name
 ```
 
 2. **Check resource ID parameter:**
+
 ```typescript
 // Verify :id parameter is being passed correctly
 @Put(':id') // ← Parameter name
@@ -1383,6 +1385,7 @@ async update(@Param('id') id: string) {} // ← Must match
 ```
 
 3. **Test database query:**
+
 ```sql
 SELECT user_id FROM app.posts WHERE id = 'post-123';
 -- Verify user_id matches expected user
@@ -1405,7 +1408,7 @@ nest-generator generate <table> --features.rbac=true
 ```sql
 -- Map existing permissions
 INSERT INTO rbac.permissions (name, description, resource, action)
-SELECT 
+SELECT
   CONCAT(resource, '.', action) as name,
   description,
   resource,
@@ -1446,11 +1449,7 @@ app.useGlobalGuards(new CustomAuthGuard());
 
 // After
 const reflector = app.get(Reflector);
-app.useGlobalGuards(
-  new AuthGuard(),
-  new PermissionsGuard(reflector),
-  new RolesGuard(reflector),
-);
+app.useGlobalGuards(new AuthGuard(), new PermissionsGuard(reflector), new RolesGuard(reflector));
 ```
 
 ### Breaking Changes
@@ -1464,20 +1463,20 @@ app.useGlobalGuards(
 
 ## API Reference Table
 
-| Method | Parameters | Return Type | Description |
-|--------|-----------|-------------|-------------|
-| `hasPermission` | `userId: string, permission: string` | `Promise<boolean>` | Check single permission |
-| `hasAllPermissions` | `userId: string, permissions: string[]` | `Promise<PermissionCheckResult>` | Check all permissions (AND) |
-| `hasAnyPermission` | `userId: string, permissions: string[]` | `Promise<PermissionCheckResult>` | Check any permission (OR) |
-| `hasRole` | `userId: string, roleName: string, activeOnly?: boolean, checkExpiration?: boolean` | `Promise<boolean>` | Check single role |
-| `hasAllRoles` | `userId: string, roles: string[]` | `Promise<RoleCheckResult>` | Check all roles (AND) |
-| `hasAnyRole` | `userId: string, roles: string[]` | `Promise<RoleCheckResult>` | Check any role (OR) |
-| `getUserContext` | `userId: string` | `Promise<UserRBACContext>` | Get full user RBAC context |
-| `assignRole` | `userId: string, roleName: string, expiresAt?: Date` | `Promise<void>` | Assign role to user |
-| `removeRole` | `userId: string, roleName: string` | `Promise<void>` | Remove role from user |
-| `checkOwnership` | `userId: string, schema: string, table: string, resourceId: string, config: OwnershipConfig` | `Promise<boolean>` | Verify resource ownership |
-| `isSuperAdmin` | `userId: string` | `Promise<boolean>` | Check super admin status |
-| `isAdmin` | `userId: string` | `Promise<boolean>` | Check admin status |
+| Method              | Parameters                                                                                   | Return Type                      | Description                 |
+| ------------------- | -------------------------------------------------------------------------------------------- | -------------------------------- | --------------------------- |
+| `hasPermission`     | `userId: string, permission: string`                                                         | `Promise<boolean>`               | Check single permission     |
+| `hasAllPermissions` | `userId: string, permissions: string[]`                                                      | `Promise<PermissionCheckResult>` | Check all permissions (AND) |
+| `hasAnyPermission`  | `userId: string, permissions: string[]`                                                      | `Promise<PermissionCheckResult>` | Check any permission (OR)   |
+| `hasRole`           | `userId: string, roleName: string, activeOnly?: boolean, checkExpiration?: boolean`          | `Promise<boolean>`               | Check single role           |
+| `hasAllRoles`       | `userId: string, roles: string[]`                                                            | `Promise<RoleCheckResult>`       | Check all roles (AND)       |
+| `hasAnyRole`        | `userId: string, roles: string[]`                                                            | `Promise<RoleCheckResult>`       | Check any role (OR)         |
+| `getUserContext`    | `userId: string`                                                                             | `Promise<UserRBACContext>`       | Get full user RBAC context  |
+| `assignRole`        | `userId: string, roleName: string, expiresAt?: Date`                                         | `Promise<void>`                  | Assign role to user         |
+| `removeRole`        | `userId: string, roleName: string`                                                           | `Promise<void>`                  | Remove role from user       |
+| `checkOwnership`    | `userId: string, schema: string, table: string, resourceId: string, config: OwnershipConfig` | `Promise<boolean>`               | Verify resource ownership   |
+| `isSuperAdmin`      | `userId: string`                                                                             | `Promise<boolean>`               | Check super admin status    |
+| `isAdmin`           | `userId: string`                                                                             | `Promise<boolean>`               | Check admin status          |
 
 ---
 

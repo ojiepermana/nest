@@ -55,12 +55,15 @@ See [prompt.md](./prompt.md) for complete feature list and implementation guide.
 ## Architecture Support
 
 ### Standalone Application
+
 Single NestJS app with all modules.
 
 ### Monorepo
+
 Multiple apps sharing common libraries.
 
 ### Microservices
+
 Distributed services with API gateway pattern.
 
 ## Generated Files
@@ -82,6 +85,7 @@ GET /users?username_like=john&age_gte=18&role_in=admin,user
 ```
 
 Supported operators:
+
 - `_eq`, `_ne` - Equality
 - `_gt`, `_gte`, `_lt`, `_lte` - Comparison
 - `_like` - Pattern matching (case-insensitive)
@@ -135,24 +139,31 @@ async myCustomMethod() {
 ## Advanced Features
 
 ### Swagger/OpenAPI
+
 Auto-generated API documentation with examples.
 
 ### Export Functionality
+
 Export to CSV, Excel, PDF.
 
 ### Caching Layer
+
 Redis integration with auto-invalidation.
 
 ### Rate Limiting
+
 IP-based throttling with configurable limits.
 
 ### Audit Trail
+
 Activity logging with rollback support.
 
 ### RBAC
+
 Role-based access control with field-level permissions.
 
 ### Search Integration
+
 Elasticsearch/Algolia for full-text search.
 
 ## Requirements

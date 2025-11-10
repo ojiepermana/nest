@@ -25,9 +25,7 @@ export function getSchema(databaseType: 'postgresql' | 'mysql'): string {
  * @param databaseType - 'postgresql' or 'mysql'
  * @returns SQL script content
  */
-export function getSchemaForDatabase(
-  databaseType: 'postgresql' | 'mysql',
-): string {
+export function getSchemaForDatabase(databaseType: 'postgresql' | 'mysql'): string {
   const schemaPath = join(__dirname, `${databaseType}.sql`);
   return readFileSync(schemaPath, 'utf-8');
 }

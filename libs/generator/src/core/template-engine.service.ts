@@ -10,12 +10,7 @@ import { join } from 'path';
 import { existsSync } from 'fs';
 import * as Handlebars from 'handlebars';
 import { Logger } from '../utils/logger.util';
-import {
-  pascalCase,
-  camelCase,
-  snakeCase,
-  kebabCase,
-} from '../utils/string.util';
+import { pascalCase, camelCase, snakeCase, kebabCase } from '../utils/string.util';
 
 export type TemplateFormat = 'mjs' | 'hbs' | 'auto';
 
@@ -41,13 +36,8 @@ export class TemplateEngineService {
   private readonly defaultTemplateDir: string;
   private readonly cacheTTL: number;
 
-  constructor(options?: {
-    templateDir?: string;
-    cacheTTL?: number;
-    enableCache?: boolean;
-  }) {
-    this.defaultTemplateDir =
-      options?.templateDir || join(__dirname, '../templates');
+  constructor(options?: { templateDir?: string; cacheTTL?: number; enableCache?: boolean }) {
+    this.defaultTemplateDir = options?.templateDir || join(__dirname, '../templates');
     this.cacheTTL = options?.cacheTTL || 3600000; // 1 hour default
     this.handlebarsInstance = Handlebars.create();
 
@@ -60,44 +50,20 @@ export class TemplateEngineService {
    */
   private registerDefaultHelpers(): void {
     // String transformation helpers
-    this.handlebarsInstance.registerHelper('pascalCase', (str: string) =>
-      pascalCase(str),
-    );
-    this.handlebarsInstance.registerHelper('camelCase', (str: string) =>
-      camelCase(str),
-    );
-    this.handlebarsInstance.registerHelper('snakeCase', (str: string) =>
-      snakeCase(str),
-    );
-    this.handlebarsInstance.registerHelper('kebabCase', (str: string) =>
-      kebabCase(str),
-    );
-    this.handlebarsInstance.registerHelper('upperCase', (str: string) =>
-      str.toUpperCase(),
-    );
-    this.handlebarsInstance.registerHelper('lowerCase', (str: string) =>
-      str.toLowerCase(),
-    );
+    this.handlebarsInstance.registerHelper('pascalCase', (str: string) => pascalCase(str));
+    this.handlebarsInstance.registerHelper('camelCase', (str: string) => camelCase(str));
+    this.handlebarsInstance.registerHelper('snakeCase', (str: string) => snakeCase(str));
+    this.handlebarsInstance.registerHelper('kebabCase', (str: string) => kebabCase(str));
+    this.handlebarsInstance.registerHelper('upperCase', (str: string) => str.toUpperCase());
+    this.handlebarsInstance.registerHelper('lowerCase', (str: string) => str.toLowerCase());
 
     // Comparison helpers
     this.handlebarsInstance.registerHelper('eq', (a: any, b: any) => a === b);
     this.handlebarsInstance.registerHelper('ne', (a: any, b: any) => a !== b);
-    this.handlebarsInstance.registerHelper(
-      'gt',
-      (a: number, b: number) => a > b,
-    );
-    this.handlebarsInstance.registerHelper(
-      'lt',
-      (a: number, b: number) => a < b,
-    );
-    this.handlebarsInstance.registerHelper(
-      'gte',
-      (a: number, b: number) => a >= b,
-    );
-    this.handlebarsInstance.registerHelper(
-      'lte',
-      (a: number, b: number) => a <= b,
-    );
+    this.handlebarsInstance.registerHelper('gt', (a: number, b: number) => a > b);
+    this.handlebarsInstance.registerHelper('lt', (a: number, b: number) => a < b);
+    this.handlebarsInstance.registerHelper('gte', (a: number, b: number) => a >= b);
+    this.handlebarsInstance.registerHelper('lte', (a: number, b: number) => a <= b);
 
     // Logical helpers
     this.handlebarsInstance.registerHelper('and', (...args: any[]) => {
@@ -111,10 +77,7 @@ export class TemplateEngineService {
     this.handlebarsInstance.registerHelper('not', (value: any) => !value);
 
     // Array/Collection helpers
-    this.handlebarsInstance.registerHelper(
-      'length',
-      (array: any[]) => array?.length || 0,
-    );
+    this.handlebarsInstance.registerHelper('length', (array: any[]) => array?.length || 0);
     this.handlebarsInstance.registerHelper(
       'isEmpty',
       (array: any[]) => !array || array.length === 0,
@@ -123,22 +86,13 @@ export class TemplateEngineService {
       'isNotEmpty',
       (array: any[]) => array && array.length > 0,
     );
-    this.handlebarsInstance.registerHelper(
-      'first',
-      (array: any[]) => array?.[0],
-    );
-    this.handlebarsInstance.registerHelper(
-      'last',
-      (array: any[]) => array?.[array.length - 1],
-    );
+    this.handlebarsInstance.registerHelper('first', (array: any[]) => array?.[0]);
+    this.handlebarsInstance.registerHelper('last', (array: any[]) => array?.[array.length - 1]);
 
     // Join helper for arrays
-    this.handlebarsInstance.registerHelper(
-      'join',
-      (array: any[], separator: string) => {
-        return array?.join(separator || ', ') || '';
-      },
-    );
+    this.handlebarsInstance.registerHelper('join', (array: any[], separator: string) => {
+      return array?.join(separator || ', ') || '';
+    });
 
     // Conditional helper
     this.handlebarsInstance.registerHelper(
@@ -171,10 +125,7 @@ export class TemplateEngineService {
   /**
    * Load template file (auto-detect format or use specified)
    */
-  async loadTemplate(
-    templateName: string,
-    options?: TemplateOptions,
-  ): Promise<CachedTemplate> {
+  async loadTemplate(templateName: string, options?: TemplateOptions): Promise<CachedTemplate> {
     const format = options?.format || 'auto';
     const templateDir = options?.templateDir || this.defaultTemplateDir;
     const cacheKey = `${templateDir}:${templateName}:${format}`;
@@ -200,9 +151,7 @@ export class TemplateEngineService {
 
     // Cache template
     this.templateCache.set(cacheKey, template);
-    Logger.debug(
-      `Template loaded and cached: ${templateName} (${template.format})`,
-    );
+    Logger.debug(`Template loaded and cached: ${templateName} (${template.format})`);
 
     return template;
   }
@@ -218,9 +167,7 @@ export class TemplateEngineService {
     try {
       return await this.loadMjsTemplate(templateName, templateDir);
     } catch (mjsError) {
-      Logger.debug(
-        `MJS template not found: ${templateName}.mjs, trying HBS...`,
-      );
+      Logger.debug(`MJS template not found: ${templateName}.mjs, trying HBS...`);
 
       // Fallback to .hbs
       try {
@@ -252,9 +199,7 @@ export class TemplateEngineService {
       const templateFn = module.default;
 
       if (typeof templateFn !== 'function') {
-        throw new Error(
-          `MJS template must export default function: ${templateName}`,
-        );
+        throw new Error(`MJS template must export default function: ${templateName}`);
       }
 
       return {
@@ -263,10 +208,7 @@ export class TemplateEngineService {
         timestamp: Date.now(),
       };
     } catch (error) {
-      Logger.error(
-        `Failed to load MJS template: ${templateName}`,
-        error as Error,
-      );
+      Logger.error(`Failed to load MJS template: ${templateName}`, error as Error);
       throw error;
     }
   }
@@ -294,10 +236,7 @@ export class TemplateEngineService {
         timestamp: Date.now(),
       };
     } catch (error) {
-      Logger.error(
-        `Failed to load HBS template: ${templateName}`,
-        error as Error,
-      );
+      Logger.error(`Failed to load HBS template: ${templateName}`, error as Error);
       throw error;
     }
   }
@@ -327,18 +266,13 @@ export class TemplateEngineService {
       if (cachedTemplate.format === 'mjs') {
         result = cachedTemplate.template(enrichedData);
       } else {
-        result = (cachedTemplate.template as HandlebarsTemplateDelegate)(
-          enrichedData,
-        );
+        result = (cachedTemplate.template as HandlebarsTemplateDelegate)(enrichedData);
       }
 
       Logger.debug(`Template rendered: ${templateName}`);
       return result;
     } catch (error) {
-      Logger.error(
-        `Failed to render template: ${templateName}`,
-        error as Error,
-      );
+      Logger.error(`Failed to render template: ${templateName}`, error as Error);
       throw error;
     }
   }
@@ -358,12 +292,9 @@ export class TemplateEngineService {
       lowerCase: (str: string) => str.toLowerCase(),
 
       // Utility helpers
-      join: (array: any[], separator: string = ', ') =>
-        array?.join(separator) || '',
-      isEmpty: (value: any) =>
-        !value || (Array.isArray(value) && value.length === 0),
-      isNotEmpty: (value: any) =>
-        !!value && (!Array.isArray(value) || value.length > 0),
+      join: (array: any[], separator: string = ', ') => array?.join(separator) || '',
+      isEmpty: (value: any) => !value || (Array.isArray(value) && value.length === 0),
+      isNotEmpty: (value: any) => !!value && (!Array.isArray(value) || value.length > 0),
     };
   }
 
@@ -373,9 +304,7 @@ export class TemplateEngineService {
   clearCache(templateName?: string): void {
     if (templateName) {
       // Clear specific template (all formats)
-      const keys = Array.from(this.templateCache.keys()).filter((k) =>
-        k.includes(templateName),
-      );
+      const keys = Array.from(this.templateCache.keys()).filter((k) => k.includes(templateName));
       keys.forEach((k) => this.templateCache.delete(k));
       Logger.debug(`Cache cleared for template: ${templateName}`);
     } else {
@@ -393,13 +322,11 @@ export class TemplateEngineService {
     entries: { name: string; format: string; age: number }[];
   } {
     const now = Date.now();
-    const entries = Array.from(this.templateCache.entries()).map(
-      ([key, cached]) => ({
-        name: key,
-        format: cached.format,
-        age: now - cached.timestamp,
-      }),
-    );
+    const entries = Array.from(this.templateCache.entries()).map(([key, cached]) => ({
+      name: key,
+      format: cached.format,
+      age: now - cached.timestamp,
+    }));
 
     return {
       size: this.templateCache.size,
@@ -410,10 +337,7 @@ export class TemplateEngineService {
   /**
    * Check if template exists
    */
-  async templateExists(
-    templateName: string,
-    format?: 'mjs' | 'hbs',
-  ): Promise<boolean> {
+  async templateExists(templateName: string, format?: 'mjs' | 'hbs'): Promise<boolean> {
     const templateDir = this.defaultTemplateDir;
 
     if (format) {
@@ -422,12 +346,8 @@ export class TemplateEngineService {
     }
 
     // Check both formats
-    const mjsExists = existsSync(
-      join(templateDir, `${templateName}.template.mjs`),
-    );
-    const hbsExists = existsSync(
-      join(templateDir, `${templateName}.template.hbs`),
-    );
+    const mjsExists = existsSync(join(templateDir, `${templateName}.template.mjs`));
+    const hbsExists = existsSync(join(templateDir, `${templateName}.template.hbs`));
 
     return mjsExists || hbsExists;
   }

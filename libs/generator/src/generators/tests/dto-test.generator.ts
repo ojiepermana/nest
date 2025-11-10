@@ -4,10 +4,7 @@
  * Generates unit test files for DTO classes with validation tests
  */
 
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
 
 export interface DtoTestGeneratorOptions {
@@ -27,10 +24,7 @@ export class DtoTestGenerator {
   /**
    * Generate DTO test file
    */
-  generateCreateDtoTest(
-    table: TableMetadata,
-    columns: ColumnMetadata[],
-  ): string {
+  generateCreateDtoTest(table: TableMetadata, columns: ColumnMetadata[]): string {
     const className = `Create${toPascalCase(table.table_name)}Dto`;
     const formColumns = columns.filter(
       (col) =>
@@ -50,10 +44,7 @@ export class DtoTestGenerator {
   /**
    * Generate Update DTO test file
    */
-  generateUpdateDtoTest(
-    table: TableMetadata,
-    columns: ColumnMetadata[],
-  ): string {
+  generateUpdateDtoTest(table: TableMetadata, columns: ColumnMetadata[]): string {
     const className = `Update${toPascalCase(table.table_name)}Dto`;
     const formColumns = columns.filter(
       (col) =>
@@ -65,11 +56,7 @@ export class DtoTestGenerator {
 
     let testCode = this.generateFileHeader(table, className);
     testCode += this.generateImports(className, table.table_name);
-    testCode += this.generateUpdateDtoDescribeBlock(
-      className,
-      table,
-      formColumns,
-    );
+    testCode += this.generateUpdateDtoDescribeBlock(className, table, formColumns);
 
     return testCode;
   }
@@ -77,20 +64,13 @@ export class DtoTestGenerator {
   /**
    * Generate Filter DTO test file
    */
-  generateFilterDtoTest(
-    table: TableMetadata,
-    columns: ColumnMetadata[],
-  ): string {
+  generateFilterDtoTest(table: TableMetadata, columns: ColumnMetadata[]): string {
     const className = `${toPascalCase(table.table_name)}FilterDto`;
     const filterableColumns = columns.filter((col) => col.is_filterable);
 
     let testCode = this.generateFileHeader(table, className);
     testCode += this.generateImports(className, table.table_name);
-    testCode += this.generateFilterDtoDescribeBlock(
-      className,
-      table,
-      filterableColumns,
-    );
+    testCode += this.generateFilterDtoDescribeBlock(className, table, filterableColumns);
 
     return testCode;
   }
@@ -227,9 +207,7 @@ ${this.generateValidTestData(columns, '      ')}
     // Add numeric range validation test
     if (
       numericFields.length > 0 &&
-      numericFields.some(
-        (col) => col.min_value !== null || col.max_value !== null,
-      )
+      numericFields.some((col) => col.min_value !== null || col.max_value !== null)
     ) {
       const fieldsWithRange = numericFields.filter(
         (col) => col.min_value !== null || col.max_value !== null,
@@ -274,9 +252,7 @@ ${this.generateValidTestData(columns, '      ')}
     }
 
     // Add enum validation test
-    const enumFields = columns.filter(
-      (col) => col.enum_values && col.enum_values.length > 0,
-    );
+    const enumFields = columns.filter((col) => col.enum_values && col.enum_values.length > 0);
     if (enumFields.length > 0) {
       enumFields.forEach((col) => {
         code += `  // GENERATED_TEST_START: validation-enum-${col.column_name}
@@ -391,10 +367,7 @@ ${columns
   /**
    * Generate valid test data for a set of columns
    */
-  private generateValidTestData(
-    columns: ColumnMetadata[],
-    indent: string,
-  ): string {
+  private generateValidTestData(columns: ColumnMetadata[], indent: string): string {
     return columns
       .map((col) => {
         const value = this.generateSampleValue(col);
@@ -437,9 +410,7 @@ ${columns
       case 'bigint':
       case 'smallint':
         if (col.min_value !== null && col.max_value !== null) {
-          return String(
-            Math.floor((Number(col.min_value) + Number(col.max_value)) / 2),
-          );
+          return String(Math.floor((Number(col.min_value) + Number(col.max_value)) / 2));
         }
         return '1';
 
@@ -448,9 +419,7 @@ ${columns
       case 'float':
       case 'double':
         if (col.min_value !== null && col.max_value !== null) {
-          return ((Number(col.min_value) + Number(col.max_value)) / 2).toFixed(
-            2,
-          );
+          return ((Number(col.min_value) + Number(col.max_value)) / 2).toFixed(2);
         }
         return '1.5';
 

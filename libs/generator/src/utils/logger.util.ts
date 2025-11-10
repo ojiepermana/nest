@@ -60,11 +60,7 @@ export class Logger {
 
   static step(step: number, total: number, message: string): void;
   static step(message: string): void;
-  static step(
-    stepOrMessage: number | string,
-    total?: number,
-    message?: string,
-  ): void {
+  static step(stepOrMessage: number | string, total?: number, message?: string): void {
     if (typeof stepOrMessage === 'string') {
       console.log(`⏩ ${stepOrMessage}`);
     } else {
@@ -102,9 +98,7 @@ export class Logger {
   static box(message: string): void;
   static box(lines: string[]): void;
   static box(messageOrLines: string | string[]): void {
-    const lines = Array.isArray(messageOrLines)
-      ? messageOrLines
-      : messageOrLines.split('\n');
+    const lines = Array.isArray(messageOrLines) ? messageOrLines : messageOrLines.split('\n');
     const maxLength = Math.max(...lines.map((l) => l.length));
     const border = '─'.repeat(maxLength + 2);
 

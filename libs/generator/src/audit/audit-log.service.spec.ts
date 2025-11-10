@@ -132,9 +132,7 @@ describe('AuditLogService', () => {
         user_id: 'admin-1',
       };
 
-      await expect(service.log(dto)).rejects.toThrow(
-        'Audit logging is disabled',
-      );
+      await expect(service.log(dto)).rejects.toThrow('Audit logging is disabled');
     });
 
     it('should throw error when logging READ and log_reads is false', async () => {
@@ -147,9 +145,7 @@ describe('AuditLogService', () => {
         user_id: 'admin-1',
       };
 
-      await expect(service.log(dto)).rejects.toThrow(
-        'Read operations are not logged',
-      );
+      await expect(service.log(dto)).rejects.toThrow('Read operations are not logged');
     });
 
     it('should set default status to SUCCESS', async () => {
@@ -441,9 +437,7 @@ describe('AuditLogService', () => {
         rolled_back_by: 'admin',
       };
 
-      await expect(service.rollback(options)).rejects.toThrow(
-        'Audit log not found',
-      );
+      await expect(service.rollback(options)).rejects.toThrow('Audit log not found');
     });
 
     it('should throw error if already rolled back', async () => {

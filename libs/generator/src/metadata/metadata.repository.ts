@@ -23,10 +23,7 @@ export class MetadataRepository {
   /**
    * Get table metadata by schema and table name
    */
-  async getTableMetadata(
-    schema: string,
-    tableName: string,
-  ): Promise<TableMetadata | null> {
+  async getTableMetadata(schema: string, tableName: string): Promise<TableMetadata | null> {
     const query = `
       SELECT *
       FROM ${this.dialect.quoteIdentifier('meta.table_metadata')}
@@ -35,10 +32,7 @@ export class MetadataRepository {
         AND status = 'active'
     `;
 
-    const result = await this.connection.query<TableMetadata>(query, [
-      schema,
-      tableName,
-    ]);
+    const result = await this.connection.query<TableMetadata>(query, [schema, tableName]);
 
     return result.rows.length > 0 ? result.rows[0] : null;
   }
@@ -61,9 +55,7 @@ export class MetadataRepository {
   /**
    * Get all columns for a table by table metadata ID
    */
-  async getColumnsByTableId(
-    tableMetadataId: string,
-  ): Promise<ColumnMetadata[]> {
+  async getColumnsByTableId(tableMetadataId: string): Promise<ColumnMetadata[]> {
     const query = `
       SELECT *
       FROM ${this.dialect.quoteIdentifier('meta.column_metadata')}
@@ -71,9 +63,7 @@ export class MetadataRepository {
       ORDER BY column_order, column_name
     `;
 
-    const result = await this.connection.query<ColumnMetadata>(query, [
-      tableMetadataId,
-    ]);
+    const result = await this.connection.query<ColumnMetadata>(query, [tableMetadataId]);
 
     return result.rows;
   }
@@ -81,10 +71,7 @@ export class MetadataRepository {
   /**
    * Get all columns for a table by schema and table name
    */
-  async getColumnsBySchemaAndTable(
-    schema: string,
-    tableName: string,
-  ): Promise<ColumnMetadata[]> {
+  async getColumnsBySchemaAndTable(schema: string, tableName: string): Promise<ColumnMetadata[]> {
     const tableMetadata = await this.getTableMetadata(schema, tableName);
 
     if (!tableMetadata) {
@@ -98,21 +85,15 @@ export class MetadataRepository {
   /**
    * Get foreign key columns for a table
    */
-  async getForeignKeyColumns(
-    tableMetadataId: string,
-  ): Promise<ColumnMetadata[]> {
+  async getForeignKeyColumns(tableMetadataId: string): Promise<ColumnMetadata[]> {
     const columns = await this.getColumnsByTableId(tableMetadataId);
-    return columns.filter(
-      (col) => col.ref_schema && col.ref_table && col.ref_column,
-    );
+    return columns.filter((col) => col.ref_schema && col.ref_table && col.ref_column);
   }
 
   /**
    * Get generated files for a table
    */
-  async getGeneratedFilesByTableId(
-    tableMetadataId: string,
-  ): Promise<GeneratedFile[]> {
+  async getGeneratedFilesByTableId(tableMetadataId: string): Promise<GeneratedFile[]> {
     const query = `
       SELECT *
       FROM ${this.dialect.quoteIdentifier('meta.generated_files')}
@@ -120,9 +101,7 @@ export class MetadataRepository {
       ORDER BY file_type, file_path
     `;
 
-    const result = await this.connection.query<GeneratedFile>(query, [
-      tableMetadataId,
-    ]);
+    const result = await this.connection.query<GeneratedFile>(query, [tableMetadataId]);
 
     return result.rows;
   }
@@ -184,18 +163,14 @@ export class MetadataRepository {
   /**
    * Get generated file by path
    */
-  async getGeneratedFileByPath(
-    filePath: string,
-  ): Promise<GeneratedFile | null> {
+  async getGeneratedFileByPath(filePath: string): Promise<GeneratedFile | null> {
     const query = `
       SELECT *
       FROM ${this.dialect.quoteIdentifier('meta.generated_files')}
       WHERE file_path = ${this.dialect.getParameterPlaceholder(1)}
     `;
 
-    const result = await this.connection.query<GeneratedFile>(query, [
-      filePath,
-    ]);
+    const result = await this.connection.query<GeneratedFile>(query, [filePath]);
 
     return result.rows.length > 0 ? result.rows[0] : null;
   }
@@ -239,9 +214,7 @@ export class MetadataRepository {
   /**
    * Get filterable columns
    */
-  async getFilterableColumns(
-    tableMetadataId: string,
-  ): Promise<ColumnMetadata[]> {
+  async getFilterableColumns(tableMetadataId: string): Promise<ColumnMetadata[]> {
     const columns = await this.getColumnsByTableId(tableMetadataId);
     return columns.filter((col) => col.is_filterable);
   }
@@ -249,9 +222,7 @@ export class MetadataRepository {
   /**
    * Get searchable columns
    */
-  async getSearchableColumns(
-    tableMetadataId: string,
-  ): Promise<ColumnMetadata[]> {
+  async getSearchableColumns(tableMetadataId: string): Promise<ColumnMetadata[]> {
     const columns = await this.getColumnsByTableId(tableMetadataId);
     return columns.filter((col) => col.is_searchable);
   }

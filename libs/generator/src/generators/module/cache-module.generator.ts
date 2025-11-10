@@ -81,23 +81,14 @@ ${passwordConfig}
   /**
    * Generate complete module with cache
    */
-  generateModule(
-    moduleName: string,
-    controllers: string[],
-    providers: string[],
-  ): string {
+  generateModule(moduleName: string, controllers: string[], providers: string[]): string {
     const imports = this.generateImports();
     const cacheModuleImport = this.generateCacheModuleImport();
     const cacheProvider = this.generateCacheProvider();
 
-    const importsSection = this.config.enableCache
-      ? `${cacheModuleImport}\n`
-      : '';
+    const importsSection = this.config.enableCache ? `${cacheModuleImport}\n` : '';
 
-    const providersSection = [
-      ...providers,
-      this.config.enableCache ? cacheProvider : '',
-    ]
+    const providersSection = [...providers, this.config.enableCache ? cacheProvider : '']
       .filter(Boolean)
       .join(',\n    ');
 

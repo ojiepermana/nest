@@ -95,9 +95,7 @@ export function IsUnique(validationOptions?: ValidationOptions) {
  * Validates password strength
  */
 @ValidatorConstraint({ name: 'isStrongPassword', async: false })
-export class IsStrongPasswordConstraint
-  implements ValidatorConstraintInterface
-{
+export class IsStrongPasswordConstraint implements ValidatorConstraintInterface {
   validate(password: string, args: ValidationArguments): boolean {
     if (!password || typeof password !== 'string') {
       return false;
@@ -143,9 +141,7 @@ export function IsStrongPassword(validationOptions?: ValidationOptions) {
  * Validates SQL identifiers (table names, column names)
  */
 @ValidatorConstraint({ name: 'isValidIdentifier', async: false })
-export class IsValidIdentifierConstraint
-  implements ValidatorConstraintInterface
-{
+export class IsValidIdentifierConstraint implements ValidatorConstraintInterface {
   private readonly IDENTIFIER_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 
   validate(identifier: string, args: ValidationArguments): boolean {

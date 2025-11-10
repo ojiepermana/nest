@@ -30,16 +30,9 @@ export function generateFilterClause(
   if (['varchar', 'text', 'char', 'string'].includes(dataType)) {
     operators.push('_eq', '_like', '_in');
   } else if (
-    [
-      'integer',
-      'int',
-      'bigint',
-      'smallint',
-      'decimal',
-      'numeric',
-      'float',
-      'double',
-    ].includes(dataType)
+    ['integer', 'int', 'bigint', 'smallint', 'decimal', 'numeric', 'float', 'double'].includes(
+      dataType,
+    )
   ) {
     operators.push('_eq', '_gt', '_gte', '_lt', '_lte', '_between', '_in');
   } else if (['boolean', 'bool'].includes(dataType)) {
@@ -69,9 +62,7 @@ export function generateFilterClauses(
 ): FilterClause[] {
   const filterableColumns = columns.filter((col) => col.is_filterable);
 
-  return filterableColumns.map((col, index) =>
-    generateFilterClause(col, dialect, index + 1),
-  );
+  return filterableColumns.map((col, index) => generateFilterClause(col, dialect, index + 1));
 }
 
 /**
@@ -110,17 +101,13 @@ export function buildWhereClause(
       paramIndex++;
     } else if (operator === 'in') {
       const values = Array.isArray(value) ? value : [value];
-      const placeholders = values
-        .map((_, i) => `$${paramIndex + i}`)
-        .join(', ');
+      const placeholders = values.map((_, i) => `$${paramIndex + i}`).join(', ');
       conditions.push(`${quotedColumn} IN (${placeholders})`);
       params.push(...values);
       paramIndex += values.length;
     } else if (operator === 'between') {
       const [start, end] = Array.isArray(value) ? value : value.split(',');
-      conditions.push(
-        `${quotedColumn} BETWEEN $${paramIndex} AND $${paramIndex + 1}`,
-      );
+      conditions.push(`${quotedColumn} BETWEEN $${paramIndex} AND $${paramIndex + 1}`);
       params.push(start, end);
       paramIndex += 2;
     } else if (['gt', 'gte', 'lt', 'lte'].includes(operator)) {

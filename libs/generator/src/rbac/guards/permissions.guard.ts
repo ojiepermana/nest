@@ -11,10 +11,7 @@ import {
   PermissionMetadata,
   PermissionLogic,
 } from '../decorators/require-permission.decorator';
-import {
-  IS_PUBLIC_KEY,
-  SKIP_PERMISSION_KEY,
-} from '../decorators/require-role.decorator';
+import { IS_PUBLIC_KEY, SKIP_PERMISSION_KEY } from '../decorators/require-role.decorator';
 
 /**
  * Guard to check user permissions based on @RequirePermission decorator
@@ -56,21 +53,20 @@ export class PermissionsGuard implements CanActivate {
     }
 
     // Check if permission check should be skipped
-    const skipPermission = this.reflector.getAllAndOverride<boolean>(
-      SKIP_PERMISSION_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const skipPermission = this.reflector.getAllAndOverride<boolean>(SKIP_PERMISSION_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
     if (skipPermission) {
       return true;
     }
 
     // Get permission metadata from decorator
-    const permissionMetadata =
-      this.reflector.getAllAndOverride<PermissionMetadata>(PERMISSIONS_KEY, [
-        context.getHandler(),
-        context.getClass(),
-      ]);
+    const permissionMetadata = this.reflector.getAllAndOverride<PermissionMetadata>(
+      PERMISSIONS_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     // No permission decorator = allow access
     if (!permissionMetadata) {
@@ -89,9 +85,7 @@ export class PermissionsGuard implements CanActivate {
 
     // Check if permission service is available
     if (!this.permissionService) {
-      console.warn(
-        'PermissionService not injected. Permissions will not be checked.',
-      );
+      console.warn('PermissionService not injected. Permissions will not be checked.');
       return true;
     }
 
@@ -108,8 +102,7 @@ export class PermissionsGuard implements CanActivate {
 
     if (!hasPermission) {
       const errorMessage =
-        options.errorMessage ||
-        `Missing required permission(s): ${permissions.join(', ')}`;
+        options.errorMessage || `Missing required permission(s): ${permissions.join(', ')}`;
       throw new ForbiddenException(errorMessage);
     }
 
@@ -117,16 +110,10 @@ export class PermissionsGuard implements CanActivate {
     if (options.requireOwnership) {
       const resourceId = request.params.id;
       if (resourceId) {
-        const ownsResource = await this.checkOwnership(
-          user.id,
-          resourceId,
-          options.ownershipField,
-        );
+        const ownsResource = await this.checkOwnership(user.id, resourceId, options.ownershipField);
 
         if (!ownsResource) {
-          throw new ForbiddenException(
-            'You do not have permission to access this resource',
-          );
+          throw new ForbiddenException('You do not have permission to access this resource');
         }
       }
     }
@@ -137,19 +124,13 @@ export class PermissionsGuard implements CanActivate {
   /**
    * Check if user has ALL specified permissions
    */
-  private async checkAllPermissions(
-    userId: string,
-    permissions: string[],
-  ): Promise<boolean> {
+  private async checkAllPermissions(userId: string, permissions: string[]): Promise<boolean> {
     if (!this.permissionService) {
       return true;
     }
 
     for (const permission of permissions) {
-      const hasPermission = await this.permissionService.userHasPermission(
-        userId,
-        permission,
-      );
+      const hasPermission = await this.permissionService.userHasPermission(userId, permission);
       if (!hasPermission) {
         return false;
       }
@@ -161,19 +142,13 @@ export class PermissionsGuard implements CanActivate {
   /**
    * Check if user has AT LEAST ONE of the specified permissions
    */
-  private async checkAnyPermission(
-    userId: string,
-    permissions: string[],
-  ): Promise<boolean> {
+  private async checkAnyPermission(userId: string, permissions: string[]): Promise<boolean> {
     if (!this.permissionService) {
       return true;
     }
 
     for (const permission of permissions) {
-      const hasPermission = await this.permissionService.userHasPermission(
-        userId,
-        permission,
-      );
+      const hasPermission = await this.permissionService.userHasPermission(userId, permission);
       if (hasPermission) {
         return true;
       }
@@ -196,10 +171,6 @@ export class PermissionsGuard implements CanActivate {
 
     // This would typically query the resource and check ownership
     // For now, we'll assume the permission service handles this
-    return this.permissionService.checkOwnership(
-      userId,
-      resourceId,
-      ownershipField,
-    );
+    return this.permissionService.checkOwnership(userId, resourceId, ownershipField);
   }
 }

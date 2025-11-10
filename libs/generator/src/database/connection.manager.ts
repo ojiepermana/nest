@@ -128,15 +128,11 @@ export class DatabaseConnectionManager {
       let version = 'Unknown';
 
       if (this.config.type === 'postgresql') {
-        const result = await this.query<{ version: string }>(
-          'SELECT version() as version',
-        );
+        const result = await this.query<{ version: string }>('SELECT version() as version');
         version = result.rows?.[0]?.version || 'Unknown';
         Logger.info(`PostgreSQL version: ${version}`);
       } else if (this.config.type === 'mysql') {
-        const result = await this.query<{ version: string }>(
-          'SELECT version() as version',
-        );
+        const result = await this.query<{ version: string }>('SELECT version() as version');
         version = result.rows?.[0]?.version || 'Unknown';
         Logger.info(`MySQL version: ${version}`);
       }
@@ -157,10 +153,7 @@ export class DatabaseConnectionManager {
   /**
    * Execute query (auto-detects database type)
    */
-  async query<T = any>(
-    text: string,
-    params?: any[],
-  ): Promise<{ rows: T[]; rowCount: number }> {
+  async query<T = any>(text: string, params?: any[]): Promise<{ rows: T[]; rowCount: number }> {
     if (this.config.type === 'postgresql') {
       return this.queryPostgreSQL<T>(text, params);
     } else if (this.config.type === 'mysql') {
@@ -273,9 +266,7 @@ export class DatabaseConnectionManager {
   /**
    * Rollback transaction
    */
-  async rollbackTransaction(
-    client: PoolClient | PoolConnection,
-  ): Promise<void> {
+  async rollbackTransaction(client: PoolClient | PoolConnection): Promise<void> {
     if (this.config.type === 'postgresql') {
       await (client as PoolClient).query('ROLLBACK');
     } else if (this.config.type === 'mysql') {

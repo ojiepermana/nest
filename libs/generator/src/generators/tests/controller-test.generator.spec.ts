@@ -3,10 +3,7 @@
  */
 
 import { ControllerTestGenerator } from './controller-test.generator';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 describe('ControllerTestGenerator', () => {
   let generator: ControllerTestGenerator;
@@ -107,9 +104,7 @@ describe('ControllerTestGenerator', () => {
     it('should include findAll pagination endpoint test', () => {
       const result = generator.generateControllerTest(tableMetadata, columns);
 
-      expect(result).toContain(
-        'GENERATED_TEST_START: find-all-pagination-endpoint',
-      );
+      expect(result).toContain('GENERATED_TEST_START: find-all-pagination-endpoint');
       expect(result).toContain("describe('GET / with pagination'");
       expect(result).toContain('should return paginated users records');
     });
@@ -195,15 +190,11 @@ describe('ControllerTestGenerator', () => {
 
       // create passes DTO
       expect(result).toContain('controller.create(createDto)');
-      expect(result).toContain(
-        'service.create).toHaveBeenCalledWith(createDto)',
-      );
+      expect(result).toContain('service.create).toHaveBeenCalledWith(createDto)');
 
       // update passes ID and DTO
       expect(result).toContain("controller.update('123', updateDto)");
-      expect(result).toContain(
-        "service.update).toHaveBeenCalledWith('123', updateDto)",
-      );
+      expect(result).toContain("service.update).toHaveBeenCalledWith('123', updateDto)");
 
       // delete passes ID
       expect(result).toContain("controller.delete('123')");

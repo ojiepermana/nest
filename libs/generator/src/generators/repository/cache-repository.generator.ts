@@ -5,10 +5,7 @@
  * Auto-invalidates cache on mutations (create/update/delete)
  */
 
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
 
 export interface CacheRepositoryGeneratorOptions {

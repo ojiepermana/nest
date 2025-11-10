@@ -59,7 +59,7 @@ REDIS_TTL=300000                     # Default TTL in milliseconds (5 min)
 ```sql
 -- Update table_metadata to enable cache
 UPDATE meta.table_metadata
-SET 
+SET
   cache_enabled = true,
   cache_ttl = 300000  -- 5 minutes in milliseconds
 WHERE schema_name = 'user' AND table_name = 'users';
@@ -87,10 +87,7 @@ export class UsersRepository {
   // GENERATED_METHOD_START: find-all-cached
   async findAll(filters?: UserFilterDto, page = 1, limit = 10): Promise<User[]> {
     // Build cache key
-    const cacheKey = CacheKeyBuilder.create('users')
-      .operation('list')
-      .query({ filters, page, limit })
-      .build();
+    const cacheKey = CacheKeyBuilder.create('users').operation('list').query({ filters, page, limit }).build();
 
     // Try cache first
     const cached = await this.cacheService.get<User[]>(cacheKey);
@@ -110,10 +107,7 @@ export class UsersRepository {
 
   // GENERATED_METHOD_START: find-one-cached
   async findOne(id: string): Promise<User | null> {
-    const cacheKey = CacheKeyBuilder.create('users')
-      .operation('detail')
-      .id(id)
-      .build();
+    const cacheKey = CacheKeyBuilder.create('users').operation('detail').id(id).build();
 
     const cached = await this.cacheService.get<User>(cacheKey);
     if (cached) {
@@ -134,7 +128,9 @@ export class UsersRepository {
 
   // GENERATED_METHOD_START: create-with-invalidation
   async create(dto: CreateUserDto, createdBy: string): Promise<User> {
-    const result = await this.pool.query(UsersQueries.create, [/* params */]);
+    const result = await this.pool.query(UsersQueries.create, [
+      /* params */
+    ]);
     const created = result.rows[0];
 
     // Invalidate list cache
@@ -147,7 +143,9 @@ export class UsersRepository {
 
   // GENERATED_METHOD_START: update-with-invalidation
   async update(id: string, dto: UpdateUserDto, updatedBy: string): Promise<User> {
-    const result = await this.pool.query(UsersQueries.update, [/* params */]);
+    const result = await this.pool.query(UsersQueries.update, [
+      /* params */
+    ]);
     const updated = result.rows[0];
 
     // Invalidate detail and list caches
@@ -236,15 +234,15 @@ export class UsersModule {}
 
 ```typescript
 // List with filters
-'users:list:{"filters":{"status":"active"},"page":1,"limit":10}'
+'users:list:{"filters":{"status":"active"},"page":1,"limit":10}';
 
 // Detail by ID
-'users:detail:123e4567-e89b-12d3-a456-426614174000'
+'users:detail:123e4567-e89b-12d3-a456-426614174000';
 
 // Pattern for deletion
-'users:list:*'    // All list queries
-'users:detail:*'  // All detail queries
-'users:*'         // All user-related cache
+'users:list:*'; // All list queries
+'users:detail:*'; // All detail queries
+'users:*'; // All user-related cache
 ```
 
 ### Using CacheKeyBuilder
@@ -260,16 +258,11 @@ const listKey = CacheKeyBuilder.create('users')
 // Result: "users:list:{"limit":20,"page":1,"status":"active"}"
 
 // Build detail cache key
-const detailKey = CacheKeyBuilder.create('users')
-  .operation('detail')
-  .id('123')
-  .build();
+const detailKey = CacheKeyBuilder.create('users').operation('detail').id('123').build();
 // Result: "users:detail:123"
 
 // Build pattern for deletion
-const pattern = CacheKeyBuilder.create('users')
-  .operation('list')
-  .pattern();
+const pattern = CacheKeyBuilder.create('users').operation('list').pattern();
 // Result: "users:list:*"
 ```
 
@@ -300,8 +293,8 @@ await cacheService.deletePattern('users:*');
 const detailKey = CacheKeyBuilder.create('users').operation('detail').id(id).build();
 const listPattern = CacheKeyBuilder.create('users').operation('list').pattern();
 
-await cacheService.delete(detailKey);      // Clear specific item
-await cacheService.deletePattern(listPattern);  // Clear all lists
+await cacheService.delete(detailKey); // Clear specific item
+await cacheService.deletePattern(listPattern); // Clear all lists
 ```
 
 ---
@@ -316,9 +309,7 @@ import { ICacheService } from '../cache/cache.interface';
 
 @Injectable()
 export class CustomService {
-  constructor(
-    @Inject('CACHE_SERVICE') private readonly cacheService: ICacheService,
-  ) {}
+  constructor(@Inject('CACHE_SERVICE') private readonly cacheService: ICacheService) {}
 
   async getExpensiveData(id: string) {
     const cacheKey = `expensive:${id}`;
@@ -384,9 +375,7 @@ console.log(stats);
 // In production, expose stats via endpoint
 @Controller('admin')
 export class AdminController {
-  constructor(
-    @Inject('CACHE_SERVICE') private cacheService: ICacheService,
-  ) {}
+  constructor(@Inject('CACHE_SERVICE') private cacheService: ICacheService) {}
 
   @Get('cache/stats')
   async getCacheStats() {
@@ -410,7 +399,7 @@ export class AdminController {
 ```sql
 -- Per-table cache configuration
 UPDATE meta.table_metadata
-SET 
+SET
   cache_enabled = true,           -- Enable/disable cache
   cache_ttl = 600000              -- Custom TTL (10 minutes)
 WHERE table_name = 'products';
@@ -481,16 +470,16 @@ describe('UsersRepository with Cache', () => {
 
 ```typescript
 // Frequently changing data
-cache_ttl = 60000    // 1 minute
+cache_ttl = 60000; // 1 minute
 
 // Moderate changes
-cache_ttl = 300000   // 5 minutes (default)
+cache_ttl = 300000; // 5 minutes (default)
 
 // Rarely changing data
-cache_ttl = 3600000  // 1 hour
+cache_ttl = 3600000; // 1 hour
 
 // Static/reference data
-cache_ttl = 86400000 // 24 hours
+cache_ttl = 86400000; // 24 hours
 ```
 
 ### Memory Management
@@ -511,6 +500,7 @@ maxmemory-policy allkeys-lru  # Evict least recently used
 ### Common Issues
 
 **1. Cache Not Working**
+
 ```typescript
 // Check if cache service is injected
 if (!this.cacheService) {
@@ -519,6 +509,7 @@ if (!this.cacheService) {
 ```
 
 **2. Redis Connection Failed**
+
 ```bash
 # Check Redis is running
 redis-cli ping
@@ -530,6 +521,7 @@ echo $REDIS_PORT
 ```
 
 **3. High Memory Usage**
+
 ```bash
 # Clear all cache
 redis-cli FLUSHALL

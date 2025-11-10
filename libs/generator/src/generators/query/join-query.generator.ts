@@ -5,10 +5,7 @@
  * Supports INNER/LEFT JOIN, nested JOINs, and multiple JOINs to same table
  */
 
-import type {
-  ColumnMetadata,
-  DatabaseType,
-} from '../../interfaces/generator.interface';
+import type { ColumnMetadata, DatabaseType } from '../../interfaces/generator.interface';
 import { DialectFactory } from '../../database/dialects';
 import type { IDatabaseDialect } from '../../interfaces/base.interface';
 
@@ -48,9 +45,7 @@ export class JoinQueryGenerator {
     joins: string[];
     selectColumns: string[];
   } {
-    const fkColumns = columns.filter(
-      (col) => col.ref_schema && col.ref_table && col.ref_column,
-    );
+    const fkColumns = columns.filter((col) => col.ref_schema && col.ref_table && col.ref_column);
 
     const joins: string[] = [];
     const selectColumns: string[] = [];
@@ -70,19 +65,13 @@ export class JoinQueryGenerator {
   /**
    * Create JOIN configuration from foreign key column
    */
-  private createJoinConfig(
-    col: ColumnMetadata,
-    mainTableAlias: string,
-  ): JoinConfig {
+  private createJoinConfig(col: ColumnMetadata, mainTableAlias: string): JoinConfig {
     const refTableKey = `${col.ref_schema}.${col.ref_table}`;
     const count = this.joinCounter.get(refTableKey) || 0;
     this.joinCounter.set(refTableKey, count + 1);
 
     // Generate unique alias for multiple JOINs to same table
-    const alias =
-      count > 0
-        ? `${col.ref_table}_${col.column_name}`
-        : `${col.ref_table}_alias`;
+    const alias = count > 0 ? `${col.ref_table}_${col.column_name}` : `${col.ref_table}_alias`;
 
     // Determine JOIN type based on nullability
     const joinType = col.is_nullable ? 'LEFT' : 'INNER';
@@ -107,15 +96,9 @@ export class JoinQueryGenerator {
    * Build JOIN clause SQL
    */
   private buildJoinClause(config: JoinConfig): string {
-    const refTable = this.dialect.quoteIdentifier(
-      `${config.refSchema}.${config.refTable}`,
-    );
-    const mainColumn = this.dialect.quoteIdentifier(
-      `${config.table}.${config.column}`,
-    );
-    const refColumn = this.dialect.quoteIdentifier(
-      `${config.alias}.${config.refColumn}`,
-    );
+    const refTable = this.dialect.quoteIdentifier(`${config.refSchema}.${config.refTable}`);
+    const mainColumn = this.dialect.quoteIdentifier(`${config.table}.${config.column}`);
+    const refColumn = this.dialect.quoteIdentifier(`${config.alias}.${config.refColumn}`);
 
     let joinClause = `${config.type} JOIN ${refTable} AS ${this.dialect.quoteIdentifier(config.alias)}
     ON ${mainColumn} = ${refColumn}`;
@@ -165,9 +148,7 @@ export class JoinQueryGenerator {
     const mainSelects = mainColumns
       .filter((col) => col.display_in_list || col.display_in_detail)
       .map((col) => {
-        const quotedCol = this.dialect.quoteIdentifier(
-          `${mainTableAlias}.${col.column_name}`,
-        );
+        const quotedCol = this.dialect.quoteIdentifier(`${mainTableAlias}.${col.column_name}`);
         return quotedCol;
       });
 

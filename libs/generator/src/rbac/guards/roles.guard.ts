@@ -54,20 +54,20 @@ export class RolesGuard implements CanActivate {
     }
 
     // Check if permission check should be skipped
-    const skipPermission = this.reflector.getAllAndOverride<boolean>(
-      SKIP_PERMISSION_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const skipPermission = this.reflector.getAllAndOverride<boolean>(SKIP_PERMISSION_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
     if (skipPermission) {
       return true;
     }
 
     // Get role metadata from decorator
-    const roleMetadata = this.reflector.getAllAndOverride<RoleMetadata>(
-      ROLES_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const roleMetadata = this.reflector.getAllAndOverride<RoleMetadata>(ROLES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
     // No role decorator = allow access
     if (!roleMetadata) {
@@ -86,9 +86,7 @@ export class RolesGuard implements CanActivate {
 
     // Check if permission service is available
     if (!this.permissionService) {
-      console.warn(
-        'PermissionService not injected. Roles will not be checked.',
-      );
+      console.warn('PermissionService not injected. Roles will not be checked.');
       return true;
     }
 
@@ -114,8 +112,7 @@ export class RolesGuard implements CanActivate {
     }
 
     if (!hasRole) {
-      const errorMessage =
-        options.errorMessage || `Missing required role(s): ${roles.join(', ')}`;
+      const errorMessage = options.errorMessage || `Missing required role(s): ${roles.join(', ')}`;
       throw new ForbiddenException(errorMessage);
     }
 

@@ -5,10 +5,7 @@
  * Supports operators: _eq, _ne, _gt, _lt, _gte, _lte, _like, _in, _between, _null
  */
 
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
 import { mapToTypeScriptType, getSwaggerDecorator } from './dto-mapper';
 
@@ -46,8 +43,7 @@ const FILTER_OPERATORS = [
   {
     suffix: '_between',
     description: 'Between two values',
-    decorator:
-      '@IsOptional()\n  @IsArray()\n  @ArrayMinSize(2)\n  @ArrayMaxSize(2)',
+    decorator: '@IsOptional()\n  @IsArray()\n  @ArrayMinSize(2)\n  @ArrayMaxSize(2)',
   },
   {
     suffix: '_null',
@@ -69,14 +65,9 @@ export class FilterDtoGenerator {
   /**
    * Generate Filter DTO class
    */
-  generate(
-    table: TableMetadata,
-    columns: ColumnMetadata[],
-  ): { code: string; imports: string[] } {
+  generate(table: TableMetadata, columns: ColumnMetadata[]): { code: string; imports: string[] } {
     const className = `Filter${toPascalCase(table.table_name)}Dto`;
-    const filterableColumns = columns.filter(
-      (col) => col.is_filterable !== false,
-    );
+    const filterableColumns = columns.filter((col) => col.is_filterable !== false);
 
     const enumDefinitions: string[] = [];
     const allDecorators: string[] = [];
@@ -85,9 +76,7 @@ export class FilterDtoGenerator {
     filterableColumns.forEach((col) => {
       if (col.enum_values && col.enum_values.length > 0) {
         const enumName = `${toPascalCase(col.column_name)}Enum`;
-        const enumValues = col.enum_values
-          .map((val) => `  ${val} = '${val}'`)
-          .join(',\n');
+        const enumValues = col.enum_values.map((val) => `  ${val} = '${val}'`).join(',\n');
         enumDefinitions.push(`export enum ${enumName} {\n${enumValues}\n}`);
       }
     });
@@ -121,11 +110,7 @@ export class FilterDtoGenerator {
 
           // Add Swagger decorator
           if (this.options.includeSwagger) {
-            const swaggerDecorator = this.getFilterSwaggerDecorator(
-              col,
-              operator,
-              opType,
-            );
+            const swaggerDecorator = this.getFilterSwaggerDecorator(col, operator, opType);
             propertyCode += `  ${swaggerDecorator}\n`;
             allDecorators.push(swaggerDecorator);
           }
@@ -273,10 +258,7 @@ export class FilterDtoGenerator {
     }
 
     // Swagger imports
-    if (
-      this.options.includeSwagger &&
-      decorators.some((d) => d.includes('@ApiProperty'))
-    ) {
+    if (this.options.includeSwagger && decorators.some((d) => d.includes('@ApiProperty'))) {
       imports.push(`import { ApiProperty } from '@nestjs/swagger';`);
     }
 

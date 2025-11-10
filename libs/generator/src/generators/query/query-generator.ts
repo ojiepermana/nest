@@ -32,15 +32,11 @@ export class QueryGenerator {
     this.resetParamCounter();
     const params: Record<string, any> = {};
 
-    const tableName = options.alias
-      ? `${options.table} ${options.alias}`
-      : options.table;
+    const tableName = options.alias ? `${options.table} ${options.alias}` : options.table;
 
     // SELECT clause
     const columns =
-      options.columns && options.columns.length > 0
-        ? options.columns.join(', ')
-        : '*';
+      options.columns && options.columns.length > 0 ? options.columns.join(', ') : '*';
     let sql = `SELECT ${columns} FROM ${tableName}`;
 
     // JOIN clauses
@@ -169,10 +165,7 @@ export class QueryGenerator {
   /**
    * Build WHERE clause from conditions
    */
-  private buildWhereClause(
-    conditions: WhereCondition[],
-    params: Record<string, any>,
-  ): string {
+  private buildWhereClause(conditions: WhereCondition[], params: Record<string, any>): string {
     return conditions
       .map((condition) => {
         const paramName = condition.paramName || this.getNextParamName();
@@ -218,10 +211,7 @@ export class QueryGenerator {
             return '';
 
           case QueryFilterOperator.BETWEEN:
-            if (
-              Array.isArray(condition.value) &&
-              condition.value.length === 2
-            ) {
+            if (Array.isArray(condition.value) && condition.value.length === 2) {
               const param1 = `${paramName}_start`;
               const param2 = `${paramName}_end`;
               params[param1] = condition.value[0];
@@ -249,9 +239,7 @@ export class QueryGenerator {
   private buildJoinClauses(joins: JoinClause[]): string {
     return joins
       .map((join) => {
-        const tableName = join.alias
-          ? `${join.table} ${join.alias}`
-          : join.table;
+        const tableName = join.alias ? `${join.table} ${join.alias}` : join.table;
         return ` ${join.type} JOIN ${tableName} ON ${join.on.left} = ${join.on.right}`;
       })
       .join('');
@@ -261,9 +249,7 @@ export class QueryGenerator {
    * Build ORDER BY clause
    */
   private buildOrderByClause(orderBy: OrderByClause[]): string {
-    const clauses = orderBy
-      .map((order) => `${order.column} ${order.order}`)
-      .join(', ');
+    const clauses = orderBy.map((order) => `${order.column} ${order.order}`).join(', ');
     return ` ORDER BY ${clauses}`;
   }
 
@@ -300,9 +286,7 @@ export class QueryGenerator {
     this.resetParamCounter();
     const params: Record<string, any> = {};
 
-    const tableName = options.alias
-      ? `${options.table} ${options.alias}`
-      : options.table;
+    const tableName = options.alias ? `${options.table} ${options.alias}` : options.table;
 
     let sql = `SELECT COUNT(*) as total FROM ${tableName}`;
 

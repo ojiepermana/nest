@@ -20,6 +20,7 @@ Comprehensive file upload system with multi-cloud storage support, validation, s
 ## Features
 
 ### Core Features
+
 - ✅ **Single & Multiple File Upload** - Handle one or many files per request
 - ✅ **4 Storage Providers** - Local, AWS S3, Google Cloud Storage, Azure Blob
 - ✅ **File Validation** - Size limits, MIME type filtering, extension checking
@@ -34,6 +35,7 @@ Comprehensive file upload system with multi-cloud storage support, validation, s
 - ✅ **File Versioning** - Keep file history (S3 versioning)
 
 ### Security Features
+
 - MIME type validation (prevent execution of malicious files)
 - File extension whitelist/blacklist
 - Virus scanning integration (ClamAV)
@@ -41,6 +43,7 @@ Comprehensive file upload system with multi-cloud storage support, validation, s
 - Access control (IAM, signed URLs)
 
 ### Supported File Types
+
 - **Images**: JPEG, PNG, GIF, WebP, SVG, TIFF, BMP
 - **Documents**: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX
 - **Archives**: ZIP, RAR, TAR, GZ, 7Z
@@ -58,6 +61,7 @@ nest-generator generate users.profile --features.fileUpload=true --storageProvid
 ```
 
 **Options**:
+
 - `--features.fileUpload=true` - Enable file upload
 - `--storageProvider=local|s3|gcs|azure` - Choose storage provider
 - `--imagePprocessing=true` - Enable image processing (requires Sharp)
@@ -65,27 +69,32 @@ nest-generator generate users.profile --features.fileUpload=true --storageProvid
 ### 2. Install Required Dependencies
 
 **Base Dependencies** (all providers):
+
 ```bash
 npm install @nestjs/platform-express multer
 npm install -D @types/multer
 ```
 
 **AWS S3**:
+
 ```bash
 npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 ```
 
 **Google Cloud Storage**:
+
 ```bash
 npm install @google-cloud/storage
 ```
 
 **Azure Blob Storage**:
+
 ```bash
 npm install @azure/storage-blob
 ```
 
 **Image Processing** (optional):
+
 ```bash
 npm install sharp
 ```
@@ -148,12 +157,14 @@ INSERT INTO meta.column_metadata (
 ### 1. Local Storage (Development)
 
 **.env**:
+
 ```env
 UPLOAD_DEST=./uploads
 MAX_FILE_SIZE=5242880
 ```
 
 **Generated Controller**:
+
 ```typescript
 import { Controller, Post, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -164,17 +175,19 @@ export class UsersProfileController {
   constructor(private readonly storageService: StorageService) {}
 
   @Post('upload')
-  @UseInterceptors(FileInterceptor('profile_picture', {
-    limits: { fileSize: 5242880 }, // 5MB
-    fileFilter: (req, file, cb) => {
-      const allowedMimes = ['image/jpeg', 'image/png', 'image/gif'];
-      if (allowedMimes.includes(file.mimetype)) {
-        cb(null, true);
-      } else {
-        cb(new Error('Invalid file type'), false);
-      }
-    }
-  }))
+  @UseInterceptors(
+    FileInterceptor('profile_picture', {
+      limits: { fileSize: 5242880 }, // 5MB
+      fileFilter: (req, file, cb) => {
+        const allowedMimes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (allowedMimes.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(new Error('Invalid file type'), false);
+        }
+      },
+    }),
+  )
   async uploadProfilePicture(@UploadedFile() file: Express.Multer.File) {
     const url = await this.storageService.upload(file, 'avatars');
     return { url };
@@ -189,6 +202,7 @@ export class UsersProfileController {
 ```
 
 **Usage**:
+
 ```bash
 curl -X POST http://localhost:3000/users/profile/upload \
   -F "profile_picture=@/path/to/image.jpg"
@@ -197,6 +211,7 @@ curl -X POST http://localhost:3000/users/profile/upload \
 ### 2. AWS S3 (Production)
 
 **.env**:
+
 ```env
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=your_access_key
@@ -207,6 +222,7 @@ S3_CUSTOM_ENDPOINT=  # Optional: for S3-compatible services
 ```
 
 **Generated StorageService**:
+
 ```typescript
 import { Injectable } from '@nestjs/common';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
@@ -229,7 +245,7 @@ export class StorageService {
 
   async upload(file: Express.Multer.File, path: string): Promise<string> {
     const key = `${path}/${Date.now()}-${file.originalname}`;
-    
+
     const command = new PutObjectCommand({
       Bucket: this.bucket,
       Key: key,
@@ -239,13 +255,13 @@ export class StorageService {
     });
 
     await this.s3Client.send(command);
-    
+
     return `https://${this.bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
   }
 
   async delete(filename: string, path: string): Promise<void> {
     const key = `${path}/${filename}`;
-    
+
     const command = new DeleteObjectCommand({
       Bucket: this.bucket,
       Key: key,
@@ -266,6 +282,7 @@ export class StorageService {
 ```
 
 **CloudFront Integration**:
+
 ```env
 CLOUDFRONT_DOMAIN=d1234567890.cloudfront.net
 CLOUDFRONT_KEY_PAIR_ID=APKA...
@@ -275,6 +292,7 @@ CLOUDFRONT_PRIVATE_KEY_PATH=./cloudfront-private-key.pem
 ### 3. Google Cloud Storage
 
 **.env**:
+
 ```env
 GCP_PROJECT_ID=my-project-id
 GCP_KEY_FILE=./service-account.json
@@ -283,12 +301,14 @@ GCS_CDN_DOMAIN=  # Optional: Cloud CDN domain
 ```
 
 **Service Account Setup**:
+
 1. Go to Google Cloud Console → IAM & Admin → Service Accounts
 2. Create service account with "Storage Object Admin" role
 3. Download JSON key file
 4. Set `GCP_KEY_FILE` to the key file path
 
 **Generated StorageService**:
+
 ```typescript
 import { Injectable } from '@nestjs/common';
 import { Storage } from '@google-cloud/storage';
@@ -308,7 +328,7 @@ export class StorageService {
 
   async upload(file: Express.Multer.File, path: string): Promise<string> {
     const blob = this.storage.bucket(this.bucket).file(`${path}/${Date.now()}-${file.originalname}`);
-    
+
     await blob.save(file.buffer, {
       metadata: {
         contentType: file.mimetype,
@@ -341,6 +361,7 @@ export class StorageService {
 ### 4. Azure Blob Storage
 
 **.env**:
+
 ```env
 AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=...
 AZURE_STORAGE_CONTAINER=uploads
@@ -348,12 +369,14 @@ AZURE_CDN_ENDPOINT=  # Optional: Azure CDN endpoint
 ```
 
 **Connection String**:
+
 1. Go to Azure Portal → Storage Accounts
 2. Select your storage account
 3. Settings → Access keys
 4. Copy "Connection string"
 
 **Generated StorageService**:
+
 ```typescript
 import { Injectable } from '@nestjs/common';
 import { BlobServiceClient, ContainerClient } from '@azure/storage-blob';
@@ -363,18 +386,14 @@ export class StorageService {
   private containerClient: ContainerClient;
 
   constructor() {
-    const blobServiceClient = BlobServiceClient.fromConnectionString(
-      process.env.AZURE_STORAGE_CONNECTION_STRING,
-    );
-    this.containerClient = blobServiceClient.getContainerClient(
-      process.env.AZURE_STORAGE_CONTAINER,
-    );
+    const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING);
+    this.containerClient = blobServiceClient.getContainerClient(process.env.AZURE_STORAGE_CONTAINER);
   }
 
   async upload(file: Express.Multer.File, path: string): Promise<string> {
     const blobName = `${path}/${Date.now()}-${file.originalname}`;
     const blockBlobClient = this.containerClient.getBlockBlobClient(blobName);
-    
+
     await blockBlobClient.upload(file.buffer, file.size, {
       blobHTTPHeaders: {
         blobContentType: file.mimetype,
@@ -391,7 +410,7 @@ export class StorageService {
 
   async getSignedUrl(blobName: string, expiresIn = 3600): Promise<string> {
     const blockBlobClient = this.containerClient.getBlockBlobClient(blobName);
-    
+
     const sasUrl = await blockBlobClient.generateSasUrl({
       permissions: 'r', // read
       expiresOn: new Date(Date.now() + expiresIn * 1000),
@@ -406,20 +425,21 @@ export class StorageService {
 
 ### Comparison Matrix
 
-| Feature | Local | AWS S3 | Google Cloud Storage | Azure Blob |
-|---------|-------|--------|---------------------|------------|
-| **Cost** | Free | Pay per GB | Pay per GB | Pay per GB |
-| **Scalability** | Limited | Unlimited | Unlimited | Unlimited |
-| **CDN** | ❌ | CloudFront | Cloud CDN | Azure CDN |
-| **Signed URLs** | ❌ | ✅ | ✅ | ✅ |
-| **Versioning** | ❌ | ✅ | ✅ | ✅ |
-| **Lifecycle** | ❌ | ✅ | ✅ | ✅ |
-| **Geo-replication** | ❌ | ✅ | ✅ | ✅ |
-| **Best For** | Development | Production (AWS) | Production (GCP) | Production (Azure) |
+| Feature             | Local       | AWS S3           | Google Cloud Storage | Azure Blob         |
+| ------------------- | ----------- | ---------------- | -------------------- | ------------------ |
+| **Cost**            | Free        | Pay per GB       | Pay per GB           | Pay per GB         |
+| **Scalability**     | Limited     | Unlimited        | Unlimited            | Unlimited          |
+| **CDN**             | ❌          | CloudFront       | Cloud CDN            | Azure CDN          |
+| **Signed URLs**     | ❌          | ✅               | ✅                   | ✅                 |
+| **Versioning**      | ❌          | ✅               | ✅                   | ✅                 |
+| **Lifecycle**       | ❌          | ✅               | ✅                   | ✅                 |
+| **Geo-replication** | ❌          | ✅               | ✅                   | ✅                 |
+| **Best For**        | Development | Production (AWS) | Production (GCP)     | Production (Azure) |
 
 ### Provider-Specific Features
 
 #### AWS S3
+
 - **Transfer Acceleration**: Faster uploads over long distances
 - **Intelligent Tiering**: Automatic cost optimization
 - **Glacier**: Long-term archival
@@ -427,6 +447,7 @@ export class StorageService {
 - **Event Notifications**: Trigger Lambda on upload
 
 #### Google Cloud Storage
+
 - **Nearline/Coldline**: Cost-effective archival
 - **Pub/Sub Notifications**: Event-driven processing
 - **Cloud CDN**: Global edge caching
@@ -434,6 +455,7 @@ export class StorageService {
 - **Uniform Bucket-Level Access**: Simplified IAM
 
 #### Azure Blob Storage
+
 - **Hot/Cool/Archive Tiers**: Cost optimization
 - **Blob Versioning**: Keep file history
 - **Soft Delete**: Recycle bin for blobs
@@ -445,6 +467,7 @@ export class StorageService {
 ### Single File Upload
 
 **Frontend (React/Next.js)**:
+
 ```tsx
 async function uploadFile(file: File) {
   const formData = new FormData();
@@ -461,15 +484,16 @@ async function uploadFile(file: File) {
 ```
 
 **Backend (Generated)**:
+
 ```typescript
 @Post('upload')
 @UseInterceptors(FileInterceptor('profile_picture'))
 async uploadProfilePicture(@UploadedFile() file: Express.Multer.File) {
   const url = await this.storageService.upload(file, 'avatars');
-  
+
   // Update database
   await this.service.update(userId, { profile_picture: url });
-  
+
   return { url };
 }
 ```
@@ -477,10 +501,11 @@ async uploadProfilePicture(@UploadedFile() file: Express.Multer.File) {
 ### Multiple File Upload
 
 **Frontend**:
+
 ```tsx
 async function uploadMultiple(files: FileList) {
   const formData = new FormData();
-  Array.from(files).forEach(file => {
+  Array.from(files).forEach((file) => {
     formData.append('attachments', file);
   });
 
@@ -495,6 +520,7 @@ async function uploadMultiple(files: FileList) {
 ```
 
 **Backend (Generated)**:
+
 ```typescript
 @Post('upload-multiple')
 @UseInterceptors(FilesInterceptor('attachments', 5)) // max 5 files
@@ -502,10 +528,10 @@ async uploadAttachments(@UploadedFiles() files: Express.Multer.File[]) {
   const urls = await Promise.all(
     files.map(file => this.storageService.upload(file, 'documents'))
   );
-  
+
   // Update database
   await this.service.update(userId, { attachments: urls });
-  
+
   return { urls };
 }
 ```
@@ -513,6 +539,7 @@ async uploadAttachments(@UploadedFiles() files: Express.Multer.File[]) {
 ### Image Upload with Resize
 
 **With Sharp Integration**:
+
 ```typescript
 import * as sharp from 'sharp';
 
@@ -541,6 +568,7 @@ async uploadImage(@UploadedFile() file: Express.Multer.File) {
 ### Generate Thumbnails
 
 **Multiple Sizes**:
+
 ```typescript
 async uploadWithThumbnails(@UploadedFile() file: Express.Multer.File) {
   const sizes = [
@@ -575,6 +603,7 @@ async uploadWithThumbnails(@UploadedFile() file: Express.Multer.File) {
 ### Direct Upload to S3 (Presigned URL)
 
 **Generate Presigned URL**:
+
 ```typescript
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -596,6 +625,7 @@ async getPresignedUrl(@Body() dto: { filename: string; contentType: string }) {
 ```
 
 **Frontend (Direct Upload)**:
+
 ```tsx
 async function directUpload(file: File) {
   // 1. Get presigned URL
@@ -606,7 +636,7 @@ async function directUpload(file: File) {
       filename: file.name,
       contentType: file.type,
     }),
-  }).then(r => r.json());
+  }).then((r) => r.json());
 
   // 2. Upload directly to S3
   await fetch(url, {
@@ -629,9 +659,11 @@ async function directUpload(file: File) {
 ### StorageService
 
 #### `upload(file, path, options?)`
+
 Upload a file to storage.
 
 **Parameters**:
+
 - `file`: Express.Multer.File - The file to upload
 - `path`: string - Path/folder in storage
 - `options?`: UploadOptions - Additional options
@@ -639,63 +671,76 @@ Upload a file to storage.
 **Returns**: Promise<string> - Public URL of uploaded file
 
 **Example**:
+
 ```typescript
 const url = await storageService.upload(file, 'avatars', {
   acl: 'public-read',
-  metadata: { userId: '123' }
+  metadata: { userId: '123' },
 });
 ```
 
 #### `delete(filename, path?)`
+
 Delete a file from storage.
 
 **Parameters**:
+
 - `filename`: string - File name or key
 - `path?`: string - Optional path/folder
 
 **Returns**: Promise<void>
 
 **Example**:
+
 ```typescript
 await storageService.delete('avatar.jpg', 'avatars');
 ```
 
 #### `getSignedUrl(key, expiresIn?)`
+
 Generate signed URL for private files.
 
 **Parameters**:
+
 - `key`: string - File key/path
 - `expiresIn?`: number - Expiration in seconds (default: 3600)
 
 **Returns**: Promise<string> - Signed URL
 
 **Example**:
+
 ```typescript
 const url = await storageService.getSignedUrl('private/doc.pdf', 7200);
 ```
 
 #### `exists(key)`
+
 Check if file exists.
 
 **Parameters**:
+
 - `key`: string - File key/path
 
 **Returns**: Promise<boolean>
 
 **Example**:
+
 ```typescript
 const exists = await storageService.exists('avatars/user123.jpg');
 ```
 
 #### `getMetadata(key)`
+
 Get file metadata.
 
 **Parameters**:
+
 - `key`: string - File key/path
 
 **Returns**: Promise<FileMetadata>
 
 **Example**:
+
 ```typescript
 const metadata = await storageService.getMetadata('avatars/user123.jpg');
 // { size: 1024000, contentType: 'image/jpeg', lastModified: Date }
@@ -705,12 +750,12 @@ const metadata = await storageService.getMetadata('avatars/user123.jpg');
 
 ```typescript
 interface FileUploadConfig {
-  maxSize: number;           // Max file size in bytes
-  maxCount?: number;         // Max files for multiple upload
-  mimeTypes: string[];       // Allowed MIME types
+  maxSize: number; // Max file size in bytes
+  maxCount?: number; // Max files for multiple upload
+  mimeTypes: string[]; // Allowed MIME types
   storage: 'local' | 's3' | 'gcs' | 'azure';
-  bucket?: string;           // Cloud storage bucket/container
-  path?: string;             // Default path prefix
+  bucket?: string; // Cloud storage bucket/container
+  path?: string; // Default path prefix
   resize?: ImageResizeConfig;
   thumbnail?: boolean;
   virusScan?: boolean;
@@ -730,10 +775,11 @@ interface ImageResizeConfig {
 ### MIME Type Validation
 
 **Strict Validation**:
+
 ```typescript
 const imageFilter = (req, file, cb) => {
   const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-  
+
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
@@ -747,18 +793,19 @@ async upload(@UploadedFile() file) { /* ... */ }
 ```
 
 **Wildcard Matching**:
+
 ```typescript
 const documentFilter = (req, file, cb) => {
   const allowed = ['image/*', 'application/pdf', 'application/msword'];
-  
-  const isAllowed = allowed.some(pattern => {
+
+  const isAllowed = allowed.some((pattern) => {
     if (pattern.endsWith('/*')) {
       const prefix = pattern.slice(0, -2);
       return file.mimetype.startsWith(prefix);
     }
     return file.mimetype === pattern;
   });
-  
+
   cb(null, isAllowed);
 };
 ```
@@ -766,13 +813,14 @@ const documentFilter = (req, file, cb) => {
 ### File Extension Validation
 
 **Double Extension Check**:
+
 ```typescript
 import * as path from 'path';
 
 const extensionFilter = (req, file, cb) => {
   const allowedExts = ['.jpg', '.jpeg', '.png', '.gif', '.pdf'];
   const ext = path.extname(file.originalname).toLowerCase();
-  
+
   if (allowedExts.includes(ext)) {
     cb(null, true);
   } else {
@@ -784,6 +832,7 @@ const extensionFilter = (req, file, cb) => {
 ### Virus Scanning
 
 **ClamAV Integration**:
+
 ```bash
 npm install clamscan
 ```
@@ -806,11 +855,11 @@ export class VirusScanService {
 
   async scanFile(file: Express.Multer.File): Promise<boolean> {
     const { isInfected } = await this.clam.scanBuffer(file.buffer);
-    
+
     if (isInfected) {
       throw new BadRequestException('File contains malware');
     }
-    
+
     return true;
   }
 }
@@ -828,6 +877,7 @@ async upload(@UploadedFile() file: Express.Multer.File) {
 ### Secure File Names
 
 **Sanitize Filenames**:
+
 ```typescript
 import * as sanitize from 'sanitize-filename';
 import { v4 as uuidv4 } from 'uuid';
@@ -837,7 +887,7 @@ function generateSecureFilename(originalname: string): string {
   const base = path.basename(originalname, ext);
   const safe = sanitize(base).replace(/\s+/g, '-').toLowerCase();
   const unique = `${Date.now()}-${uuidv4().slice(0, 8)}`;
-  
+
   return `${safe}-${unique}${ext}`;
 }
 
@@ -849,6 +899,7 @@ const url = await this.storageService.upload(file, `uploads/${secureFilename}`);
 ### Rate Limiting
 
 **Throttle Upload Endpoints**:
+
 ```typescript
 import { Throttle } from '@nestjs/throttler';
 
@@ -868,6 +919,7 @@ export class UploadController {
 ### Resize & Optimize
 
 **Basic Resize**:
+
 ```typescript
 import * as sharp from 'sharp';
 
@@ -885,6 +937,7 @@ async processImage(file: Express.Multer.File, width: number, height: number) {
 ```
 
 **Preserve Aspect Ratio**:
+
 ```typescript
 async resizePreserveAspect(file: Express.Multer.File, maxWidth: number) {
   const processed = await sharp(file.buffer)
@@ -898,6 +951,7 @@ async resizePreserveAspect(file: Express.Multer.File, maxWidth: number) {
 ### Watermark
 
 **Text Watermark**:
+
 ```typescript
 async addWatermark(file: Express.Multer.File, text: string) {
   const svg = `
@@ -922,6 +976,7 @@ async addWatermark(file: Express.Multer.File, text: string) {
 ```
 
 **Image Watermark**:
+
 ```typescript
 async addLogoWatermark(file: Express.Multer.File, logoPath: string) {
   const processed = await sharp(file.buffer)
@@ -939,6 +994,7 @@ async addLogoWatermark(file: Express.Multer.File, logoPath: string) {
 ### Format Conversion
 
 **Convert to WebP**:
+
 ```typescript
 async convertToWebP(file: Express.Multer.File) {
   const processed = await sharp(file.buffer)
@@ -957,6 +1013,7 @@ async convertToWebP(file: Express.Multer.File) {
 ### EXIF Data Removal
 
 **Strip Metadata**:
+
 ```typescript
 async stripExif(file: Express.Multer.File) {
   const processed = await sharp(file.buffer)
@@ -973,6 +1030,7 @@ async stripExif(file: Express.Multer.File) {
 ### Progress Tracking
 
 **Server-Sent Events (SSE)**:
+
 ```typescript
 import { Sse, MessageEvent } from '@nestjs/common';
 import { Observable, interval } from 'rxjs';
@@ -994,6 +1052,7 @@ uploadProgress(@Param('uploadId') uploadId: string): Observable<MessageEvent> {
 ### Chunked Upload
 
 **Large File Upload**:
+
 ```typescript
 @Post('upload-chunk')
 async uploadChunk(
@@ -1007,13 +1066,13 @@ async uploadChunk(
   if (dto.chunk === dto.totalChunks - 1) {
     // Merge chunks
     const fullFile = await this.mergeChunks(dto.filename, dto.totalChunks);
-    
+
     // Upload to cloud
     const url = await this.storageService.upload(fullFile, 'uploads');
-    
+
     // Cleanup temp files
     await this.cleanupChunks(dto.filename, dto.totalChunks);
-    
+
     return { url };
   }
 
@@ -1024,6 +1083,7 @@ async uploadChunk(
 ### File Metadata in Database
 
 **Track Uploads**:
+
 ```sql
 CREATE TABLE file_uploads (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1080,6 +1140,7 @@ export class FileUploadService {
 ### CDN Integration
 
 **CloudFront (AWS)**:
+
 ```typescript
 import { CloudFrontClient, CreateInvalidationCommand } from '@aws-sdk/client-cloudfront';
 
@@ -1126,13 +1187,13 @@ export class CdnService {
     if (!file.mimetype.startsWith('image/')) {
       return cb(new BadRequestException('Only images allowed'), false);
     }
-    
+
     // Check extension
     const ext = path.extname(file.originalname).toLowerCase();
     if (!['.jpg', '.jpeg', '.png'].includes(ext)) {
       return cb(new BadRequestException('Invalid file extension'), false);
     }
-    
+
     cb(null, true);
   },
 }))
@@ -1141,10 +1202,10 @@ async upload(@UploadedFile() file: Express.Multer.File) {
   if (!file) {
     throw new BadRequestException('File is required');
   }
-  
+
   // Virus scan
   await this.virusScanService.scan(file);
-  
+
   // Process and upload
   const url = await this.storageService.upload(file, 'uploads');
   return { url };
@@ -1197,18 +1258,18 @@ const key = `uploads/${uuidv4()}${ext}`;
 // ✅ Good: Delete files when entity is deleted
 async delete(id: string): Promise<void> {
   const entity = await this.repository.findOne(id);
-  
+
   // Delete from storage
   if (entity.profile_picture) {
     await this.storageService.delete(entity.profile_picture);
   }
-  
+
   if (entity.attachments?.length) {
     await Promise.all(
       entity.attachments.map(url => this.storageService.delete(url))
     );
   }
-  
+
   // Delete from database
   await this.repository.delete(id);
 }
@@ -1275,11 +1336,13 @@ async upload(@UploadedFile() file: Express.Multer.File) {
 #### 1. "File size limit exceeded"
 
 **Error**:
+
 ```
 PayloadTooLargeError: request entity too large
 ```
 
 **Solution**:
+
 ```typescript
 // Increase limit in main.ts
 import { NestFactory } from '@nestjs/core';
@@ -1293,11 +1356,13 @@ app.use(urlencoded({ extended: true, limit: '50mb' }));
 #### 2. "Multipart/form-data not parsed"
 
 **Error**:
+
 ```
 Request body is empty
 ```
 
 **Solution**:
+
 ```bash
 # Ensure multer is installed
 npm install @nestjs/platform-express multer
@@ -1311,22 +1376,20 @@ async upload(@UploadedFile() file: Express.Multer.File) { }
 #### 3. "S3 Access Denied"
 
 **Error**:
+
 ```
 AccessDenied: User is not authorized to perform: s3:PutObject
 ```
 
 **Solution**:
+
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": [
-        "s3:PutObject",
-        "s3:GetObject",
-        "s3:DeleteObject"
-      ],
+      "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
       "Resource": "arn:aws:s3:::your-bucket/*"
     }
   ]
@@ -1336,11 +1399,13 @@ AccessDenied: User is not authorized to perform: s3:PutObject
 #### 4. "CORS Error on Direct Upload"
 
 **Error**:
+
 ```
 Access to fetch has been blocked by CORS policy
 ```
 
 **Solution (S3)**:
+
 ```json
 {
   "CORSRules": [
@@ -1357,11 +1422,13 @@ Access to fetch has been blocked by CORS policy
 #### 5. "Sharp Installation Failed"
 
 **Error**:
+
 ```
 Could not load the "sharp" module
 ```
 
 **Solution**:
+
 ```bash
 # Clear cache and reinstall
 npm cache clean --force
@@ -1375,12 +1442,13 @@ npm install --platform=linux --arch=x64 sharp
 ### Performance Tips
 
 1. **Use Streaming for Large Files**:
+
 ```typescript
 import { createReadStream, createWriteStream } from 'fs';
 
 async uploadLargeFile(filePath: string, key: string) {
   const fileStream = createReadStream(filePath);
-  
+
   const upload = new Upload({
     client: this.s3Client,
     params: {
@@ -1395,6 +1463,7 @@ async uploadLargeFile(filePath: string, key: string) {
 ```
 
 2. **Enable Compression**:
+
 ```typescript
 // main.ts
 import * as compression from 'compression';
@@ -1403,24 +1472,25 @@ app.use(compression());
 ```
 
 3. **Cache File Metadata**:
+
 ```typescript
 import { CACHE_MANAGER, Inject } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 
 async getFileInfo(key: string) {
   const cacheKey = `file:${key}`;
-  
+
   // Check cache
   let info = await this.cacheManager.get(cacheKey);
-  
+
   if (!info) {
     // Fetch from storage
     info = await this.storageService.getMetadata(key);
-    
+
     // Cache for 1 hour
     await this.cacheManager.set(cacheKey, info, 3600);
   }
-  
+
   return info;
 }
 ```
@@ -1430,6 +1500,7 @@ async getFileInfo(key: string) {
 ### From Multer Local to S3
 
 **Before**:
+
 ```typescript
 import { diskStorage } from 'multer';
 
@@ -1444,6 +1515,7 @@ import { diskStorage } from 'multer';
 ```
 
 **After**:
+
 ```typescript
 import { StorageService } from './storage.service';
 

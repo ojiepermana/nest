@@ -3,10 +3,7 @@
  */
 
 import { RepositoryGenerator } from './repository.generator';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 describe('RepositoryGenerator', () => {
   const mockTableMetadata: TableMetadata = {
@@ -52,13 +49,9 @@ describe('RepositoryGenerator', () => {
 
   describe('Basic Repository Generation', () => {
     it('should generate basic repository class', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -70,32 +63,22 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should generate constructor with repository injection', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
       expect(result).toContain('@InjectRepository(Users)');
-      expect(result).toContain(
-        'private readonly repository: Repository<Users>',
-      );
+      expect(result).toContain('private readonly repository: Repository<Users>');
       expect(result).toContain('constructor(');
     });
 
     it('should use custom entity name if provided', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          entityName: 'User',
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        entityName: 'User',
+      });
 
       const result = generator.generate();
 
@@ -107,84 +90,52 @@ describe('RepositoryGenerator', () => {
 
   describe('Import Generation', () => {
     it('should generate correct imports', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
       expect(result).toContain("import { Injectable } from '@nestjs/common'");
-      expect(result).toContain(
-        "import { InjectRepository } from '@nestjs/typeorm'",
-      );
+      expect(result).toContain("import { InjectRepository } from '@nestjs/typeorm'");
       expect(result).toContain(
         "import { Repository, FindOptionsWhere, FindManyOptions, DeepPartial } from 'typeorm'",
       );
-      expect(result).toContain(
-        "import { Users } from '../entities/users.entity'",
-      );
-      expect(result).toContain(
-        "import { UsersFilterDto } from '../dto/users-filter.dto'",
-      );
-      expect(result).toContain(
-        "import { CreateUsersDto } from '../dto/create-users.dto'",
-      );
-      expect(result).toContain(
-        "import { UpdateUsersDto } from '../dto/update-users.dto'",
-      );
+      expect(result).toContain("import { Users } from '../entities/users.entity'");
+      expect(result).toContain("import { UsersFilterDto } from '../dto/users-filter.dto'");
+      expect(result).toContain("import { CreateUsersDto } from '../dto/create-users.dto'");
+      expect(result).toContain("import { UpdateUsersDto } from '../dto/update-users.dto'");
     });
 
     it('should include FilterCompiler import when customMethods enabled', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          customMethods: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        customMethods: true,
+      });
 
       const result = generator.generate();
 
-      expect(result).toContain(
-        "import { FilterCompiler } from '@ojiepermana/nest-generator'",
-      );
-      expect(result).toContain(
-        "import { QueryBuilder } from '@ojiepermana/nest-generator'",
-      );
+      expect(result).toContain("import { FilterCompiler } from '@ojiepermana/nest-generator'");
+      expect(result).toContain("import { QueryBuilder } from '@ojiepermana/nest-generator'");
     });
 
     it('should include transaction imports when transactionSupport enabled', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          transactionSupport: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        transactionSupport: true,
+      });
 
       const result = generator.generate();
 
-      expect(result).toContain(
-        "import { DataSource, QueryRunner } from 'typeorm'",
-      );
+      expect(result).toContain("import { DataSource, QueryRunner } from 'typeorm'");
     });
   });
 
   describe('Basic CRUD Methods', () => {
     it('should generate create method', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -195,31 +146,21 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should generate findAll method', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
-      expect(result).toContain(
-        'async findAll(options?: FindManyOptions<Users>)',
-      );
+      expect(result).toContain('async findAll(options?: FindManyOptions<Users>)');
       expect(result).toContain('Promise<Users[]>');
       expect(result).toContain('this.repository.find(options)');
     });
 
     it('should generate findOne method with correct PK type', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -229,19 +170,13 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should generate update method', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
-      expect(result).toContain(
-        'async update(id: number, updateDto: UpdateUsersDto)',
-      );
+      expect(result).toContain('async update(id: number, updateDto: UpdateUsersDto)');
       expect(result).toContain('Promise<Users>');
       expect(result).toContain('await this.findOne(id)');
       expect(result).toContain('Object.assign(');
@@ -249,13 +184,9 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should generate remove method', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -264,13 +195,9 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should generate count method', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -280,13 +207,9 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should generate exists method', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -298,13 +221,9 @@ describe('RepositoryGenerator', () => {
 
   describe('Filter Methods', () => {
     it('should generate findWithFilters method', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -316,13 +235,9 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should generate applyFilter helper method', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -335,13 +250,9 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should handle operator parsing in findWithFilters', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -349,39 +260,25 @@ describe('RepositoryGenerator', () => {
         'const operatorMatch = key.match(/^(.+)_(eq|ne|gt|gte|lt|lte|like|in|between|null)$/)',
       );
       expect(result).toContain('const [, field, operator] = operatorMatch');
-      expect(result).toContain(
-        'this.applyFilter(queryBuilder, field, operator, value)',
-      );
+      expect(result).toContain('this.applyFilter(queryBuilder, field, operator, value)');
     });
 
     it('should apply pagination in findWithFilters', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
       expect(result).toContain('const page = options?.page || 1');
-      expect(result).toContain(
-        'const limit = Math.min(options?.limit || 20, 100)',
-      );
-      expect(result).toContain(
-        'queryBuilder.skip((page - 1) * limit).take(limit)',
-      );
+      expect(result).toContain('const limit = Math.min(options?.limit || 20, 100)');
+      expect(result).toContain('queryBuilder.skip((page - 1) * limit).take(limit)');
     });
 
     it('should apply sorting in findWithFilters', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+      });
 
       const result = generator.generate();
 
@@ -393,14 +290,10 @@ describe('RepositoryGenerator', () => {
 
   describe('Soft Delete Methods', () => {
     it('should generate soft delete methods when enabled', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          softDelete: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        softDelete: true,
+      });
 
       const result = generator.generate();
 
@@ -411,14 +304,10 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should not generate soft delete methods when disabled', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          softDelete: false,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        softDelete: false,
+      });
 
       const result = generator.generate();
 
@@ -427,17 +316,13 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should use custom deletedAt column name', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          softDelete: true,
-          timestampColumns: {
-            deletedAt: 'deleted_on',
-          },
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        softDelete: true,
+        timestampColumns: {
+          deletedAt: 'deleted_on',
         },
-      );
+      });
 
       const result = generator.generate();
 
@@ -447,14 +332,10 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should use default deleted_at if not specified', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          softDelete: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        softDelete: true,
+      });
 
       const result = generator.generate();
 
@@ -465,14 +346,10 @@ describe('RepositoryGenerator', () => {
 
   describe('Custom Methods', () => {
     it('should generate custom methods when enabled', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          customMethods: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        customMethods: true,
+      });
 
       const result = generator.generate();
 
@@ -483,14 +360,10 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should not generate custom methods when disabled', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          customMethods: false,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        customMethods: false,
+      });
 
       const result = generator.generate();
 
@@ -499,14 +372,10 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should generate findOneOrFail with error handling', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          customMethods: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        customMethods: true,
+      });
 
       const result = generator.generate();
 
@@ -516,14 +385,10 @@ describe('RepositoryGenerator', () => {
 
   describe('Bulk Operations', () => {
     it('should generate bulk operation methods when enabled', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          bulkOperations: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        bulkOperations: true,
+      });
 
       const result = generator.generate();
 
@@ -534,14 +399,10 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should not generate bulk methods when disabled', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          bulkOperations: false,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        bulkOperations: false,
+      });
 
       const result = generator.generate();
 
@@ -550,14 +411,10 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should generate bulkCreate with array parameter', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          bulkOperations: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        bulkOperations: true,
+      });
 
       const result = generator.generate();
 
@@ -566,14 +423,10 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should generate upsert with conflict fields', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          bulkOperations: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        bulkOperations: true,
+      });
 
       const result = generator.generate();
 
@@ -584,14 +437,10 @@ describe('RepositoryGenerator', () => {
 
   describe('Transaction Support', () => {
     it('should generate transaction methods when enabled', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          transactionSupport: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        transactionSupport: true,
+      });
 
       const result = generator.generate();
 
@@ -601,14 +450,10 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should not generate transaction methods when disabled', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          transactionSupport: false,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        transactionSupport: false,
+      });
 
       const result = generator.generate();
 
@@ -617,14 +462,10 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should include DataSource in constructor when transaction enabled', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          transactionSupport: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        transactionSupport: true,
+      });
 
       const result = generator.generate();
 
@@ -632,14 +473,10 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should generate transaction with rollback handling', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          transactionSupport: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        transactionSupport: true,
+      });
 
       const result = generator.generate();
 
@@ -652,68 +489,46 @@ describe('RepositoryGenerator', () => {
 
   describe('Audit Logging', () => {
     it('should include AuditLogService import when audit logging enabled', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          auditLogging: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        auditLogging: true,
+      });
 
       const result = generator.generate();
 
-      expect(result).toContain(
-        "import { AuditLogService } from '../audit/audit-log.service';",
-      );
+      expect(result).toContain("import { AuditLogService } from '../audit/audit-log.service';");
     });
 
     it('should inject AuditLogService in constructor when enabled', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          auditLogging: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        auditLogging: true,
+      });
 
       const result = generator.generate();
 
-      expect(result).toContain(
-        'private readonly auditLogService: AuditLogService',
-      );
+      expect(result).toContain('private readonly auditLogService: AuditLogService');
     });
 
     it('should generate create method with audit logging', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          auditLogging: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        auditLogging: true,
+      });
 
       const result = generator.generate();
 
-      expect(result).toContain(
-        'async create(createDto: CreateUsersDto, userId?: string)',
-      );
+      expect(result).toContain('async create(createDto: CreateUsersDto, userId?: string)');
       expect(result).toContain('await this.auditLogService.log({');
       expect(result).toContain("action: 'CREATE'");
       expect(result).toContain("entity_type: 'users'");
     });
 
     it('should generate update method with audit logging', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          auditLogging: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        auditLogging: true,
+      });
 
       const result = generator.generate();
 
@@ -727,14 +542,10 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should generate delete method with audit logging', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          auditLogging: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        auditLogging: true,
+      });
 
       const result = generator.generate();
 
@@ -745,35 +556,25 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should not include audit code when disabled', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          auditLogging: false,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        auditLogging: false,
+      });
 
       const result = generator.generate();
 
       expect(result).not.toContain('AuditLogService');
       expect(result).not.toContain('auditLogService.log');
       expect(result).toContain('async create(createDto: CreateUsersDto)');
-      expect(result).toContain(
-        'async update(id: number, updateDto: UpdateUsersDto)',
-      );
+      expect(result).toContain('async update(id: number, updateDto: UpdateUsersDto)');
       expect(result).toContain('async remove(id: number)');
     });
 
     it('should generate README with audit examples when enabled', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          auditLogging: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        auditLogging: true,
+      });
 
       const readme = generator.generateReadme();
 
@@ -785,14 +586,10 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should not generate README when audit disabled', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          auditLogging: false,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        auditLogging: false,
+      });
 
       const readme = generator.generateReadme();
 
@@ -802,17 +599,13 @@ describe('RepositoryGenerator', () => {
 
   describe('Combined Features', () => {
     it('should generate repository with all features enabled', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          softDelete: true,
-          customMethods: true,
-          bulkOperations: true,
-          transactionSupport: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        softDelete: true,
+        customMethods: true,
+        bulkOperations: true,
+        transactionSupport: true,
+      });
 
       const result = generator.generate();
 
@@ -824,17 +617,13 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should generate minimal repository with no optional features', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          softDelete: false,
-          customMethods: false,
-          bulkOperations: false,
-          transactionSupport: false,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        softDelete: false,
+        customMethods: false,
+        bulkOperations: false,
+        transactionSupport: false,
+      });
 
       const result = generator.generate();
 
@@ -853,18 +642,14 @@ describe('RepositoryGenerator', () => {
     });
 
     it('should generate repository with audit logging and all other features', () => {
-      const generator = new RepositoryGenerator(
-        mockTableMetadata,
-        mockColumns,
-        {
-          tableName: 'users',
-          auditLogging: true,
-          softDelete: true,
-          customMethods: true,
-          bulkOperations: true,
-          transactionSupport: true,
-        },
-      );
+      const generator = new RepositoryGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        auditLogging: true,
+        softDelete: true,
+        customMethods: true,
+        bulkOperations: true,
+        transactionSupport: true,
+      });
 
       const result = generator.generate();
 

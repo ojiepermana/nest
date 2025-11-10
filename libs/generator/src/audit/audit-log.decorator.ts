@@ -36,10 +36,7 @@ export interface AuditLogOptions {
    * - number: parameter index
    * - function: custom extractor
    */
-  oldValuesParam?:
-    | string
-    | number
-    | ((params: any[]) => Record<string, any> | undefined);
+  oldValuesParam?: string | number | ((params: any[]) => Record<string, any> | undefined);
 
   /**
    * Extract new values from method return or params (for CREATE/UPDATE)
@@ -108,11 +105,7 @@ export interface AuditLogOptions {
  * ```
  */
 export function AuditLog(options: AuditLogOptions): MethodDecorator {
-  return (
-    target: any,
-    propertyKey: string | symbol,
-    descriptor: PropertyDescriptor,
-  ) => {
+  return (target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) => {
     // Store metadata
     SetMetadata(AUDIT_LOG_METADATA, options)(target, propertyKey, descriptor);
 
@@ -146,11 +139,7 @@ export function AuditLog(options: AuditLogOptions): MethodDecorator {
         const oldValues = await extractOldValues(options.oldValuesParam, args);
 
         // Extract new values
-        const newValues = await extractNewValues(
-          options.newValuesParam,
-          args,
-          result,
-        );
+        const newValues = await extractNewValues(options.newValuesParam, args, result);
 
         // Get user context (from request or this)
         const userContext = getUserContext(this);
@@ -186,8 +175,7 @@ export function AuditLog(options: AuditLogOptions): MethodDecorator {
             entity_id: entityId,
             user_id: userContext.userId || 'system',
             status: 'FAILED',
-            error_message:
-              error instanceof Error ? error.message : String(error),
+            error_message: error instanceof Error ? error.message : String(error),
             tags: options.tags,
             metadata: options.metadata,
           })
@@ -221,9 +209,7 @@ function extractEntityId(
 
   if (typeof param === 'string') {
     // Find named parameter
-    const index = args.findIndex(
-      (arg) => arg && typeof arg === 'object' && arg[param],
-    );
+    const index = args.findIndex((arg) => arg && typeof arg === 'object' && arg[param]);
     return index >= 0 ? args[index][param] : undefined;
   }
 
@@ -242,11 +228,7 @@ function extractEntityId(
  * Extract old values from parameters
  */
 async function extractOldValues(
-  param:
-    | string
-    | number
-    | ((params: any[]) => Record<string, any> | undefined)
-    | undefined,
+  param: string | number | ((params: any[]) => Record<string, any> | undefined) | undefined,
   args: any[],
 ): Promise<Record<string, any> | undefined> {
   if (!param) {

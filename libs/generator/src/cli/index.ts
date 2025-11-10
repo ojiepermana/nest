@@ -15,9 +15,7 @@ const program = new Command();
 
 program
   .name('nest-generator')
-  .description(
-    'NestJS CRUD Generator - Generate production-ready modules from database metadata',
-  )
+  .description('NestJS CRUD Generator - Generate production-ready modules from database metadata')
   .version('1.0.0');
 
 // Init command

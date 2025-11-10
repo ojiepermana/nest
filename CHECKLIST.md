@@ -5,6 +5,7 @@ Checklist sebelum publish library ke npm.
 ## ✅ Configuration Check
 
 ### Package.json Configuration
+
 - [x] `name` menggunakan scope `@ojiepermana/`
 - [x] `version` sudah benar
 - [x] `description` sudah jelas
@@ -17,12 +18,14 @@ Checklist sebelum publish library ke npm.
 - [x] `files` array sudah ditambahkan
 
 ### Build Configuration
+
 - [x] Library bisa di-build tanpa error
 - [x] `dist/` folder tergenerate dengan benar
 - [x] TypeScript declarations (`.d.ts`) tergenerate
 - [x] `.npmignore` sudah dibuat
 
 ### Documentation
+
 - [x] README.md untuk setiap library
 - [x] Installation instructions
 - [x] Usage examples
@@ -31,16 +34,19 @@ Checklist sebelum publish library ke npm.
 ## 🚀 Pre-Publish Steps
 
 ### 1. Verifikasi Build
+
 ```bash
 npm run build:all-libs
 ```
 
 Expected output:
+
 - ✅ `libs/generator/dist/` ada
 - ✅ `libs/nest/dist/` ada
 - ✅ No build errors
 
 ### 2. Test Locally (Optional)
+
 ```bash
 # Link library secara lokal
 cd libs/generator
@@ -53,6 +59,7 @@ npm link @ojiepermana/nest-generator
 ```
 
 ### 3. Check Package Contents
+
 ```bash
 # Lihat apa yang akan di-publish
 cd libs/generator
@@ -63,6 +70,7 @@ npm pack --dry-run
 ```
 
 ### 4. Login to npm
+
 ```bash
 npm whoami
 # Jika belum login:
@@ -70,6 +78,7 @@ npm whoami
 ```
 
 ### 5. Publish
+
 ```bash
 # Interactive
 ./scripts/publish-libs.sh
@@ -81,11 +90,13 @@ npm run publish:all-libs
 ## 📝 Post-Publish Verification
 
 ### Verifikasi di npm
+
 1. Cek di browser:
    - https://www.npmjs.com/package/@ojiepermana/nest-generator
    - https://www.npmjs.com/package/@ojiepermana/nest
 
 2. Test install:
+
 ```bash
 mkdir test-install
 cd test-install
@@ -95,6 +106,7 @@ npm install @ojiepermana/nest
 ```
 
 3. Verifikasi version:
+
 ```bash
 npm view @ojiepermana/nest-generator version
 npm view @ojiepermana/nest version
@@ -105,11 +117,13 @@ npm view @ojiepermana/nest version
 Untuk publish versi baru:
 
 1. **Bump version**
+
    ```bash
    ./scripts/version-bump.sh
    ```
 
 2. **Commit changes**
+
    ```bash
    git add .
    git commit -m "chore: release v1.0.x"
@@ -117,6 +131,7 @@ Untuk publish versi baru:
    ```
 
 3. **Tag release** (Optional but recommended)
+
    ```bash
    git tag -a v1.0.0 -m "Release v1.0.0"
    git push origin v1.0.0
@@ -130,29 +145,38 @@ Untuk publish versi baru:
 ## ⚠️ Common Issues
 
 ### Issue: "You do not have permission to publish"
+
 **Solution:**
+
 - Pastikan logged in: `npm whoami`
 - Pastikan scope `@ojiepermana` adalah milik Anda
 - Atau create organization di npm
 
 ### Issue: "Package name too similar to existing package"
+
 **Solution:**
+
 - Gunakan nama yang lebih spesifik
 - Atau tambahkan suffix/prefix
 
 ### Issue: "You must verify your email"
+
 **Solution:**
+
 - Login ke npmjs.com
 - Verify email address
 
 ### Issue: "Package version already exists"
+
 **Solution:**
+
 - Bump version terlebih dahulu
 - Tidak bisa overwrite version yang sudah published
 
 ## 📊 Package Info Summary
 
 ### @ojiepermana/nest-generator
+
 ```json
 {
   "name": "@ojiepermana/nest-generator",
@@ -163,6 +187,7 @@ Untuk publish versi baru:
 ```
 
 ### @ojiepermana/nest
+
 ```json
 {
   "name": "@ojiepermana/nest",

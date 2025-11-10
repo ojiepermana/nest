@@ -111,9 +111,7 @@ describe('FilterCompiler', () => {
       expect(query.sql).toContain('field6 <= $param6');
       expect(query.sql).toContain('field7 LIKE $param7');
       expect(query.sql).toContain('field8 IN ($param8_0, $param8_1)'); // Array params start at 0
-      expect(query.sql).toContain(
-        'field9 BETWEEN $param9_start AND $param9_end',
-      ); // BETWEEN uses _start/_end
+      expect(query.sql).toContain('field9 BETWEEN $param9_start AND $param9_end'); // BETWEEN uses _start/_end
       expect(query.sql).toContain('field10 IS NULL');
     });
 
@@ -799,9 +797,7 @@ describe('FilterCompiler', () => {
       const query = builder.buildSelect();
 
       expect(query.sql).toContain('WHERE status = $param1');
-      expect(query.sql).toContain(
-        'AND age BETWEEN $param2_start AND $param2_end',
-      );
+      expect(query.sql).toContain('AND age BETWEEN $param2_start AND $param2_end');
       expect(query.sql).toContain('AND name LIKE $param3');
       expect(query.sql).toContain('AND is_verified = $param4');
     });

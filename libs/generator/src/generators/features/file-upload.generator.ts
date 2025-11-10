@@ -6,10 +6,7 @@
  */
 
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 export interface FileUploadConfig {
   maxFileSize?: number; // in bytes
@@ -209,9 +206,7 @@ export class FileUploadGenerator {
 
     // File filter (mime types)
     if (config.allowedMimeTypes && config.allowedMimeTypes.length > 0) {
-      const mimeTypes = config.allowedMimeTypes
-        .map((type) => `'${type}'`)
-        .join(', ');
+      const mimeTypes = config.allowedMimeTypes.map((type) => `'${type}'`).join(', ');
       options.push(`fileFilter: (req, file, cb) => {
       const allowedMimeTypes = [${mimeTypes}];
       if (!allowedMimeTypes.includes(file.mimetype)) {
@@ -223,9 +218,7 @@ export class FileUploadGenerator {
 
     // File extension filter
     if (config.allowedExtensions && config.allowedExtensions.length > 0) {
-      const extensions = config.allowedExtensions
-        .map((ext) => `'${ext}'`)
-        .join(', ');
+      const extensions = config.allowedExtensions.map((ext) => `'${ext}'`).join(', ');
       options.push(`fileFilter: (req, file, cb) => {
       const ext = file.originalname.split('.').pop()?.toLowerCase();
       const allowedExtensions = [${extensions}];
@@ -308,9 +301,7 @@ export class FileUploadGenerator {
     imports.push(
       "import { UseInterceptors, UploadedFile, UploadedFiles, BadRequestException, NotFoundException } from '@nestjs/common';",
     );
-    imports.push(
-      "import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';",
-    );
+    imports.push("import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';");
 
     // Swagger imports
     if (this.options.enableSwagger) {
@@ -320,9 +311,7 @@ export class FileUploadGenerator {
     }
 
     // Storage service import
-    imports.push(
-      "import { StorageService } from '../services/storage.service';",
-    );
+    imports.push("import { StorageService } from '../services/storage.service';");
 
     return imports.join('\n');
   }

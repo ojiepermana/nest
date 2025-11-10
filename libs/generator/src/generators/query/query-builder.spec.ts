@@ -42,9 +42,7 @@ describe('QueryBuilder', () => {
 
       it('should build SELECT with WHERE condition', () => {
         const builder = new QueryBuilder('users', 'postgresql');
-        const query = builder
-          .where('status', QueryFilterOperator.EQUALS, 'active')
-          .buildSelect();
+        const query = builder.where('status', QueryFilterOperator.EQUALS, 'active').buildSelect();
 
         expect(query.sql).toBe('SELECT * FROM users WHERE status = $param1');
         expect(query.params).toEqual({ param1: 'active' });
@@ -57,9 +55,7 @@ describe('QueryBuilder', () => {
           .andWhere('age', QueryFilterOperator.GREATER_THAN, 18)
           .buildSelect();
 
-        expect(query.sql).toBe(
-          'SELECT * FROM users WHERE status = $param1 AND age > $param2',
-        );
+        expect(query.sql).toBe('SELECT * FROM users WHERE status = $param1 AND age > $param2');
         expect(query.params).toEqual({ param1: 'active', param2: 18 });
       });
 
@@ -91,9 +87,7 @@ describe('QueryBuilder', () => {
 
         const query = builder.addFilters(filterDto).buildSelect();
 
-        expect(query.sql).toContain(
-          'status IN ($param1_0, $param1_1, $param1_2)',
-        );
+        expect(query.sql).toContain('status IN ($param1_0, $param1_1, $param1_2)');
         expect(query.params).toEqual({
           param1_0: 'active',
           param1_1: 'pending',
@@ -109,9 +103,7 @@ describe('QueryBuilder', () => {
 
         const query = builder.addFilters(filterDto).buildSelect();
 
-        expect(query.sql).toContain(
-          'price BETWEEN $param1_start AND $param1_end',
-        );
+        expect(query.sql).toContain('price BETWEEN $param1_start AND $param1_end');
         expect(query.params).toEqual({
           param1_start: 100,
           param1_end: 500,
@@ -141,9 +133,7 @@ describe('QueryBuilder', () => {
 
       it('should build SELECT with LEFT JOIN', () => {
         const builder = new QueryBuilder('users', 'postgresql', 'u');
-        const query = builder
-          .leftJoin('posts', 'id', 'user_id', 'p')
-          .buildSelect();
+        const query = builder.leftJoin('posts', 'id', 'user_id', 'p').buildSelect();
 
         expect(query.sql).toContain('LEFT JOIN posts p ON u.id = p.user_id');
       });
@@ -161,10 +151,7 @@ describe('QueryBuilder', () => {
 
       it('should build SELECT with ORDER BY', () => {
         const builder = new QueryBuilder('users', 'postgresql');
-        const query = builder
-          .orderBy('created_at', 'DESC')
-          .orderBy('name', 'ASC')
-          .buildSelect();
+        const query = builder.orderBy('created_at', 'DESC').orderBy('name', 'ASC').buildSelect();
 
         expect(query.sql).toContain('ORDER BY created_at DESC, name ASC');
       });
@@ -246,18 +233,14 @@ describe('QueryBuilder', () => {
 
       it('should auto-qualify columns with table alias', () => {
         const builder = new QueryBuilder('users', 'postgresql', 'u');
-        const query = builder
-          .where('status', QueryFilterOperator.EQUALS, 'active')
-          .buildSelect();
+        const query = builder.where('status', QueryFilterOperator.EQUALS, 'active').buildSelect();
 
         expect(query.sql).toContain('u.status = $param1');
       });
 
       it('should not double-qualify already qualified columns', () => {
         const builder = new QueryBuilder('users', 'postgresql', 'u');
-        const query = builder
-          .where('u.status', QueryFilterOperator.EQUALS, 'active')
-          .buildSelect();
+        const query = builder.where('u.status', QueryFilterOperator.EQUALS, 'active').buildSelect();
 
         expect(query.sql).toContain('u.status = $param1');
         expect(query.sql).not.toContain('u.u.status');
@@ -267,13 +250,9 @@ describe('QueryBuilder', () => {
     describe('COUNT queries', () => {
       it('should build COUNT query', () => {
         const builder = new QueryBuilder('users', 'postgresql');
-        const query = builder
-          .where('status', QueryFilterOperator.EQUALS, 'active')
-          .buildCount();
+        const query = builder.where('status', QueryFilterOperator.EQUALS, 'active').buildCount();
 
-        expect(query.sql).toBe(
-          'SELECT COUNT(*) as total FROM users WHERE status = $param1',
-        );
+        expect(query.sql).toBe('SELECT COUNT(*) as total FROM users WHERE status = $param1');
       });
 
       it('should build COUNT query with JOINs', () => {
@@ -331,9 +310,7 @@ describe('QueryBuilder', () => {
           email: 'jane@example.com',
         };
 
-        const query = builder
-          .where('id', QueryFilterOperator.EQUALS, 1)
-          .buildUpdate(data);
+        const query = builder.where('id', QueryFilterOperator.EQUALS, 1).buildUpdate(data);
 
         expect(query.sql).toBe(
           'UPDATE users SET name = $param1, email = $param2 WHERE id = $param3',
@@ -360,9 +337,7 @@ describe('QueryBuilder', () => {
     describe('DELETE queries', () => {
       it('should build DELETE query', () => {
         const builder = new QueryBuilder('users', 'postgresql');
-        const query = builder
-          .where('id', QueryFilterOperator.EQUALS, 1)
-          .buildDelete();
+        const query = builder.where('id', QueryFilterOperator.EQUALS, 1).buildDelete();
 
         expect(query.sql).toBe('DELETE FROM users WHERE id = $param1');
         expect(query.params).toEqual({ param1: 1 });

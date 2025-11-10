@@ -5,10 +5,7 @@
  */
 
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 export interface RepositoryGeneratorOptions {
   tableName: string;
@@ -36,28 +33,20 @@ export class RepositoryGenerator {
    * Generate repository class
    */
   generate(): string {
-    const entityName =
-      this.options.entityName || toPascalCase(this.options.tableName);
+    const entityName = this.options.entityName || toPascalCase(this.options.tableName);
     const repositoryName = `${entityName}Repository`;
     const filterDtoName = `${entityName}FilterDto`;
 
     const imports = this.generateImports(entityName, filterDtoName);
-    const classDeclaration = this.generateClassDeclaration(
-      repositoryName,
-      entityName,
-    );
+    const classDeclaration = this.generateClassDeclaration(repositoryName, entityName);
     const constructor = this.generateConstructor();
     const basicMethods = this.generateBasicMethods(entityName);
     const filterMethods = this.generateFilterMethods(entityName, filterDtoName);
     const softDeleteMethods = this.options.softDelete
       ? this.generateSoftDeleteMethods(entityName)
       : '';
-    const customMethods = this.options.customMethods
-      ? this.generateCustomMethods(entityName)
-      : '';
-    const bulkMethods = this.options.bulkOperations
-      ? this.generateBulkMethods(entityName)
-      : '';
+    const customMethods = this.options.customMethods ? this.generateCustomMethods(entityName) : '';
+    const bulkMethods = this.options.bulkOperations ? this.generateBulkMethods(entityName) : '';
     const transactionMethods = this.options.transactionSupport
       ? this.generateTransactionMethods(entityName)
       : '';
@@ -91,12 +80,8 @@ ${transactionMethods}
     ];
 
     if (this.options.customMethods) {
-      imports.push(
-        "import { FilterCompiler } from '@ojiepermana/nest-generator';",
-      );
-      imports.push(
-        "import { QueryBuilder } from '@ojiepermana/nest-generator';",
-      );
+      imports.push("import { FilterCompiler } from '@ojiepermana/nest-generator';");
+      imports.push("import { QueryBuilder } from '@ojiepermana/nest-generator';");
     }
 
     if (this.options.transactionSupport) {
@@ -104,9 +89,7 @@ ${transactionMethods}
     }
 
     if (this.options.auditLogging) {
-      imports.push(
-        "import { AuditLogService } from '../audit/audit-log.service';",
-      );
+      imports.push("import { AuditLogService } from '../audit/audit-log.service';");
     }
 
     return imports.join('\n');
@@ -115,10 +98,7 @@ ${transactionMethods}
   /**
    * Generate class declaration
    */
-  private generateClassDeclaration(
-    repositoryName: string,
-    entityName: string,
-  ): string {
+  private generateClassDeclaration(repositoryName: string, entityName: string): string {
     return `@Injectable()
 export class ${repositoryName} {`;
   }
@@ -127,8 +107,7 @@ export class ${repositoryName} {`;
    * Generate constructor
    */
   private generateConstructor(): string {
-    const entityName =
-      this.options.entityName || toPascalCase(this.options.tableName);
+    const entityName = this.options.entityName || toPascalCase(this.options.tableName);
     const params = [
       `@InjectRepository(${entityName})
     private readonly repository: Repository<${entityName}>`,
@@ -320,11 +299,7 @@ ${deleteMethod}
   /**
    * Generate delete method without audit
    */
-  private generateDeleteBasic(
-    entityName: string,
-    camelName: string,
-    pkType: string,
-  ): string {
+  private generateDeleteBasic(entityName: string, camelName: string, pkType: string): string {
     return `  /**
    * Delete a ${camelName}
    */
@@ -370,10 +345,7 @@ ${deleteMethod}
   /**
    * Generate filter methods
    */
-  private generateFilterMethods(
-    entityName: string,
-    filterDtoName: string,
-  ): string {
+  private generateFilterMethods(entityName: string, filterDtoName: string): string {
     const camelName = toCamelCase(entityName);
 
     return `
@@ -495,8 +467,7 @@ ${deleteMethod}
     const camelName = toCamelCase(entityName);
     const pkColumn = this.getPrimaryKeyColumn();
     const pkType = this.getTypeScriptType(pkColumn?.data_type || 'integer');
-    const deletedAtColumn =
-      this.options.timestampColumns?.deletedAt || 'deleted_at';
+    const deletedAtColumn = this.options.timestampColumns?.deletedAt || 'deleted_at';
 
     return `
   /**
@@ -664,11 +635,7 @@ ${deleteMethod}
   private getTypeScriptType(dbType: string): string {
     const lowerType = dbType.toLowerCase();
 
-    if (
-      lowerType.includes('int') ||
-      lowerType.includes('serial') ||
-      lowerType.includes('number')
-    ) {
+    if (lowerType.includes('int') || lowerType.includes('serial') || lowerType.includes('number')) {
       return 'number';
     }
 
@@ -714,8 +681,7 @@ ${deleteMethod}
       return '';
     }
 
-    const entityName =
-      this.options.entityName || toPascalCase(this.options.tableName);
+    const entityName = this.options.entityName || toPascalCase(this.options.tableName);
     const repositoryName = `${entityName}Repository`;
     const camelName = toCamelCase(entityName);
 

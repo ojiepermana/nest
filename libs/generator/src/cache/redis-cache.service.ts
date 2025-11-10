@@ -95,10 +95,7 @@ export class RedisCacheService implements ICacheService {
       Logger.debug(`Cache DELETE PATTERN: ${pattern} (${deleted} keys)`);
       return deleted;
     } catch (error) {
-      Logger.error(
-        `Cache delete pattern error for: ${pattern}`,
-        error as Error,
-      );
+      Logger.error(`Cache delete pattern error for: ${pattern}`, error as Error);
       return 0;
     }
   }

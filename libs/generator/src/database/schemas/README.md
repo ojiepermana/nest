@@ -61,23 +61,24 @@ mysql -u your_user -p your_database < mysql.sql
 
 Stores table-level configuration:
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | UUID/CHAR(36) | Primary key (UUID v7) |
-| `schema_name` | VARCHAR(63) | Database schema name |
-| `table_name` | VARCHAR(63) | Table name |
-| `display_name` | VARCHAR(255) | Human-readable name |
-| `module_name` | VARCHAR(100) | NestJS module name (unique) |
-| `entity_name` | VARCHAR(100) | Entity class name |
-| `table_type` | VARCHAR(20) | master/transaction/reference/junction |
-| `has_soft_delete` | BOOLEAN | Enable soft delete |
-| `cache_enabled` | BOOLEAN | Enable Redis caching |
-| `throttle_enabled` | BOOLEAN | Enable rate limiting |
-| `enable_export` | BOOLEAN | Generate export endpoints |
-| `enable_recap` | BOOLEAN | Generate recap/aggregation endpoints |
-| `permission_config` | JSON | RBAC configuration |
+| Column              | Type          | Description                           |
+| ------------------- | ------------- | ------------------------------------- |
+| `id`                | UUID/CHAR(36) | Primary key (UUID v7)                 |
+| `schema_name`       | VARCHAR(63)   | Database schema name                  |
+| `table_name`        | VARCHAR(63)   | Table name                            |
+| `display_name`      | VARCHAR(255)  | Human-readable name                   |
+| `module_name`       | VARCHAR(100)  | NestJS module name (unique)           |
+| `entity_name`       | VARCHAR(100)  | Entity class name                     |
+| `table_type`        | VARCHAR(20)   | master/transaction/reference/junction |
+| `has_soft_delete`   | BOOLEAN       | Enable soft delete                    |
+| `cache_enabled`     | BOOLEAN       | Enable Redis caching                  |
+| `throttle_enabled`  | BOOLEAN       | Enable rate limiting                  |
+| `enable_export`     | BOOLEAN       | Generate export endpoints             |
+| `enable_recap`      | BOOLEAN       | Generate recap/aggregation endpoints  |
+| `permission_config` | JSON          | RBAC configuration                    |
 
 **Constraints**:
+
 - Unique: `(schema_name, table_name)`
 - Unique: `module_name`
 - CHECK: `table_type IN ('master', 'transaction', 'reference', 'junction')`
@@ -86,26 +87,27 @@ Stores table-level configuration:
 
 Stores column-level configuration:
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | UUID/CHAR(36) | Primary key |
-| `table_id` | UUID/CHAR(36) | Foreign key to table_metadata |
-| `column_name` | VARCHAR(63) | Column name |
-| `data_type` | VARCHAR(50) | Column data type |
-| `display_name` | VARCHAR(255) | Label for UI |
-| `is_required` | BOOLEAN | Required validation |
-| `validation_rules` | JSON | class-validator rules |
-| `is_filterable` | BOOLEAN | Allow filtering |
-| `filter_operators` | JSON | Allowed operators array |
-| `is_foreign_key` | BOOLEAN | Is this a foreign key? |
-| `ref_schema`, `ref_table`, `ref_column` | VARCHAR | Foreign key reference |
-| `input_type` | VARCHAR(50) | UI input type (text/select/date/etc) |
-| `is_file_upload` | BOOLEAN | File upload column |
-| `file_upload_config` | JSON | Upload validation and storage |
-| `swagger_example` | TEXT | Example for API docs |
-| `display_order` | INT | Column ordering in forms |
+| Column                                  | Type          | Description                          |
+| --------------------------------------- | ------------- | ------------------------------------ |
+| `id`                                    | UUID/CHAR(36) | Primary key                          |
+| `table_id`                              | UUID/CHAR(36) | Foreign key to table_metadata        |
+| `column_name`                           | VARCHAR(63)   | Column name                          |
+| `data_type`                             | VARCHAR(50)   | Column data type                     |
+| `display_name`                          | VARCHAR(255)  | Label for UI                         |
+| `is_required`                           | BOOLEAN       | Required validation                  |
+| `validation_rules`                      | JSON          | class-validator rules                |
+| `is_filterable`                         | BOOLEAN       | Allow filtering                      |
+| `filter_operators`                      | JSON          | Allowed operators array              |
+| `is_foreign_key`                        | BOOLEAN       | Is this a foreign key?               |
+| `ref_schema`, `ref_table`, `ref_column` | VARCHAR       | Foreign key reference                |
+| `input_type`                            | VARCHAR(50)   | UI input type (text/select/date/etc) |
+| `is_file_upload`                        | BOOLEAN       | File upload column                   |
+| `file_upload_config`                    | JSON          | Upload validation and storage        |
+| `swagger_example`                       | TEXT          | Example for API docs                 |
+| `display_order`                         | INT           | Column ordering in forms             |
 
 **Constraints**:
+
 - Unique: `(table_id, column_name)`
 - Foreign key: `table_id → meta.table_metadata(id)` ON DELETE CASCADE
 - CHECK: Foreign key fields consistency
@@ -114,19 +116,20 @@ Stores column-level configuration:
 
 Tracks generated files:
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | UUID/CHAR(36) | Primary key |
-| `table_id` | UUID/CHAR(36) | Foreign key to table_metadata |
-| `file_path` | VARCHAR(500) | Absolute path to generated file |
-| `file_type` | VARCHAR(50) | dto/entity/service/controller/etc |
-| `checksum` | VARCHAR(64) | SHA-256 of current file |
-| `metadata_checksum` | VARCHAR(64) | SHA-256 of metadata used |
-| `has_custom_code` | BOOLEAN | Contains CUSTOM_CODE blocks |
-| `last_generated_at` | TIMESTAMP | Last generation time |
-| `last_modified_at` | TIMESTAMP | Last manual modification |
+| Column              | Type          | Description                       |
+| ------------------- | ------------- | --------------------------------- |
+| `id`                | UUID/CHAR(36) | Primary key                       |
+| `table_id`          | UUID/CHAR(36) | Foreign key to table_metadata     |
+| `file_path`         | VARCHAR(500)  | Absolute path to generated file   |
+| `file_type`         | VARCHAR(50)   | dto/entity/service/controller/etc |
+| `checksum`          | VARCHAR(64)   | SHA-256 of current file           |
+| `metadata_checksum` | VARCHAR(64)   | SHA-256 of metadata used          |
+| `has_custom_code`   | BOOLEAN       | Contains CUSTOM_CODE blocks       |
+| `last_generated_at` | TIMESTAMP     | Last generation time              |
+| `last_modified_at`  | TIMESTAMP     | Last manual modification          |
 
 **Constraints**:
+
 - Unique: `file_path`
 - Foreign key: `table_id → meta.table_metadata(id)` ON DELETE CASCADE
 

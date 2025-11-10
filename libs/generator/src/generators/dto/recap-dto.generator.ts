@@ -4,10 +4,7 @@
  * Generates yearly recap DTO with validation for year and group_by parameters
  */
 
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
 
 export interface RecapDtoGeneratorOptions {
@@ -27,10 +24,7 @@ export class RecapDtoGenerator {
   /**
    * Generate Recap DTO class
    */
-  generate(
-    table: TableMetadata,
-    columns: ColumnMetadata[],
-  ): { code: string; imports: string[] } {
+  generate(table: TableMetadata, columns: ColumnMetadata[]): { code: string; imports: string[] } {
     const className = `${toPascalCase(table.table_name)}RecapDto`;
     const filterableColumns = columns.filter((col) => col.is_filterable);
 
@@ -67,10 +61,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
   /**
    * Generate Recap DTO class
    */
-  private generateRecapDto(
-    className: string,
-    filterableColumns: ColumnMetadata[],
-  ): string {
+  private generateRecapDto(className: string, filterableColumns: ColumnMetadata[]): string {
     const filterProperties = this.generateFilterProperties(filterableColumns);
 
     return `/**

@@ -5,10 +5,7 @@
  */
 
 import { ModuleGenerator } from './module.generator';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 describe('ModuleGenerator', () => {
   let mockTableMetadata: TableMetadata;
@@ -72,18 +69,10 @@ describe('ModuleGenerator', () => {
       const result = generator.generate();
 
       expect(result).toContain("import { Module } from '@nestjs/common';");
-      expect(result).toContain(
-        "import { TypeOrmModule } from '@nestjs/typeorm';",
-      );
-      expect(result).toContain(
-        "import { Users } from './entities/users.entity';",
-      );
-      expect(result).toContain(
-        "import { UsersController } from './controllers/users.controller';",
-      );
-      expect(result).toContain(
-        "import { UsersService } from './services/users.service';",
-      );
+      expect(result).toContain("import { TypeOrmModule } from '@nestjs/typeorm';");
+      expect(result).toContain("import { Users } from './entities/users.entity';");
+      expect(result).toContain("import { UsersController } from './controllers/users.controller';");
+      expect(result).toContain("import { UsersService } from './services/users.service';");
       expect(result).toContain(
         "import { UsersRepository } from './repositories/users.repository';",
       );
@@ -97,9 +86,7 @@ describe('ModuleGenerator', () => {
 
       const result = generator.generate();
 
-      expect(result).toContain(
-        "import { CacheModule } from '@nestjs/cache-manager';",
-      );
+      expect(result).toContain("import { CacheModule } from '@nestjs/cache-manager';");
     });
 
     it('should not include CacheModule import when caching disabled', () => {
@@ -110,9 +97,7 @@ describe('ModuleGenerator', () => {
 
       const result = generator.generate();
 
-      expect(result).not.toContain(
-        "import { CacheModule } from '@nestjs/cache-manager';",
-      );
+      expect(result).not.toContain("import { CacheModule } from '@nestjs/cache-manager';");
     });
 
     it('should include AuditModule import when audit enabled', () => {
@@ -124,9 +109,7 @@ describe('ModuleGenerator', () => {
       const result = generator.generate();
 
       // AuditModule is @Global(), so we import the module not the service
-      expect(result).toContain(
-        "import { AuditModule } from '../audit/audit.module';",
-      );
+      expect(result).toContain("import { AuditModule } from '../audit/audit.module';");
     });
 
     it('should not include controller import when controller disabled', () => {
@@ -291,12 +274,8 @@ describe('ModuleGenerator', () => {
 
       // Check all imports present
       expect(result).toContain("import { Module } from '@nestjs/common';");
-      expect(result).toContain(
-        "import { TypeOrmModule } from '@nestjs/typeorm';",
-      );
-      expect(result).toContain(
-        "import { CacheModule } from '@nestjs/cache-manager';",
-      );
+      expect(result).toContain("import { TypeOrmModule } from '@nestjs/typeorm';");
+      expect(result).toContain("import { CacheModule } from '@nestjs/cache-manager';");
       expect(result).toContain('AuditModule'); // Changed from AuditLogService to AuditModule
 
       // Check module config

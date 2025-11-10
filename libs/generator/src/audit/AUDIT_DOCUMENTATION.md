@@ -21,6 +21,7 @@ Comprehensive audit logging system for tracking all CRUD operations with rollbac
 ## Features
 
 ### Core Features
+
 - ✅ **Automatic CRUD Logging** - Track all create, read, update, delete operations
 - ✅ **Change Tracking** - Detailed field-level changes (old → new values)
 - ✅ **Rollback Capability** - Restore previous states with validation
@@ -36,6 +37,7 @@ Comprehensive audit logging system for tracking all CRUD operations with rollbac
 - ✅ **Grouping** - Group by entity, user, action, date
 
 ### Compliance Support
+
 - SOC 2 Type II
 - GDPR (with PII anonymization)
 - HIPAA
@@ -47,11 +49,13 @@ Comprehensive audit logging system for tracking all CRUD operations with rollbac
 ### 1. Add Database Schema
 
 **PostgreSQL:**
+
 ```bash
 psql -U username -d database -f libs/generator/src/audit/schemas/postgresql-audit.sql
 ```
 
 **MySQL:**
+
 ```bash
 mysql -u username -p database < libs/generator/src/audit/schemas/mysql-audit.sql
 ```
@@ -66,7 +70,9 @@ import { AuditQueryService } from './audit/audit-query.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([/* AuditLogEntity */]),
+    TypeOrmModule.forFeature([
+      /* AuditLogEntity */
+    ]),
   ],
   providers: [AuditLogService, AuditQueryService],
   exports: [AuditLogService, AuditQueryService],
@@ -168,16 +174,16 @@ await this.auditLogService.log({
 
 ```typescript
 type AuditAction =
-  | 'CREATE'   // Insert new record
-  | 'UPDATE'   // Modify existing record
-  | 'DELETE'   // Remove record
-  | 'RESTORE'  // Rollback/undelete
-  | 'READ'     // SELECT query (optional)
-  | 'LOGIN'    // User authentication
-  | 'LOGOUT'   // User logout
-  | 'EXPORT'   // Data export
-  | 'IMPORT'   // Data import
-  | 'CUSTOM';  // Custom actions
+  | 'CREATE' // Insert new record
+  | 'UPDATE' // Modify existing record
+  | 'DELETE' // Remove record
+  | 'RESTORE' // Rollback/undelete
+  | 'READ' // SELECT query (optional)
+  | 'LOGIN' // User authentication
+  | 'LOGOUT' // User logout
+  | 'EXPORT' // Data export
+  | 'IMPORT' // Data import
+  | 'CUSTOM'; // Custom actions
 ```
 
 ### Change Detection
@@ -240,11 +246,7 @@ console.log(history);
 
 ```typescript
 // Get all actions by a user in date range
-const activity = await auditLogService.getUserActivity(
-  'user-123',
-  new Date('2024-01-01'),
-  new Date('2024-12-31')
-);
+const activity = await auditLogService.getUserActivity('user-123', new Date('2024-01-01'), new Date('2024-12-31'));
 ```
 
 ### Advanced Filtering
@@ -297,7 +299,7 @@ console.log(stats);
 ```typescript
 // Find the log to rollback
 const logs = await auditLogService.getEntityHistory('users', 'user-123');
-const lastUpdate = logs.find(log => log.action === 'UPDATE');
+const lastUpdate = logs.find((log) => log.action === 'UPDATE');
 
 // Rollback the change
 await auditLogService.rollback({
@@ -326,33 +328,33 @@ console.log('Can rollback:', !result.is_rolled_back && result.old_values !== nul
 async rollbackUserChange(userId: string, logId: string, adminId: string) {
   // 1. Find the log
   const log = await this.auditLogService.findById(logId);
-  
+
   if (!log) {
     throw new Error('Audit log not found');
   }
-  
+
   // 2. Verify it's for the correct user
   if (log.entity_id !== userId) {
     throw new Error('Log does not belong to this user');
   }
-  
+
   // 3. Check if already rolled back
   if (log.is_rolled_back) {
     throw new Error('Already rolled back');
   }
-  
+
   // 4. Perform rollback
   await this.auditLogService.rollback({
     audit_log_id: logId,
     rolled_back_by: adminId,
     reason: 'User requested data restoration',
   });
-  
+
   // 5. Apply the old values back to the entity
   if (log.old_values) {
     await this.usersRepository.update(userId, log.old_values);
   }
-  
+
   return { success: true, restored: log.old_values };
 }
 ```
@@ -365,7 +367,7 @@ async rollbackUserChange(userId: string, logId: string, adminId: string) {
 const result = await auditQueryService.query(
   { entity_type: 'users' },
   1, // page
-  20 // limit
+  20, // limit
 );
 
 console.log(result);
@@ -491,13 +493,7 @@ const timeline = await auditQueryService.getTimeline({
 // Anonymize user data
 service.configure({
   anonymize_pii: true,
-  excluded_fields: [
-    'email',
-    'phone',
-    'address',
-    'ssn',
-    'credit_card',
-  ],
+  excluded_fields: ['email', 'phone', 'address', 'ssn', 'credit_card'],
 });
 
 // Export user's data (right to access)
@@ -553,7 +549,7 @@ CREATE INDEX idx_audit_logs_user ON audit_logs(user_id);
 CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at DESC);
 
 -- Composite indexes
-CREATE INDEX idx_audit_logs_entity_created 
+CREATE INDEX idx_audit_logs_entity_created
   ON audit_logs(entity_type, entity_id, created_at DESC);
 ```
 
@@ -578,7 +574,7 @@ FOR VALUES FROM ('2024-01-01') TO ('2024-02-01');
 async archiveOldLogs() {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - 90);
-  
+
   const archived = await this.auditLogService.archiveOldLogs(cutoffDate);
   this.logger.log(`Archived ${archived} audit logs`);
 }
@@ -627,10 +623,10 @@ excluded_fields: [
   'credit_card',
   'ssn',
   'bank_account',
-]
+];
 
 // ❌ Bad: Missing fields
-excluded_fields: ['password']
+excluded_fields: ['password'];
 ```
 
 ### 3. Error Handling
@@ -652,10 +648,10 @@ await auditLogService.log(logData); // Throws on error
 
 ```typescript
 // ✅ Good: Meaningful tags for filtering
-tags: ['critical', 'role-change', 'admin-action', 'security']
+tags: ['critical', 'role-change', 'admin-action', 'security'];
 
 // ❌ Bad: No tags or useless tags
-tags: ['tag1', 'tag2']
+tags: ['tag1', 'tag2'];
 ```
 
 ### 5. Metadata
@@ -678,6 +674,7 @@ metadata: {}
 ### Issue: Audit logs not appearing
 
 **Solution:**
+
 ```typescript
 // Check if enabled
 const config = auditLogService['config'];
@@ -690,13 +687,14 @@ console.log('Has auditLogService:', !!this.auditLogService);
 ### Issue: Too many logs (performance)
 
 **Solution:**
+
 ```typescript
 // Disable READ logging
 service.configure({ log_reads: false });
 
 // Exclude high-frequency entities
-service.configure({ 
-  excluded_entities: ['sessions', 'tokens', 'metrics'] 
+service.configure({
+  excluded_entities: ['sessions', 'tokens', 'metrics']
 });
 
 // Enable archiving
@@ -706,6 +704,7 @@ service.archiveOldLogs(90DaysAgo);
 ### Issue: Rollback not working
 
 **Solution:**
+
 ```typescript
 // Check if old_values exists
 const log = await service.findById(logId);
@@ -722,6 +721,7 @@ if (log.is_rolled_back) {
 ### Issue: Missing change details
 
 **Solution:**
+
 ```typescript
 // Ensure both old and new values are provided
 await auditLogService.log({
@@ -730,7 +730,7 @@ await auditLogService.log({
   entity_id: id,
   user_id: currentUser.id,
   old_values: beforeUpdate, // ← Required for changes
-  new_values: afterUpdate,  // ← Required for changes
+  new_values: afterUpdate, // ← Required for changes
 });
 ```
 

@@ -5,10 +5,7 @@
  */
 
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 export interface ServiceGeneratorOptions {
   tableName: string;
@@ -32,29 +29,17 @@ export class ServiceGenerator {
    * Generate service class
    */
   generate(): string {
-    const entityName =
-      this.options.entityName || toPascalCase(this.options.tableName);
+    const entityName = this.options.entityName || toPascalCase(this.options.tableName);
     const serviceName = `${entityName}Service`;
     const repositoryName = `${entityName}Repository`;
     const filterDtoName = `${entityName}FilterDto`;
 
-    const imports = this.generateImports(
-      entityName,
-      repositoryName,
-      filterDtoName,
-    );
+    const imports = this.generateImports(entityName, repositoryName, filterDtoName);
     const classDeclaration = this.generateClassDeclaration(serviceName);
     const constructor = this.generateConstructor(repositoryName);
     const crudMethods = this.generateCRUDMethods(entityName, repositoryName);
-    const filterMethods = this.generateFilterMethods(
-      entityName,
-      filterDtoName,
-      repositoryName,
-    );
-    const customMethods = this.generateCustomMethods(
-      entityName,
-      repositoryName,
-    );
+    const filterMethods = this.generateFilterMethods(entityName, filterDtoName, repositoryName);
+    const customMethods = this.generateCustomMethods(entityName, repositoryName);
 
     return `${imports}
 
@@ -97,9 +82,7 @@ ${customMethods}
     }
 
     if (this.options.enableAuditLog) {
-      imports.push(
-        "import { AuditLogService } from '@ojiepermana/nest-generator/audit';",
-      );
+      imports.push("import { AuditLogService } from '@ojiepermana/nest-generator/audit';");
     }
 
     return imports.join('\n');
@@ -120,9 +103,7 @@ export class ${serviceName} {`;
     const params = [`private readonly repository: ${repositoryName}`];
 
     if (this.options.enableCaching) {
-      params.push(
-        '@Inject(CACHE_MANAGER) private readonly cacheManager: Cache',
-      );
+      params.push('@Inject(CACHE_MANAGER) private readonly cacheManager: Cache');
     }
 
     if (this.options.enableTransactions) {
@@ -142,10 +123,7 @@ export class ${serviceName} {`;
   /**
    * Generate CRUD methods
    */
-  private generateCRUDMethods(
-    entityName: string,
-    repositoryName: string,
-  ): string {
+  private generateCRUDMethods(entityName: string, repositoryName: string): string {
     const camelName = toCamelCase(entityName);
     const pkColumn = this.getPrimaryKeyColumn();
     const pkType = this.getTypeScriptType(pkColumn?.data_type || 'integer');
@@ -458,9 +436,7 @@ export class ${serviceName} {`;
   }
 `;
 
-    return (
-      createMethod + findAllMethod + findOneMethod + updateMethod + removeMethod
-    );
+    return createMethod + findAllMethod + findOneMethod + updateMethod + removeMethod;
   }
 
   /**
@@ -515,10 +491,7 @@ export class ${serviceName} {`;
   /**
    * Generate custom methods
    */
-  private generateCustomMethods(
-    entityName: string,
-    repositoryName: string,
-  ): string {
+  private generateCustomMethods(entityName: string, repositoryName: string): string {
     const camelName = toCamelCase(entityName);
     const cacheKey = `${camelName}`;
 
@@ -648,10 +621,7 @@ export class ${serviceName} {`;
   /**
    * Generate unique validation logic
    */
-  private generateUniqueValidation(
-    entityName: string,
-    excludeIdParam: string,
-  ): string {
+  private generateUniqueValidation(entityName: string, excludeIdParam: string): string {
     const uniqueColumns = this.columns.filter((col) => col.is_unique);
 
     if (uniqueColumns.length === 0) {
@@ -684,11 +654,7 @@ export class ${serviceName} {`;
   private getTypeScriptType(dbType: string): string {
     const lowerType = dbType.toLowerCase();
 
-    if (
-      lowerType.includes('int') ||
-      lowerType.includes('serial') ||
-      lowerType.includes('number')
-    ) {
+    if (lowerType.includes('int') || lowerType.includes('serial') || lowerType.includes('number')) {
       return 'number';
     }
 

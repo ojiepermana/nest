@@ -4,10 +4,7 @@
  * Generates unit test files for repository classes with mocked database queries
  */
 
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
 
 export interface RepositoryTestGeneratorOptions {
@@ -27,25 +24,13 @@ export class RepositoryTestGenerator {
   /**
    * Generate repository test file
    */
-  generateRepositoryTest(
-    table: TableMetadata,
-    columns: ColumnMetadata[],
-  ): string {
+  generateRepositoryTest(table: TableMetadata, columns: ColumnMetadata[]): string {
     const entityName = toPascalCase(table.table_name);
     const repositoryName = `${entityName}Repository`;
 
     let testCode = this.generateFileHeader(table, repositoryName);
-    testCode += this.generateImports(
-      entityName,
-      repositoryName,
-      table.table_name,
-    );
-    testCode += this.generateDescribeBlock(
-      repositoryName,
-      entityName,
-      table,
-      columns,
-    );
+    testCode += this.generateImports(entityName, repositoryName, table.table_name);
+    testCode += this.generateDescribeBlock(repositoryName, entityName, table, columns);
 
     return testCode;
   }
@@ -53,10 +38,7 @@ export class RepositoryTestGenerator {
   /**
    * Generate file header comment
    */
-  private generateFileHeader(
-    table: TableMetadata,
-    repositoryName: string,
-  ): string {
+  private generateFileHeader(table: TableMetadata, repositoryName: string): string {
     return `/**
  * ${repositoryName} Unit Tests
  * Auto-generated test file for ${table.table_name} repository
@@ -71,11 +53,7 @@ export class RepositoryTestGenerator {
   /**
    * Generate imports
    */
-  private generateImports(
-    entityName: string,
-    repositoryName: string,
-    tableName: string,
-  ): string {
+  private generateImports(entityName: string, repositoryName: string, tableName: string): string {
     return `import { Test, TestingModule } from '@nestjs/testing';
 import { Pool } from 'pg';
 import { ${repositoryName} } from './${tableName}.repository';
@@ -126,11 +104,7 @@ import { ${entityName}FilterDto } from './${tableName}.dto';
 
     // Add findAll with filters test
     if (filterableColumns.length > 0) {
-      code += this.generateFindAllWithFiltersTest(
-        entityName,
-        camelEntity,
-        filterableColumns[0],
-      );
+      code += this.generateFindAllWithFiltersTest(entityName, camelEntity, filterableColumns[0]);
     }
 
     // Add soft delete test
@@ -139,42 +113,22 @@ import { ${entityName}FilterDto } from './${tableName}.dto';
     }
 
     // Add findOne test
-    code += this.generateFindOneTest(
-      entityName,
-      camelEntity,
-      table.primary_key_column,
-    );
+    code += this.generateFindOneTest(entityName, camelEntity, table.primary_key_column);
 
     // Add findOne not found test
-    code += this.generateFindOneNotFoundTest(
-      entityName,
-      camelEntity,
-      table.primary_key_column,
-    );
+    code += this.generateFindOneNotFoundTest(entityName, camelEntity, table.primary_key_column);
 
     // Add create test
     code += this.generateCreateTest(entityName, camelEntity, columns);
 
     // Add update test
-    code += this.generateUpdateTest(
-      entityName,
-      camelEntity,
-      table.primary_key_column,
-    );
+    code += this.generateUpdateTest(entityName, camelEntity, table.primary_key_column);
 
     // Add delete/soft delete test
     if (table.has_soft_delete) {
-      code += this.generateSoftDeleteTest(
-        entityName,
-        camelEntity,
-        table.primary_key_column,
-      );
+      code += this.generateSoftDeleteTest(entityName, camelEntity, table.primary_key_column);
     } else {
-      code += this.generateHardDeleteTest(
-        entityName,
-        camelEntity,
-        table.primary_key_column,
-      );
+      code += this.generateHardDeleteTest(entityName, camelEntity, table.primary_key_column);
     }
 
     // Add bulk operations tests if enabled
@@ -234,13 +188,9 @@ import { ${entityName}FilterDto } from './${tableName}.dto';
   ): string {
     const filterField = toCamelCase(sampleColumn.column_name);
     const operator =
-      sampleColumn.data_type === 'varchar' || sampleColumn.data_type === 'text'
-        ? 'ILIKE'
-        : '=';
+      sampleColumn.data_type === 'varchar' || sampleColumn.data_type === 'text' ? 'ILIKE' : '=';
     const filterValue =
-      sampleColumn.data_type === 'varchar' || sampleColumn.data_type === 'text'
-        ? `%test%`
-        : 'test';
+      sampleColumn.data_type === 'varchar' || sampleColumn.data_type === 'text' ? `%test%` : 'test';
 
     return `  // GENERATED_TEST_START: find-all-with-filters
   describe('findAll with filters', () => {
@@ -266,10 +216,7 @@ import { ${entityName}FilterDto } from './${tableName}.dto';
   /**
    * Generate soft delete exclusion test
    */
-  private generateSoftDeleteExclusionTest(
-    entityName: string,
-    camelEntity: string,
-  ): string {
+  private generateSoftDeleteExclusionTest(entityName: string, camelEntity: string): string {
     return `  // GENERATED_TEST_START: soft-delete-exclusion
   describe('soft delete exclusion', () => {
     it('should exclude soft-deleted records from findAll', async () => {
@@ -349,16 +296,10 @@ import { ${entityName}FilterDto } from './${tableName}.dto';
   ): string {
     const sampleColumn = columns.find(
       (col) =>
-        !col.is_primary_key &&
-        col.column_name !== 'created_at' &&
-        col.column_name !== 'updated_at',
+        !col.is_primary_key && col.column_name !== 'created_at' && col.column_name !== 'updated_at',
     );
-    const fieldName = sampleColumn
-      ? toCamelCase(sampleColumn.column_name)
-      : 'name';
-    const fieldValue = sampleColumn
-      ? this.generateSampleValue(sampleColumn)
-      : "'test'";
+    const fieldName = sampleColumn ? toCamelCase(sampleColumn.column_name) : 'name';
+    const fieldValue = sampleColumn ? this.generateSampleValue(sampleColumn) : "'test'";
 
     return `  // GENERATED_TEST_START: create
   describe('create', () => {
@@ -466,10 +407,7 @@ import { ${entityName}FilterDto } from './${tableName}.dto';
   /**
    * Generate bulk create test
    */
-  private generateBulkCreateTest(
-    entityName: string,
-    camelEntity: string,
-  ): string {
+  private generateBulkCreateTest(entityName: string, camelEntity: string): string {
     return `  // GENERATED_TEST_START: bulk-create
   describe('bulkCreate', () => {
     it('should insert multiple ${camelEntity} records', async () => {
@@ -500,10 +438,7 @@ import { ${entityName}FilterDto } from './${tableName}.dto';
   /**
    * Generate bulk update test
    */
-  private generateBulkUpdateTest(
-    entityName: string,
-    camelEntity: string,
-  ): string {
+  private generateBulkUpdateTest(entityName: string, camelEntity: string): string {
     return `  // GENERATED_TEST_START: bulk-update
   describe('bulkUpdate', () => {
     it('should update multiple ${camelEntity} records', async () => {

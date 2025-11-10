@@ -99,8 +99,7 @@ export function removeTrailingSlash(path: string): string {
  * Check if a value is a valid UUID
  */
 export function isUUID(value: string): boolean {
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   return uuidRegex.test(value);
 }
 
@@ -145,12 +144,7 @@ export async function retry<T>(
     backoffMultiplier?: number;
   } = {},
 ): Promise<T> {
-  const {
-    maxAttempts = 3,
-    initialDelay = 1000,
-    maxDelay = 10000,
-    backoffMultiplier = 2,
-  } = options;
+  const { maxAttempts = 3, initialDelay = 1000, maxDelay = 10000, backoffMultiplier = 2 } = options;
 
   let lastError: Error;
   let delay = initialDelay;

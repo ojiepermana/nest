@@ -6,10 +6,7 @@
  */
 
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 export interface ExportGeneratorOptions {
   tableName: string;
@@ -250,8 +247,6 @@ export class ExportGenerator {
       imports.push('// npm install pdfkit @types/pdfkit');
     }
 
-    return imports.length > 0
-      ? `// Export dependencies:\n${imports.join('\n')}\n`
-      : '';
+    return imports.length > 0 ? `// Export dependencies:\n${imports.join('\n')}\n` : '';
   }
 }

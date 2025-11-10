@@ -4,10 +4,7 @@
  * Generates unit test files for controller classes with REST endpoint tests
  */
 
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
 
 export interface ControllerTestGeneratorOptions {
@@ -27,28 +24,14 @@ export class ControllerTestGenerator {
   /**
    * Generate controller test file
    */
-  generateControllerTest(
-    table: TableMetadata,
-    columns: ColumnMetadata[],
-  ): string {
+  generateControllerTest(table: TableMetadata, columns: ColumnMetadata[]): string {
     const entityName = toPascalCase(table.table_name);
     const controllerName = `${entityName}Controller`;
     const serviceName = `${entityName}Service`;
 
     let testCode = this.generateFileHeader(table, controllerName);
-    testCode += this.generateImports(
-      entityName,
-      controllerName,
-      serviceName,
-      table.table_name,
-    );
-    testCode += this.generateDescribeBlock(
-      controllerName,
-      serviceName,
-      entityName,
-      table,
-      columns,
-    );
+    testCode += this.generateImports(entityName, controllerName, serviceName, table.table_name);
+    testCode += this.generateDescribeBlock(controllerName, serviceName, entityName, table, columns);
 
     return testCode;
   }
@@ -56,10 +39,7 @@ export class ControllerTestGenerator {
   /**
    * Generate file header comment
    */
-  private generateFileHeader(
-    table: TableMetadata,
-    controllerName: string,
-  ): string {
+  private generateFileHeader(table: TableMetadata, controllerName: string): string {
     return `/**
  * ${controllerName} Unit Tests
  * Auto-generated test file for ${table.table_name} controller
@@ -140,28 +120,16 @@ import { ${serviceName} } from './${tableName}.service';
     code += this.generateFindAllPaginationEndpointTest(entityName, camelEntity);
 
     // Add GET /:id test
-    code += this.generateFindOneEndpointTest(
-      entityName,
-      camelEntity,
-      table.primary_key_column,
-    );
+    code += this.generateFindOneEndpointTest(entityName, camelEntity, table.primary_key_column);
 
     // Add POST / test
     code += this.generateCreateEndpointTest(entityName, camelEntity, columns);
 
     // Add PUT /:id test
-    code += this.generateUpdateEndpointTest(
-      entityName,
-      camelEntity,
-      table.primary_key_column,
-    );
+    code += this.generateUpdateEndpointTest(entityName, camelEntity, table.primary_key_column);
 
     // Add DELETE /:id test
-    code += this.generateDeleteEndpointTest(
-      entityName,
-      camelEntity,
-      table.primary_key_column,
-    );
+    code += this.generateDeleteEndpointTest(entityName, camelEntity, table.primary_key_column);
 
     // Add custom tests section
     code += `  // CUSTOM_TESTS_START
@@ -176,10 +144,7 @@ import { ${serviceName} } from './${tableName}.service';
   /**
    * Generate GET / (findAll) endpoint test
    */
-  private generateFindAllEndpointTest(
-    entityName: string,
-    camelEntity: string,
-  ): string {
+  private generateFindAllEndpointTest(entityName: string, camelEntity: string): string {
     return `  // GENERATED_TEST_START: find-all-endpoint
   describe('GET /', () => {
     it('should return all ${camelEntity} records', async () => {
@@ -203,10 +168,7 @@ import { ${serviceName} } from './${tableName}.service';
   /**
    * Generate GET / with pagination endpoint test
    */
-  private generateFindAllPaginationEndpointTest(
-    entityName: string,
-    camelEntity: string,
-  ): string {
+  private generateFindAllPaginationEndpointTest(entityName: string, camelEntity: string): string {
     return `  // GENERATED_TEST_START: find-all-pagination-endpoint
   describe('GET / with pagination', () => {
     it('should return paginated ${camelEntity} records', async () => {
@@ -262,16 +224,10 @@ import { ${serviceName} } from './${tableName}.service';
   ): string {
     const sampleColumn = columns.find(
       (col) =>
-        !col.is_primary_key &&
-        col.column_name !== 'created_at' &&
-        col.column_name !== 'updated_at',
+        !col.is_primary_key && col.column_name !== 'created_at' && col.column_name !== 'updated_at',
     );
-    const fieldName = sampleColumn
-      ? toCamelCase(sampleColumn.column_name)
-      : 'name';
-    const fieldValue = sampleColumn
-      ? this.generateSampleValue(sampleColumn)
-      : "'test'";
+    const fieldName = sampleColumn ? toCamelCase(sampleColumn.column_name) : 'name';
+    const fieldValue = sampleColumn ? this.generateSampleValue(sampleColumn) : "'test'";
 
     return `  // GENERATED_TEST_START: create-endpoint
   describe('POST /', () => {

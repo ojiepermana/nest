@@ -106,9 +106,7 @@ export class RBACModule {
    * Register RBAC module for async configuration
    */
   static registerAsync(options: {
-    useFactory: (
-      ...args: any[]
-    ) => Promise<RBACModuleOptions> | RBACModuleOptions;
+    useFactory: (...args: any[]) => Promise<RBACModuleOptions> | RBACModuleOptions;
     inject?: any[];
   }): DynamicModule {
     return {

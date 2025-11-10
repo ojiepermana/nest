@@ -83,9 +83,7 @@ describe('PostgresDialect', () => {
 
   describe('Array operations', () => {
     it('should check array contains', () => {
-      expect(dialect.arrayContains('tags', 'admin')).toBe(
-        "tags @> ARRAY['admin']",
-      );
+      expect(dialect.arrayContains('tags', 'admin')).toBe("tags @> ARRAY['admin']");
     });
   });
 
@@ -157,9 +155,7 @@ describe('MySQLDialect', () => {
 
   describe('buildLike', () => {
     it('should use LOWER with LIKE for case-insensitive', () => {
-      expect(dialect.buildLike('name', "'%john%'")).toBe(
-        "LOWER(name) LIKE LOWER('%john%')",
-      );
+      expect(dialect.buildLike('name', "'%john%'")).toBe("LOWER(name) LIKE LOWER('%john%')");
     });
   });
 
@@ -173,9 +169,7 @@ describe('MySQLDialect', () => {
 
   describe('Array operations', () => {
     it('should check array contains with JSON', () => {
-      expect(dialect.arrayContains('tags', 'admin')).toBe(
-        'JSON_CONTAINS(tags, \'"admin"\')',
-      );
+      expect(dialect.arrayContains('tags', 'admin')).toBe('JSON_CONTAINS(tags, \'"admin"\')');
     });
   });
 

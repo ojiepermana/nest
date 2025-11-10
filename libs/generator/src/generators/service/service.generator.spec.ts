@@ -3,10 +3,7 @@
  */
 
 import { ServiceGenerator } from './service.generator';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 describe('ServiceGenerator', () => {
   const mockTableMetadata: TableMetadata = {
@@ -96,18 +93,10 @@ describe('ServiceGenerator', () => {
       expect(result).toContain(
         "import { UsersRepository } from '../repositories/users.repository'",
       );
-      expect(result).toContain(
-        "import { Users } from '../entities/users.entity'",
-      );
-      expect(result).toContain(
-        "import { CreateUsersDto } from '../dto/create-users.dto'",
-      );
-      expect(result).toContain(
-        "import { UpdateUsersDto } from '../dto/update-users.dto'",
-      );
-      expect(result).toContain(
-        "import { UsersFilterDto } from '../dto/users-filter.dto'",
-      );
+      expect(result).toContain("import { Users } from '../entities/users.entity'");
+      expect(result).toContain("import { CreateUsersDto } from '../dto/create-users.dto'");
+      expect(result).toContain("import { UpdateUsersDto } from '../dto/update-users.dto'");
+      expect(result).toContain("import { UsersFilterDto } from '../dto/users-filter.dto'");
     });
 
     it('should include caching imports when enabled', () => {
@@ -118,9 +107,7 @@ describe('ServiceGenerator', () => {
 
       const result = generator.generate();
 
-      expect(result).toContain(
-        "import { CACHE_MANAGER } from '@nestjs/cache-manager'",
-      );
+      expect(result).toContain("import { CACHE_MANAGER } from '@nestjs/cache-manager'");
       expect(result).toContain("import { Inject } from '@nestjs/common'");
       expect(result).toContain("import { Cache } from 'cache-manager'");
     });
@@ -144,9 +131,7 @@ describe('ServiceGenerator', () => {
 
       const result = generator.generate();
 
-      expect(result).toContain(
-        "import { AuditLogService } from '../audit/audit-log.service'",
-      );
+      expect(result).toContain("import { AuditLogService } from '../audit/audit-log.service'");
     });
   });
 
@@ -192,9 +177,7 @@ describe('ServiceGenerator', () => {
 
       const result = generator.generate();
 
-      expect(result).toContain(
-        'async update(id: number, updateDto: UpdateUsersDto)',
-      );
+      expect(result).toContain('async update(id: number, updateDto: UpdateUsersDto)');
       expect(result).toContain('Promise<Users>');
       expect(result).toContain('await this.repository.update(id, updateDto)');
     });
@@ -262,9 +245,7 @@ describe('ServiceGenerator', () => {
 
       const result = generator.generate();
 
-      expect(result).toContain(
-        '@Inject(CACHE_MANAGER) private readonly cacheManager: Cache',
-      );
+      expect(result).toContain('@Inject(CACHE_MANAGER) private readonly cacheManager: Cache');
     });
 
     it('should include cache logic in findAll when enabled', () => {
@@ -338,9 +319,7 @@ describe('ServiceGenerator', () => {
       const result = generator.generate();
 
       expect(result).toContain("if ('email' in data && data.email)");
-      expect(result).toContain(
-        "throw new ConflictException('email already exists')",
-      );
+      expect(result).toContain("throw new ConflictException('email already exists')");
     });
 
     it('should validate exists before update when enabled', () => {
@@ -379,9 +358,7 @@ describe('ServiceGenerator', () => {
 
       const result = generator.generate();
 
-      expect(result).toContain(
-        'private readonly auditLogService: AuditLogService',
-      );
+      expect(result).toContain('private readonly auditLogService: AuditLogService');
     });
 
     it('should log create action when enabled', () => {
@@ -451,9 +428,7 @@ describe('ServiceGenerator', () => {
       const result = generator.generate();
 
       expect(result).toContain('async transaction<T>(');
-      expect(result).toContain(
-        'const queryRunner = this.dataSource.createQueryRunner()',
-      );
+      expect(result).toContain('const queryRunner = this.dataSource.createQueryRunner()');
       expect(result).toContain('await queryRunner.startTransaction()');
       expect(result).toContain('await queryRunner.commitTransaction()');
       expect(result).toContain('await queryRunner.rollbackTransaction()');

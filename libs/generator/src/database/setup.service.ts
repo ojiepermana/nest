@@ -50,10 +50,7 @@ export class DatabaseSetupService {
   /**
    * Check if table exists in schema
    */
-  async checkTableExists(
-    schemaName: string,
-    tableName: string,
-  ): Promise<boolean> {
+  async checkTableExists(schemaName: string, tableName: string): Promise<boolean> {
     const dbType = this.connection.getDatabaseType();
 
     try {
@@ -112,11 +109,7 @@ export class DatabaseSetupService {
       await this.executeSetupSQL(sqlFile, schemaName, result);
 
       // Verify required tables
-      const requiredTables = [
-        'table_metadata',
-        'column_metadata',
-        'generated_files',
-      ];
+      const requiredTables = ['table_metadata', 'column_metadata', 'generated_files'];
       for (const table of requiredTables) {
         const exists = await this.checkTableExists(schemaName, table);
         if (exists) {
@@ -152,13 +145,9 @@ export class DatabaseSetupService {
     const dbType = this.connection.getDatabaseType();
 
     if (dbType === 'postgresql') {
-      await this.connection.query(
-        `CREATE SCHEMA IF NOT EXISTS "${schemaName}"`,
-      );
+      await this.connection.query(`CREATE SCHEMA IF NOT EXISTS "${schemaName}"`);
     } else if (dbType === 'mysql') {
-      await this.connection.query(
-        `CREATE DATABASE IF NOT EXISTS \`${schemaName}\``,
-      );
+      await this.connection.query(`CREATE DATABASE IF NOT EXISTS \`${schemaName}\``);
     }
   }
 
@@ -175,10 +164,7 @@ export class DatabaseSetupService {
       Logger.debug(`Loaded SQL setup file: ${fileName}`);
       return sql;
     } catch (error) {
-      Logger.error(
-        `Failed to load SQL setup file: ${fileName}`,
-        error as Error,
-      );
+      Logger.error(`Failed to load SQL setup file: ${fileName}`, error as Error);
       throw error;
     }
   }
@@ -290,11 +276,7 @@ export class DatabaseSetupService {
       }
 
       // Check required tables
-      const requiredTables = [
-        'table_metadata',
-        'column_metadata',
-        'generated_files',
-      ];
+      const requiredTables = ['table_metadata', 'column_metadata', 'generated_files'];
       for (const table of requiredTables) {
         const exists = await this.checkTableExists(schemaName, table);
         if (!exists) {
@@ -367,10 +349,7 @@ export class DatabaseSetupService {
         }
       }
     } catch (error) {
-      Logger.error(
-        `Error validating table structure for ${tableName}`,
-        error as Error,
-      );
+      Logger.error(`Error validating table structure for ${tableName}`, error as Error);
       throw error;
     }
   }
@@ -378,10 +357,7 @@ export class DatabaseSetupService {
   /**
    * Drop metadata schema (DANGEROUS - for testing only)
    */
-  async dropSchema(
-    schemaName: string = 'meta',
-    cascade: boolean = true,
-  ): Promise<void> {
+  async dropSchema(schemaName: string = 'meta', cascade: boolean = true): Promise<void> {
     const dbType = this.connection.getDatabaseType();
 
     Logger.warn(`⚠️  DROPPING schema "${schemaName}"...`);
@@ -392,9 +368,7 @@ export class DatabaseSetupService {
           `DROP SCHEMA IF EXISTS "${schemaName}" ${cascade ? 'CASCADE' : ''}`,
         );
       } else if (dbType === 'mysql') {
-        await this.connection.query(
-          `DROP DATABASE IF EXISTS \`${schemaName}\``,
-        );
+        await this.connection.query(`DROP DATABASE IF EXISTS \`${schemaName}\``);
       }
 
       Logger.success(`Schema "${schemaName}" dropped`);

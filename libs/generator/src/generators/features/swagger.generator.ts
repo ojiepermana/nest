@@ -6,10 +6,7 @@
  */
 
 import { toPascalCase } from '../../utils/string.util';
-import type {
-  TableMetadata,
-  ColumnMetadata,
-} from '../../interfaces/generator.interface';
+import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
 export interface SwaggerGeneratorOptions {
   tableName: string;
@@ -83,7 +80,7 @@ export class SwaggerGenerator {
       properties: {
         data: {
           type: 'array',
-          items: { \$ref: '#/components/schemas/${entityName}' },
+          items: { $ref: '#/components/schemas/${entityName}' },
         },
         total: { type: 'number', example: 100 },
         page: { type: 'number', example: 1 },
@@ -119,7 +116,7 @@ export class SwaggerGenerator {
   @ApiResponse({
     status: 200,
     description: '${entityName} found',
-    schema: { \$ref: '#/components/schemas/${entityName}' },
+    schema: { $ref: '#/components/schemas/${entityName}' },
     examples: {
       success: { value: ${example} },
     },
@@ -142,7 +139,7 @@ export class SwaggerGenerator {
   @ApiResponse({
     status: 201,
     description: '${entityName} created successfully',
-    schema: { \$ref: '#/components/schemas/${entityName}' },
+    schema: { $ref: '#/components/schemas/${entityName}' },
     examples: {
       success: { value: ${example} },
     },
@@ -166,7 +163,7 @@ export class SwaggerGenerator {
   @ApiResponse({
     status: 200,
     description: '${entityName} updated successfully',
-    schema: { \$ref: '#/components/schemas/${entityName}' },
+    schema: { $ref: '#/components/schemas/${entityName}' },
     examples: {
       success: { value: ${example} },
     },
@@ -283,10 +280,8 @@ export class SwaggerGenerator {
     if (type.includes('int')) return '1';
     if (type.includes('bool')) return 'true';
     if (type === 'uuid') return '123e4567-e89b-12d3-a456-426614174000';
-    if (type.includes('date') || type.includes('time'))
-      return '2024-01-01T00:00:00Z';
-    if (col.enum_values && col.enum_values.length > 0)
-      return col.enum_values[0];
+    if (type.includes('date') || type.includes('time')) return '2024-01-01T00:00:00Z';
+    if (col.enum_values && col.enum_values.length > 0) return col.enum_values[0];
     return `example_${col.column_name}`;
   }
 

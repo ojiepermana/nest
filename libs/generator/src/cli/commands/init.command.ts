@@ -100,8 +100,7 @@ export class InitCommand {
         type: 'input',
         name: 'port',
         message: 'Database port:',
-        default: (answers: { type: string }) =>
-          answers.type === 'PostgreSQL' ? '5432' : '3306',
+        default: (answers: { type: string }) => (answers.type === 'PostgreSQL' ? '5432' : '3306'),
       },
       {
         type: 'input',
@@ -157,9 +156,7 @@ export class InitCommand {
   private async testConnection(): Promise<void> {
     Logger.step('Testing database connection...');
 
-    const connectionManager = new DatabaseConnectionManager(
-      this.config.database as DatabaseConfig,
-    );
+    const connectionManager = new DatabaseConnectionManager(this.config.database as DatabaseConfig);
 
     try {
       await connectionManager.connect();
@@ -173,33 +170,27 @@ export class InitCommand {
       await connectionManager.disconnect();
     } catch (error) {
       Logger.error('Database connection failed', error);
-      throw new Error(
-        'Cannot connect to database. Please check your credentials and try again.',
-      );
+      throw new Error('Cannot connect to database. Please check your credentials and try again.');
     }
   }
 
   private async setupMetadataSchema(): Promise<void> {
     Logger.section('📋 Setting up metadata schema');
 
-    const connectionManager = new DatabaseConnectionManager(
-      this.config.database as DatabaseConfig,
-    );
+    const connectionManager = new DatabaseConnectionManager(this.config.database as DatabaseConfig);
 
     try {
       await connectionManager.connect();
 
       // Check if metadata schema exists
-      const schemaExists =
-        await this.checkMetadataSchemaExists(connectionManager);
+      const schemaExists = await this.checkMetadataSchemaExists(connectionManager);
 
       if (schemaExists) {
         const { recreate } = await inquirer.prompt([
           {
             type: 'confirm',
             name: 'recreate',
-            message:
-              '⚠️  Metadata schema already exists. Recreate? (This will drop existing data)',
+            message: '⚠️  Metadata schema already exists. Recreate? (This will drop existing data)',
             default: false,
           },
         ]);
@@ -274,9 +265,7 @@ export class InitCommand {
     }
   }
 
-  private async dropMetadataSchema(
-    connectionManager: DatabaseConnectionManager,
-  ): Promise<void> {
+  private async dropMetadataSchema(connectionManager: DatabaseConnectionManager): Promise<void> {
     const dbType = this.config.database!.type;
 
     if (dbType === 'postgresql') {
@@ -291,9 +280,7 @@ export class InitCommand {
   private async setupUserTable(): Promise<void> {
     Logger.section('👤 Setting up user table');
 
-    const connectionManager = new DatabaseConnectionManager(
-      this.config.database as DatabaseConfig,
-    );
+    const connectionManager = new DatabaseConnectionManager(this.config.database as DatabaseConfig);
 
     try {
       await connectionManager.connect();
@@ -311,17 +298,14 @@ export class InitCommand {
         {
           type: 'confirm',
           name: 'createUserTable',
-          message:
-            'Create basic users table? (Required for created_by/updated_by tracking)',
+          message: 'Create basic users table? (Required for created_by/updated_by tracking)',
           default: true,
         },
       ]);
 
       if (!createUserTable) {
         Logger.warn('Skipping user table creation');
-        Logger.warn(
-          'You will need to create user.users table manually for audit tracking',
-        );
+        Logger.warn('You will need to create user.users table manually for audit tracking');
         await connectionManager.disconnect();
         return;
       }
@@ -330,17 +314,13 @@ export class InitCommand {
 
       Logger.success('User table created successfully');
       Logger.info('Created table: user.users');
-      Logger.info(
-        'Inserted system user (id: 00000000-0000-0000-0000-000000000000)',
-      );
+      Logger.info('Inserted system user (id: 00000000-0000-0000-0000-000000000000)');
 
       await connectionManager.disconnect();
     } catch (error) {
       Logger.error('Failed to setup user table', error);
       // Don't throw - user table is optional
-      Logger.warn(
-        'Continuing without user table. You can create it manually later.',
-      );
+      Logger.warn('Continuing without user table. You can create it manually later.');
     }
   }
 
@@ -366,9 +346,7 @@ export class InitCommand {
     }
   }
 
-  private async createUserTable(
-    connectionManager: DatabaseConnectionManager,
-  ): Promise<void> {
+  private async createUserTable(connectionManager: DatabaseConnectionManager): Promise<void> {
     const dbType = this.config.database!.type;
 
     if (dbType === 'postgresql') {
@@ -533,16 +511,13 @@ DB_POOL_MAX=${db.pool?.max || 10}
           {
             type: 'confirm',
             name: 'overwrite',
-            message:
-              '⚠️  .env file already contains database configuration. Overwrite?',
+            message: '⚠️  .env file already contains database configuration. Overwrite?',
             default: false,
           },
         ]);
 
         if (!overwrite) {
-          Logger.warn(
-            'Skipped .env update. Please update database configuration manually.',
-          );
+          Logger.warn('Skipped .env update. Please update database configuration manually.');
           return;
         }
       }

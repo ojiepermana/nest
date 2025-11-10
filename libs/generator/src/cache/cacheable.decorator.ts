@@ -16,11 +16,7 @@ export interface CacheableOptions extends CacheOptions {
  * Cacheable method decorator
  */
 export function Cacheable(options: CacheableOptions = {}) {
-  return function (
-    target: any,
-    propertyKey: string,
-    descriptor: PropertyDescriptor,
-  ) {
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
@@ -78,11 +74,7 @@ export interface CacheInvalidateOptions {
 }
 
 export function CacheInvalidate(options: CacheInvalidateOptions = {}) {
-  return function (
-    target: any,
-    propertyKey: string,
-    descriptor: PropertyDescriptor,
-  ) {
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {

@@ -22,12 +22,10 @@ const mockDialect: IDatabaseDialect = {
   quoteIdentifier: (name: string) => `"${name}"`,
   mapDataType: (type: string) => type.toUpperCase(),
   generateUUID: () => 'uuid_generate_v7()',
-  buildPagination: (page: number, limit: number) =>
-    `LIMIT ${limit} OFFSET ${(page - 1) * limit}`,
+  buildPagination: (page: number, limit: number) => `LIMIT ${limit} OFFSET ${(page - 1) * limit}`,
   buildLike: (column: string, value: string) => `${column} ILIKE ${value}`,
   jsonExtract: (column: string, path: string) => `${column}->>'${path}'`,
-  arrayContains: (column: string, value: string) =>
-    `${column} @> ARRAY['${value}']`,
+  arrayContains: (column: string, value: string) => `${column} @> ARRAY['${value}']`,
   getParameterPlaceholder: (index: number) => `$${index}`,
 };
 
@@ -62,10 +60,10 @@ describe('MetadataRepository', () => {
       const result = await repository.getTableMetadata('public', 'users');
 
       expect(result).toEqual(mockTable);
-      expect(mockConnection.query).toHaveBeenCalledWith(
-        expect.stringContaining('SELECT *'),
-        ['public', 'users'],
-      );
+      expect(mockConnection.query).toHaveBeenCalledWith(expect.stringContaining('SELECT *'), [
+        'public',
+        'users',
+      ]);
     });
 
     it('should return null if table not found', async () => {
@@ -442,10 +440,7 @@ describe('MetadataService', () => {
         rows: [],
       });
 
-      const result = await service.getCompleteTableConfig(
-        'public',
-        'nonexistent',
-      );
+      const result = await service.getCompleteTableConfig('public', 'nonexistent');
 
       expect(result).toBeNull();
     });
@@ -481,11 +476,7 @@ describe('MetadataService', () => {
         rows: [],
       });
 
-      const result = await service.hasFeature(
-        'public',
-        'nonexistent',
-        'soft_delete',
-      );
+      const result = await service.hasFeature('public', 'nonexistent', 'soft_delete');
 
       expect(result).toBe(false);
     });

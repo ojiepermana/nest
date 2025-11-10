@@ -151,6 +151,94 @@ export class DatabaseConnectionManager {
   }
 
   /**
+   * Validate database version meets minimum requirements
+   */
+  async validateDatabaseVersion(): Promise<{
+    valid: boolean;
+    version: string;
+    minimumVersion: string;
+    warnings: string[];
+  }> {
+    const warnings: string[] = [];
+    let version = 'Unknown';
+    let valid = false;
+    let minimumVersion = '';
+
+    try {
+      if (this.config.type === 'postgresql') {
+        minimumVersion = '18.0.0';
+        const result = await this.query<{ version: string }>('SHOW server_version');
+        version = result.rows?.[0]?.version || 'Unknown';
+
+        // Parse PostgreSQL version (format: "18.1 (Ubuntu 18.1-1.pgdg22.04+1)")
+        const versionMatch = version.match(/^(\d+)\.(\d+)/);
+        if (versionMatch) {
+          const majorVersion = parseInt(versionMatch[1], 10);
+          const minorVersion = parseInt(versionMatch[2], 10);
+
+          if (majorVersion < 18) {
+            valid = false;
+            warnings.push(`PostgreSQL ${majorVersion}.${minorVersion} detected. Minimum required: 18.0`);
+            warnings.push('Some features may not work correctly:');
+            warnings.push('  - UUID v7 requires PostgreSQL 18+ or custom function');
+            warnings.push('  - Performance optimizations for JSONB');
+          } else {
+            valid = true;
+          }
+        } else {
+          warnings.push('Could not parse PostgreSQL version. Please ensure you are using PostgreSQL 18+');
+        }
+      } else if (this.config.type === 'mysql') {
+        minimumVersion = '8.0.0';
+        const result = await this.query<{ version: string }>('SELECT VERSION() as version');
+        version = result.rows?.[0]?.version || 'Unknown';
+
+        // Parse MySQL version (format: "8.0.35" or "8.0.35-0ubuntu0.22.04.1")
+        const versionMatch = version.match(/^(\d+)\.(\d+)\.(\d+)/);
+        if (versionMatch) {
+          const majorVersion = parseInt(versionMatch[1], 10);
+          const minorVersion = parseInt(versionMatch[2], 10);
+
+          if (majorVersion < 8) {
+            valid = false;
+            warnings.push(`MySQL ${majorVersion}.${minorVersion} detected. Minimum required: 8.0`);
+            warnings.push('Some features may not work correctly:');
+            warnings.push('  - JSON functions (JSON_EXTRACT, JSON_CONTAINS)');
+            warnings.push('  - Window functions for advanced queries');
+            warnings.push('  - CTE (Common Table Expressions) support');
+          } else {
+            valid = true;
+          }
+        } else {
+          warnings.push('Could not parse MySQL version. Please ensure you are using MySQL 8.0+');
+        }
+      }
+
+      if (valid) {
+        Logger.success(`✓ Database version ${version} meets minimum requirements (${minimumVersion}+)`);
+      } else {
+        Logger.warn(`⚠️  Database version ${version} is below minimum requirements (${minimumVersion}+)`);
+        warnings.forEach((warning) => Logger.warn(`   ${warning}`));
+      }
+
+      return {
+        valid,
+        version,
+        minimumVersion,
+        warnings,
+      };
+    } catch (error) {
+      Logger.error('Failed to validate database version', error as Error);
+      return {
+        valid: false,
+        version: 'Unknown',
+        minimumVersion,
+        warnings: ['Could not determine database version. Please verify manually.'],
+      };
+    }
+  }
+
+  /**
    * Execute query (auto-detects database type)
    */
   async query<T = any>(text: string, params?: any[]): Promise<{ rows: T[]; rowCount: number }> {

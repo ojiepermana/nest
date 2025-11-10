@@ -1,4 +1,4 @@
-import { Module, Global, DynamicModule } from '@nestjs/common';
+import { Module, Global, DynamicModule, Provider } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { CacheModule } from '@nestjs/cache-manager';
 import { RBACService } from './rbac.service';
@@ -39,13 +39,42 @@ export interface RBACModuleOptions {
    * Enable global guards (apply to all routes)
    */
   useGlobalGuards?: boolean;
+
+  /**
+   * Make module global (default: true)
+   */
+  isGlobal?: boolean;
 }
 
 /**
  * RBAC Module
  *
  * Provides Role-Based Access Control functionality
- * Can be imported as global module or feature module
+ * Global by default for easy access across the application
+ *
+ * @example
+ * // Simple registration (global by default)
+ * RBACModule.register({
+ *   adminRoles: ['admin'],
+ *   useGlobalGuards: true
+ * })
+ *
+ * @example
+ * // Non-global registration
+ * RBACModule.register({
+ *   adminRoles: ['admin'],
+ *   isGlobal: false
+ * })
+ *
+ * @example
+ * // Async registration with ConfigService
+ * RBACModule.registerAsync({
+ *   useFactory: (config: ConfigService) => ({
+ *     adminRoles: config.get('ADMIN_ROLES'),
+ *     cache: { ttl: config.get('CACHE_TTL') }
+ *   }),
+ *   inject: [ConfigService]
+ * })
  */
 @Global()
 @Module({})
@@ -65,7 +94,7 @@ export class RBACModule {
       defaultExpiration: options.defaultExpiration,
     };
 
-    const providers: any[] = [
+    const providers: Provider[] = [
       {
         provide: 'RBAC_CONFIG',
         useValue: config,
@@ -92,6 +121,7 @@ export class RBACModule {
 
     return {
       module: RBACModule,
+      global: options.isGlobal !== false, // Default to global
       imports: [
         CacheModule.register({
           ttl: config.cache?.ttl ? config.cache.ttl * 1000 : 300000,

@@ -32,8 +32,12 @@ describe('Permission Decorators', () => {
 
       expect(SetMetadata).toHaveBeenCalledWith(PERMISSIONS_KEY, {
         permissions: ['users.read'],
-        logic: PermissionLogic.AND,
-        requireOwnership: false,
+        options: {
+          logic: PermissionLogic.AND,
+          errorMessage: undefined,
+          requireOwnership: false,
+          ownershipField: 'created_by',
+        },
       });
     });
 
@@ -45,8 +49,12 @@ describe('Permission Decorators', () => {
 
       expect(SetMetadata).toHaveBeenCalledWith(PERMISSIONS_KEY, {
         permissions: ['users.read', 'users.update'],
-        logic: PermissionLogic.AND,
-        requireOwnership: false,
+        options: {
+          logic: PermissionLogic.AND,
+          errorMessage: undefined,
+          requireOwnership: false,
+          ownershipField: 'created_by',
+        },
       });
     });
 
@@ -63,10 +71,12 @@ describe('Permission Decorators', () => {
 
       expect(SetMetadata).toHaveBeenCalledWith(PERMISSIONS_KEY, {
         permissions: ['users.delete'],
-        logic: PermissionLogic.OR,
-        errorMessage: 'Custom error',
-        requireOwnership: true,
-        ownershipField: 'created_by',
+        options: {
+          logic: PermissionLogic.OR,
+          errorMessage: 'Custom error',
+          requireOwnership: true,
+          ownershipField: 'created_by',
+        },
       });
     });
 
@@ -77,7 +87,7 @@ describe('Permission Decorators', () => {
       decorator(target);
 
       const metadata = (SetMetadata as jest.Mock).mock.calls[0][1];
-      expect(metadata.logic).toBe(PermissionLogic.AND);
+      expect(metadata.options.logic).toBe(PermissionLogic.AND);
     });
 
     it('should default ownershipField to "created_by"', () => {
@@ -89,7 +99,7 @@ describe('Permission Decorators', () => {
       decorator(target);
 
       const metadata = (SetMetadata as jest.Mock).mock.calls[0][1];
-      expect(metadata.ownershipField).toBe('created_by');
+      expect(metadata.options.ownershipField).toBe('created_by');
     });
   });
 
@@ -102,8 +112,12 @@ describe('Permission Decorators', () => {
 
       expect(SetMetadata).toHaveBeenCalledWith(PERMISSIONS_KEY, {
         permissions: ['users.read', 'admin.access'],
-        logic: PermissionLogic.OR,
-        requireOwnership: false,
+        options: {
+          logic: PermissionLogic.OR,
+          errorMessage: undefined,
+          requireOwnership: false,
+          ownershipField: 'created_by',
+        },
       });
     });
 
@@ -115,7 +129,7 @@ describe('Permission Decorators', () => {
 
       const metadata = (SetMetadata as jest.Mock).mock.calls[0][1];
       expect(metadata.permissions).toEqual(['users.read']);
-      expect(metadata.logic).toBe(PermissionLogic.OR);
+      expect(metadata.options.logic).toBe(PermissionLogic.OR);
     });
   });
 
@@ -128,8 +142,12 @@ describe('Permission Decorators', () => {
 
       expect(SetMetadata).toHaveBeenCalledWith(PERMISSIONS_KEY, {
         permissions: ['users.read', 'users.update'],
-        logic: PermissionLogic.AND,
-        requireOwnership: false,
+        options: {
+          logic: PermissionLogic.AND,
+          errorMessage: undefined,
+          requireOwnership: false,
+          ownershipField: 'created_by',
+        },
       });
     });
 
@@ -141,7 +159,7 @@ describe('Permission Decorators', () => {
 
       const metadata = (SetMetadata as jest.Mock).mock.calls[0][1];
       expect(metadata.permissions).toEqual(['users.read']);
-      expect(metadata.logic).toBe(PermissionLogic.AND);
+      expect(metadata.options.logic).toBe(PermissionLogic.AND);
     });
   });
 
@@ -154,9 +172,12 @@ describe('Permission Decorators', () => {
 
       expect(SetMetadata).toHaveBeenCalledWith(PERMISSIONS_KEY, {
         permissions: ['users.update'],
-        logic: PermissionLogic.AND,
-        requireOwnership: true,
-        ownershipField: 'created_by',
+        options: {
+          logic: PermissionLogic.AND,
+          errorMessage: undefined,
+          requireOwnership: true,
+          ownershipField: 'created_by',
+        },
       });
     });
 
@@ -167,8 +188,8 @@ describe('Permission Decorators', () => {
       decorator(target);
 
       const metadata = (SetMetadata as jest.Mock).mock.calls[0][1];
-      expect(metadata.requireOwnership).toBe(true);
-      expect(metadata.ownershipField).toBe('user_id');
+      expect(metadata.options.requireOwnership).toBe(true);
+      expect(metadata.options.ownershipField).toBe('user_id');
     });
   });
 

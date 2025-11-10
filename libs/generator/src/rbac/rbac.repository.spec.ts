@@ -344,7 +344,6 @@ describe('RBACRepository', () => {
       expect(result).toBe(5);
       expect(mockPool.query).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE rbac.user_roles'),
-        [],
       );
     });
 

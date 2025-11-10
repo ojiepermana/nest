@@ -20,6 +20,7 @@ describe('PermissionsGuard', () => {
       hasAllPermissions: jest.fn(),
       hasAnyPermission: jest.fn(),
       checkOwnership: jest.fn(),
+      userHasPermission: jest.fn(),
     } as any;
 
     guard = new PermissionsGuard(reflector, rbacService);
@@ -83,17 +84,20 @@ describe('PermissionsGuard', () => {
       reflector.getAllAndOverride.mockReturnValueOnce(false); // skipPermission
       reflector.getAllAndOverride.mockReturnValueOnce({
         permissions: ['users.read'],
-        logic: PermissionLogic.AND,
+        options: {
+          logic: PermissionLogic.AND,
+          errorMessage: undefined,
+          requireOwnership: false,
+          ownershipField: 'created_by',
+        },
       });
 
-      rbacService.hasAllPermissions.mockResolvedValue({
-        granted: true,
-      });
+      rbacService.userHasPermission.mockResolvedValue(true);
 
       const result = await guard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(rbacService.hasAllPermissions).toHaveBeenCalledWith('user-123', ['users.read']);
+      expect(rbacService.userHasPermission).toHaveBeenCalledWith('user-123', 'users.read');
     });
 
     it('should check multiple permissions with AND logic', async () => {
@@ -101,20 +105,21 @@ describe('PermissionsGuard', () => {
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce({
         permissions: ['users.read', 'users.update'],
-        logic: PermissionLogic.AND,
+        options: {
+          logic: PermissionLogic.AND,
+          errorMessage: undefined,
+          requireOwnership: false,
+          ownershipField: 'created_by',
+        },
       });
 
-      rbacService.hasAllPermissions.mockResolvedValue({
-        granted: true,
-      });
+      rbacService.userHasPermission.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
 
       const result = await guard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(rbacService.hasAllPermissions).toHaveBeenCalledWith('user-123', [
-        'users.read',
-        'users.update',
-      ]);
+      expect(rbacService.userHasPermission).toHaveBeenCalledWith('user-123', 'users.read');
+      expect(rbacService.userHasPermission).toHaveBeenCalledWith('user-123', 'users.update');
     });
 
     it('should check permissions with OR logic', async () => {
@@ -122,20 +127,21 @@ describe('PermissionsGuard', () => {
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce({
         permissions: ['users.read', 'admin.access'],
-        logic: PermissionLogic.OR,
+        options: {
+          logic: PermissionLogic.OR,
+          errorMessage: undefined,
+          requireOwnership: false,
+          ownershipField: 'created_by',
+        },
       });
 
-      rbacService.hasAnyPermission.mockResolvedValue({
-        granted: true,
-      });
+      rbacService.userHasPermission.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
 
       const result = await guard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(rbacService.hasAnyPermission).toHaveBeenCalledWith('user-123', [
-        'users.read',
-        'admin.access',
-      ]);
+      expect(rbacService.userHasPermission).toHaveBeenCalledWith('user-123', 'users.read');
+      expect(rbacService.userHasPermission).toHaveBeenCalledWith('user-123', 'admin.access');
     });
 
     it('should throw ForbiddenException when permission denied', async () => {
@@ -143,14 +149,15 @@ describe('PermissionsGuard', () => {
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce({
         permissions: ['users.delete'],
-        logic: PermissionLogic.AND,
+        options: {
+          logic: PermissionLogic.AND,
+          errorMessage: undefined,
+          requireOwnership: false,
+          ownershipField: 'created_by',
+        },
       });
 
-      rbacService.hasAllPermissions.mockResolvedValue({
-        granted: false,
-        reason: 'Missing permission: users.delete',
-        missingPermissions: ['users.delete'],
-      });
+      rbacService.userHasPermission.mockResolvedValue(false);
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow(ForbiddenException);
     });
@@ -160,13 +167,15 @@ describe('PermissionsGuard', () => {
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce({
         permissions: ['users.delete'],
-        logic: PermissionLogic.AND,
-        errorMessage: 'Custom error message',
+        options: {
+          logic: PermissionLogic.AND,
+          errorMessage: 'Custom error message',
+          requireOwnership: false,
+          ownershipField: 'created_by',
+        },
       });
 
-      rbacService.hasAllPermissions.mockResolvedValue({
-        granted: false,
-      });
+      rbacService.userHasPermission.mockResolvedValue(false);
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow('Custom error message');
     });
@@ -176,15 +185,15 @@ describe('PermissionsGuard', () => {
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce({
         permissions: ['users.update'],
-        logic: PermissionLogic.AND,
-        requireOwnership: true,
-        ownershipField: 'created_by',
+        options: {
+          logic: PermissionLogic.AND,
+          errorMessage: undefined,
+          requireOwnership: true,
+          ownershipField: 'created_by',
+        },
       });
 
-      rbacService.hasAllPermissions.mockResolvedValue({
-        granted: true,
-      });
-
+      rbacService.userHasPermission.mockResolvedValue(true);
       rbacService.checkOwnership.mockResolvedValue(true);
 
       const result = await guard.canActivate(mockContext);
@@ -198,14 +207,15 @@ describe('PermissionsGuard', () => {
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce({
         permissions: ['users.update'],
-        logic: PermissionLogic.AND,
-        requireOwnership: true,
+        options: {
+          logic: PermissionLogic.AND,
+          errorMessage: undefined,
+          requireOwnership: true,
+          ownershipField: 'created_by',
+        },
       });
 
-      rbacService.hasAllPermissions.mockResolvedValue({
-        granted: true,
-      });
-
+      rbacService.userHasPermission.mockResolvedValue(true);
       rbacService.checkOwnership.mockResolvedValue(false);
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow(ForbiddenException);

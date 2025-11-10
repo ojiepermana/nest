@@ -18,6 +18,8 @@ export interface ControllerGeneratorOptions {
   enableFileUpload?: boolean;
   storageProvider?: 'local' | 's3' | 'gcs' | 'azure';
   customEndpoints?: string[];
+  enableRbac?: boolean;
+  rbacResourceName?: string; // e.g., 'users', 'posts'
 }
 
 export class ControllerGenerator {
@@ -120,6 +122,11 @@ ${crudEndpoints}${fileUploadEndpoints}
       imports.push(`import { ${swaggerImports.join(', ')} } from '@nestjs/swagger';`);
     }
 
+    // Add RBAC imports
+    if (this.options.enableRbac) {
+      imports.push("import { RequirePermission } from '@ojiepermana/nest-generator/rbac';");
+    }
+
     return imports.join('\n');
   }
 
@@ -198,8 +205,12 @@ export class ${controllerName} {`;
   @ApiBody({ type: Create${entityName}Dto })`;
     }
 
-    endpoint += `
-  @Post()
+    // Add RBAC decorator
+    if (this.options.enableRbac) {
+      endpoint += `\n${this.generateRbacDecorator('create')}`;
+    }
+
+    endpoint += `  @Post()
   @HttpCode(HttpStatus.CREATED)`;
 
     if (this.options.enableValidation) {
@@ -230,8 +241,12 @@ export class ${controllerName} {`;
   @ApiResponse({ status: 200, description: 'Return all ${camelName}s.', type: [${entityName}] })`;
     }
 
-    endpoint += `
-  @Get()
+    // Add RBAC decorator
+    if (this.options.enableRbac) {
+      endpoint += `\n${this.generateRbacDecorator('read')}`;
+    }
+
+    endpoint += `  @Get()
   async findAll(): Promise<${entityName}[]> {
     return this.service.findAll();
   }
@@ -295,8 +310,12 @@ export class ${controllerName} {`;
   @ApiParam({ name: 'id', type: ${pkType === 'number' ? 'Number' : 'String'}, description: '${entityName} ID' })`;
     }
 
-    endpoint += `
-  @Get(':id')`;
+    // Add RBAC decorator
+    if (this.options.enableRbac) {
+      endpoint += `\n${this.generateRbacDecorator('read')}`;
+    }
+
+    endpoint += `  @Get(':id')`;
 
     if (pkType === 'number') {
       endpoint += `
@@ -334,8 +353,12 @@ export class ${controllerName} {`;
   @ApiBody({ type: Update${entityName}Dto })`;
     }
 
-    endpoint += `
-  @Put(':id')`;
+    // Add RBAC decorator
+    if (this.options.enableRbac) {
+      endpoint += `\n${this.generateRbacDecorator('update')}`;
+    }
+
+    endpoint += `  @Put(':id')`;
 
     if (pkType === 'number') {
       if (this.options.enableValidation) {
@@ -389,8 +412,12 @@ export class ${controllerName} {`;
   @ApiParam({ name: 'id', type: ${pkType === 'number' ? 'Number' : 'String'}, description: '${entityName} ID' })`;
     }
 
-    endpoint += `
-  @Delete(':id')
+    // Add RBAC decorator
+    if (this.options.enableRbac) {
+      endpoint += `\n${this.generateRbacDecorator('delete')}`;
+    }
+
+    endpoint += `  @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)`;
 
     if (pkType === 'number') {
@@ -484,5 +511,26 @@ export class ${controllerName} {`;
       .replace(/([a-z])([A-Z])/g, '$1-$2')
       .replace(/[\s_]+/g, '-')
       .toLowerCase();
+  }
+
+  /**
+   * Generate RBAC decorator for endpoint
+   */
+  private generateRbacDecorator(action: 'create' | 'read' | 'update' | 'delete'): string {
+    if (!this.options.enableRbac) {
+      return '';
+    }
+
+    const resourceName = this.options.rbacResourceName || this.options.tableName;
+    const permission = `${resourceName}.${action}`;
+
+    return `  @RequirePermission('${permission}')\n`;
+  }
+
+  /**
+   * Get resource name for RBAC permissions
+   */
+  private getRbacResourceName(): string {
+    return this.options.rbacResourceName || this.options.tableName;
   }
 }

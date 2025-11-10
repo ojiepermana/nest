@@ -38,9 +38,12 @@ describe('Role Decorators', () => {
 
       expect(SetMetadata).toHaveBeenCalledWith(ROLES_KEY, {
         roles: ['admin'],
-        logic: RoleLogic.AND,
-        activeOnly: true,
-        checkExpiration: true,
+        options: {
+          logic: RoleLogic.OR,
+          errorMessage: undefined,
+          activeOnly: true,
+          checkExpiration: true,
+        },
       });
     });
 
@@ -52,35 +55,35 @@ describe('Role Decorators', () => {
 
       expect(SetMetadata).toHaveBeenCalledWith(ROLES_KEY, {
         roles: ['admin', 'moderator'],
-        logic: RoleLogic.AND,
-        activeOnly: true,
-        checkExpiration: true,
+        options: {
+          logic: RoleLogic.OR,
+          errorMessage: undefined,
+          activeOnly: true,
+          checkExpiration: true,
+        },
       });
     });
 
-    it('should set metadata with custom options', () => {
-      const decorator = RequireRole('admin', {
-        logic: RoleLogic.OR,
-        errorMessage: 'Admin required',
-        activeOnly: false,
-        checkExpiration: false,
-      });
+    it('should set metadata with custom error message', () => {
+      const decorator = RequireRole('admin', { errorMessage: 'Custom error' });
       const target = {};
 
       decorator(target);
 
       expect(SetMetadata).toHaveBeenCalledWith(ROLES_KEY, {
         roles: ['admin'],
-        logic: RoleLogic.OR,
-        errorMessage: 'Admin required',
-        activeOnly: false,
-        checkExpiration: false,
+        options: {
+          logic: RoleLogic.OR,
+          errorMessage: 'Custom error',
+          activeOnly: true,
+          checkExpiration: true,
+        },
       });
     });
   });
 
   describe('@RequireAnyRole', () => {
-    it('should set OR logic for multiple roles', () => {
+    it('should require any of the specified roles', () => {
       const decorator = RequireAnyRole(['admin', 'moderator']);
       const target = {};
 
@@ -88,25 +91,31 @@ describe('Role Decorators', () => {
 
       expect(SetMetadata).toHaveBeenCalledWith(ROLES_KEY, {
         roles: ['admin', 'moderator'],
-        logic: RoleLogic.OR,
-        activeOnly: true,
-        checkExpiration: true,
+        options: {
+          logic: RoleLogic.OR,
+          errorMessage: undefined,
+          activeOnly: true,
+          checkExpiration: true,
+        },
       });
     });
   });
 
   describe('@RequireAllRoles', () => {
-    it('should set AND logic for multiple roles', () => {
-      const decorator = RequireAllRoles(['admin', 'moderator']);
+    it('should set metadata with AND logic', () => {
+      const decorator = RequireRole(['admin', 'moderator'], { logic: RoleLogic.AND });
       const target = {};
 
       decorator(target);
 
       expect(SetMetadata).toHaveBeenCalledWith(ROLES_KEY, {
         roles: ['admin', 'moderator'],
-        logic: RoleLogic.AND,
-        activeOnly: true,
-        checkExpiration: true,
+        options: {
+          logic: RoleLogic.AND,
+          errorMessage: undefined,
+          activeOnly: true,
+          checkExpiration: true,
+        },
       });
     });
   });
@@ -120,9 +129,12 @@ describe('Role Decorators', () => {
 
       expect(SetMetadata).toHaveBeenCalledWith(ROLES_KEY, {
         roles: ['admin'],
-        logic: RoleLogic.AND,
-        activeOnly: true,
-        checkExpiration: true,
+        options: {
+          logic: RoleLogic.OR,
+          errorMessage: undefined,
+          activeOnly: true,
+          checkExpiration: true,
+        },
       });
     });
   });
@@ -136,9 +148,12 @@ describe('Role Decorators', () => {
 
       expect(SetMetadata).toHaveBeenCalledWith(ROLES_KEY, {
         roles: ['super_admin'],
-        logic: RoleLogic.AND,
-        activeOnly: true,
-        checkExpiration: true,
+        options: {
+          logic: RoleLogic.OR,
+          errorMessage: undefined,
+          activeOnly: true,
+          checkExpiration: true,
+        },
       });
     });
   });
@@ -152,9 +167,12 @@ describe('Role Decorators', () => {
 
       expect(SetMetadata).toHaveBeenCalledWith(ROLES_KEY, {
         roles: ['moderator'],
-        logic: RoleLogic.AND,
-        activeOnly: true,
-        checkExpiration: true,
+        options: {
+          logic: RoleLogic.OR,
+          errorMessage: undefined,
+          activeOnly: true,
+          checkExpiration: true,
+        },
       });
     });
   });

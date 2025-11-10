@@ -83,9 +83,9 @@ describe('ControllerGenerator', () => {
 
       const result = generator.generate();
 
-      // Basic imports without ValidationPipe (only if enableValidation is true)
+      // Basic imports (BadRequestException is always included now)
       expect(result).toContain(
-        "import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpStatus, HttpCode, ParseIntPipe, NotFoundException } from '@nestjs/common'",
+        "import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpStatus, HttpCode, ParseIntPipe, NotFoundException, BadRequestException } from '@nestjs/common'",
       );
       expect(result).toContain("import { UsersService } from '../services/users.service'");
       expect(result).toContain("import { Users } from '../entities/users.entity'");
@@ -431,6 +431,79 @@ describe('ControllerGenerator', () => {
       expect(result).not.toContain('@ApiTags');
       expect(result).not.toContain('ValidationPipe');
       expect(result).not.toContain('findWithFilters');
+    });
+  });
+
+  describe('RBAC Integration', () => {
+    it('should include RBAC import when enableRbac is true', () => {
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enableRbac: true,
+      });
+
+      const result = generator.generate();
+
+      expect(result).toContain(
+        "import { RequirePermission } from '@ojiepermana/nest-generator/rbac'",
+      );
+    });
+
+    it('should not include RBAC import when enableRbac is false', () => {
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enableRbac: false,
+      });
+
+      const result = generator.generate();
+
+      expect(result).not.toContain('@ojiepermana/nest-generator/rbac');
+    });
+
+    it('should add @RequirePermission decorators to all CRUD endpoints', () => {
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enableRbac: true,
+      });
+
+      const result = generator.generate();
+
+      // Check CREATE endpoint
+      expect(result).toContain("@RequirePermission('users.create')");
+
+      // Check READ endpoints
+      expect(result).toContain("@RequirePermission('users.read')");
+
+      // Check UPDATE endpoint
+      expect(result).toContain("@RequirePermission('users.update')");
+
+      // Check DELETE endpoint
+      expect(result).toContain("@RequirePermission('users.delete')");
+    });
+
+    it('should use custom rbacResourceName when provided', () => {
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enableRbac: true,
+        rbacResourceName: 'profiles',
+      });
+
+      const result = generator.generate();
+
+      expect(result).toContain("@RequirePermission('profiles.create')");
+      expect(result).toContain("@RequirePermission('profiles.read')");
+      expect(result).toContain("@RequirePermission('profiles.update')");
+      expect(result).toContain("@RequirePermission('profiles.delete')");
+    });
+
+    it('should not add decorators when enableRbac is false', () => {
+      const generator = new ControllerGenerator(mockTableMetadata, mockColumns, {
+        tableName: 'users',
+        enableRbac: false,
+      });
+
+      const result = generator.generate();
+
+      expect(result).not.toContain('@RequirePermission');
     });
   });
 });

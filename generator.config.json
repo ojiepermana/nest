@@ -2,11 +2,27 @@
   "architecture": "standalone",
   "database": {
     "type": "postgresql",
-    "host": "127.0.0.1",
+    "host": "localhost",
     "port": 5432,
-    "username": "postgres",
+    "database": "edsis",
+    "username": "edsis",
     "password": "",
-    "database": "nest_dev",
-    "ssl": false
+    "ssl": false,
+    "pool": {
+      "min": 2,
+      "max": 10,
+      "idleTimeoutMillis": 30000,
+      "connectionTimeoutMillis": 2000
+    }
+  },
+  "features": {
+    "swagger": true,
+    "caching": false,
+    "fileUpload": false,
+    "export": true,
+    "search": false,
+    "audit": true,
+    "rbac": false,
+    "notifications": false
   }
 }

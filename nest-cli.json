@@ -14,7 +14,13 @@
       "sourceRoot": "libs/generator/src",
       "compilerOptions": {
         "tsConfigPath": "libs/generator/tsconfig.lib.json",
-        "webpack": false
+        "webpack": false,
+        "assets": [
+          {
+            "include": "database/schemas/*.sql",
+            "outDir": "dist/libs/generator"
+          }
+        ]
       }
     },
     "nest": {

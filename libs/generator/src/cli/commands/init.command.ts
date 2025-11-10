@@ -522,7 +522,7 @@ export class InitCommand {
 DB_TYPE=${db.type}
 DB_HOST=${db.host}
 DB_PORT=${db.port}
-DB_NAME=${db.database}
+DB_DATABASE=${db.database}
 DB_USERNAME=${db.username}
 DB_PASSWORD=${db.password}
 DB_SSL=${db.ssl || false}

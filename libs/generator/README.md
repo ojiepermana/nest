@@ -8,7 +8,7 @@ Before installing, ensure you have:
 
 - **NestJS** 11.x or higher
 - **Node.js** 24.0.0 or higher
-- **npm** 10.0.0 or higher
+- **npm** 11.0.0 or higher
 - **Database**:
   - PostgreSQL 18+ **OR**
   - MySQL 8+

@@ -22,7 +22,7 @@ try {
 
 const REQUIREMENTS = {
   node: '24.0.0',
-  npm: '10.0.0',
+  npm: '11.0.0',
   nestjs: '11.0.0',
 };
 

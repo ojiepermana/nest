@@ -140,7 +140,7 @@ export class UsersController {
 ### Prerequisites
 
 - **Node.js**: 24.0.0 or higher (enforced by .nvmrc and engines)
-- **npm**: 10.0.0 or higher
+- **npm**: 11.0.0 or higher
 - **NestJS**: 11.x
 - **Database**: PostgreSQL 18+ or MySQL 8+
 

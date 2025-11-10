@@ -29,9 +29,23 @@ Before installing, ensure you have:
 
 ## Installation
 
+**⚠️ Important: This is a development tool and should be installed as a dev dependency:**
+
 ```bash
-npm install @ojiepermana/nest-generator
+npm install --save-dev @ojiepermana/nest-generator
 ```
+
+**Or using other package managers:**
+
+```bash
+# Yarn
+yarn add -D @ojiepermana/nest-generator
+
+# pnpm
+pnpm add -D @ojiepermana/nest-generator
+```
+
+> **Note**: Installing as a regular dependency (`npm install`) will fail with an error. This package is designed to be used during development only, not in production runtime.
 
 ## Quick Start
 

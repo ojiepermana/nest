@@ -37,6 +37,7 @@ export function Searchable(config: Omit<SearchableConfig, 'indexName'> & { index
 
     const fullConfig: SearchableConfig = {
       indexName,
+      primaryKey: config.primaryKey || 'id',
       searchableFields: config.searchableFields || [],
       filterableFields: config.filterableFields,
       sortableFields: config.sortableFields,
@@ -44,6 +45,10 @@ export function Searchable(config: Omit<SearchableConfig, 'indexName'> & { index
       rankingRules: config.rankingRules,
       synonyms: config.synonyms,
       stopWords: config.stopWords,
+      ranking: config.ranking,
+      returnFields: config.returnFields,
+      autoSync: config.autoSync,
+      softDeleteField: config.softDeleteField,
     };
 
     // Store metadata on the class

@@ -9,9 +9,10 @@ export { SearchModule } from './search.module';
 export { SearchService } from './search.service';
 
 // Drivers
-export { ElasticsearchDriver } from './drivers/elasticsearch.driver';
-export { AlgoliaDriver } from './drivers/algolia.driver';
-export { MeilisearchDriver } from './drivers/meilisearch.driver';
+// Note: External drivers require optional dependencies
+// export { ElasticsearchDriver } from './drivers/elasticsearch.driver';
+// export { AlgoliaDriver } from './drivers/algolia.driver';
+// export { MeilisearchDriver } from './drivers/meilisearch.driver';
 export { DatabaseDriver } from './drivers/database.driver';
 
 // Decorators & Interceptors
@@ -38,15 +39,21 @@ export type {
   SearchQuery,
   SearchFilter,
   SearchResult,
+  SearchHit,
+  FacetResult,
+  BulkIndexOperation,
   SearchSuggestion,
   SearchAggregation,
   ISearchDriver,
+  SearchModuleConfig,
   ElasticsearchConfig,
   AlgoliaConfig,
   MeilisearchConfig,
   DatabaseSearchConfig,
   SearchModuleOptions,
   SearchModuleAsyncOptions,
+  SyncStatus,
+  IndexStats,
 } from './interfaces/search.interface';
 
 // Constants

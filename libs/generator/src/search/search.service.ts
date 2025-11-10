@@ -170,7 +170,7 @@ export class SearchService {
       throw new Error(`Model ${modelName} is not searchable`);
     }
 
-    return this.driver.suggest(config.indexName, query, limit);
+    return this.driver.suggest(config.indexName, query, undefined, limit);
   }
 
   /**
@@ -186,7 +186,7 @@ export class SearchService {
       throw new Error(`Model ${modelName} is not searchable`);
     }
 
-    return this.driver.moreLikeThis<T>(config.indexName, documentId, limit);
+    return this.driver.moreLikeThis<T>(config.indexName, documentId, undefined, limit);
   }
 
   /**

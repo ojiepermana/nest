@@ -9,9 +9,10 @@ import { Module, DynamicModule, Global } from '@nestjs/common';
 import type { SearchModuleConfig } from './interfaces/search.interface';
 import { SEARCH_DRIVER, SEARCH_CONFIG } from './search.constants';
 import { SearchService } from './search.service';
-import { ElasticsearchDriver } from './drivers/elasticsearch.driver';
-import { AlgoliaDriver } from './drivers/algolia.driver';
-import { MeilisearchDriver } from './drivers/meilisearch.driver';
+// Note: External drivers require optional dependencies - uncomment when needed
+// import { ElasticsearchDriver } from './drivers/elasticsearch.driver';
+// import { AlgoliaDriver } from './drivers/algolia.driver';
+// import { MeilisearchDriver } from './drivers/meilisearch.driver';
 import { DatabaseDriver } from './drivers/database.driver';
 
 @Global()
@@ -26,25 +27,37 @@ export class SearchModule {
       useFactory: () => {
         switch (config.driver) {
           case 'elasticsearch':
-            if (!config.elasticsearch) {
-              throw new Error('Elasticsearch configuration is required');
-            }
-            return new ElasticsearchDriver(config.elasticsearch);
+            throw new Error(
+              'Elasticsearch driver requires @elastic/elasticsearch package. Install it first: npm install @elastic/elasticsearch',
+            );
+          // if (!config.elasticsearch) {
+          //   throw new Error('Elasticsearch configuration is required');
+          // }
+          // return new ElasticsearchDriver(config.elasticsearch);
 
           case 'algolia':
-            if (!config.algolia) {
-              throw new Error('Algolia configuration is required');
-            }
-            return new AlgoliaDriver(config.algolia);
+            throw new Error(
+              'Algolia driver requires algoliasearch package. Install it first: npm install algoliasearch',
+            );
+          // if (!config.algolia) {
+          //   throw new Error('Algolia configuration is required');
+          // }
+          // return new AlgoliaDriver(config.algolia);
 
           case 'meilisearch':
-            if (!config.meilisearch) {
-              throw new Error('Meilisearch configuration is required');
-            }
-            return new MeilisearchDriver(config.meilisearch);
+            throw new Error(
+              'Meilisearch driver requires meilisearch package. Install it first: npm install meilisearch',
+            );
+          // if (!config.meilisearch) {
+          //   throw new Error('Meilisearch configuration is required');
+          // }
+          // return new MeilisearchDriver(config.meilisearch);
 
           case 'database':
-            throw new Error('Database driver not implemented yet');
+            if (!config.database) {
+              throw new Error('Database configuration is required');
+            }
+            return new DatabaseDriver(config.database);
 
           default:
             throw new Error(`Unknown search driver: ${config.driver}`);
@@ -79,22 +92,31 @@ export class SearchModule {
 
         switch (config.driver) {
           case 'elasticsearch':
-            if (!config.elasticsearch) {
-              throw new Error('Elasticsearch configuration is required');
-            }
-            return new ElasticsearchDriver(config.elasticsearch);
+            throw new Error(
+              'Elasticsearch driver requires @elastic/elasticsearch package. Install it first: npm install @elastic/elasticsearch',
+            );
+          // if (!config.elasticsearch) {
+          //   throw new Error('Elasticsearch configuration is required');
+          // }
+          // return new ElasticsearchDriver(config.elasticsearch);
 
           case 'algolia':
-            if (!config.algolia) {
-              throw new Error('Algolia configuration is required');
-            }
-            return new AlgoliaDriver(config.algolia);
+            throw new Error(
+              'Algolia driver requires algoliasearch package. Install it first: npm install algoliasearch',
+            );
+          // if (!config.algolia) {
+          //   throw new Error('Algolia configuration is required');
+          // }
+          // return new AlgoliaDriver(config.algolia);
 
           case 'meilisearch':
-            if (!config.meilisearch) {
-              throw new Error('Meilisearch configuration is required');
-            }
-            return new MeilisearchDriver(config.meilisearch);
+            throw new Error(
+              'Meilisearch driver requires meilisearch package. Install it first: npm install meilisearch',
+            );
+          // if (!config.meilisearch) {
+          //   throw new Error('Meilisearch configuration is required');
+          // }
+          // return new MeilisearchDriver(config.meilisearch);
 
           case 'database':
             if (!config.database) {

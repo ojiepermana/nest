@@ -223,8 +223,9 @@ export class DatabaseDriver implements ISearchDriver {
         total,
         took,
         page: query.page || 1,
-        perPage: limit,
+        limit,
         totalPages,
+        processingTimeMs: took,
       };
     } catch (error) {
       this.logger.error(`Search failed: ${(error as Error).message}`);
@@ -336,7 +337,15 @@ export class DatabaseDriver implements ISearchDriver {
       const sourceResult = await this.pool.query(sourceQuery, [id]);
 
       if (sourceResult.rows.length === 0) {
-        return { hits: [], total: 0, took: 0 };
+        return {
+          hits: [],
+          total: 0,
+          took: 0,
+          page: 1,
+          limit: size,
+          totalPages: 0,
+          processingTimeMs: 0,
+        };
       }
 
       const sourceDoc = sourceResult.rows[0].data;
@@ -351,7 +360,15 @@ export class DatabaseDriver implements ISearchDriver {
         .filter((c) => c);
 
       if (conditions.length === 0) {
-        return { hits: [], total: 0, took: 0 };
+        return {
+          hits: [],
+          total: 0,
+          took: 0,
+          page: 1,
+          limit: size,
+          totalPages: 0,
+          processingTimeMs: 0,
+        };
       }
 
       const similarQuery = `
@@ -376,6 +393,10 @@ export class DatabaseDriver implements ISearchDriver {
         hits,
         total: hits.length,
         took,
+        page: 1,
+        limit: size,
+        totalPages: Math.ceil(hits.length / size),
+        processingTimeMs: took,
       };
     } catch (error) {
       this.logger.error(`More like this failed: ${(error as Error).message}`);
@@ -597,6 +618,41 @@ export class DatabaseDriver implements ISearchDriver {
     } catch (error) {
       this.logger.error(`Health check failed: ${(error as Error).message}`);
       return false;
+    }
+  }
+
+  /**
+   * Get index statistics
+   */
+  async getStats(indexName: string): Promise<IndexStats> {
+    const tableName = this.getTableName(indexName);
+
+    try {
+      // Get document count
+      const countResult = await this.pool.query(
+        `SELECT COUNT(*) as count FROM ${this.schema}.${tableName}`,
+      );
+      const documentCount = parseInt(String(countResult.rows[0].count), 10);
+
+      // Get table size (PostgreSQL specific)
+      let sizeBytes = 0;
+      if (this.config.type === 'postgresql') {
+        const sizeResult = await this.pool.query(
+          `SELECT pg_total_relation_size('${this.schema}.${tableName}') as size`,
+        );
+        sizeBytes = parseInt(String(sizeResult.rows[0].size), 10);
+      }
+
+      return {
+        indexName,
+        documentCount,
+        sizeBytes,
+        sizeInBytes: sizeBytes,
+        lastUpdated: new Date(),
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get stats for ${indexName}: ${(error as Error).message}`);
+      throw error;
     }
   }
 

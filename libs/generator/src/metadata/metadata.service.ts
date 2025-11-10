@@ -105,6 +105,13 @@ export class MetadataService {
   }
 
   /**
+   * Alias for getColumnsBySchemaAndTable (for backward compatibility)
+   */
+  async getColumnMetadata(schema: string, tableName: string): Promise<ColumnMetadata[]> {
+    return this.getColumnsBySchemaAndTable(schema, tableName);
+  }
+
+  /**
    * Get foreign key columns with caching
    */
   async getForeignKeyColumns(tableMetadataId: string): Promise<ColumnMetadata[]> {

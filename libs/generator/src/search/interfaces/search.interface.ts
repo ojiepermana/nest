@@ -30,6 +30,21 @@ export interface SearchableConfig {
   searchableFields: string[];
 
   /**
+   * Fields that can be used for filtering
+   */
+  filterableFields?: string[];
+
+  /**
+   * Fields that can be used for sorting
+   */
+  sortableFields?: string[];
+
+  /**
+   * Ranking rules (for Meilisearch)
+   */
+  rankingRules?: string[];
+
+  /**
    * Fields to be returned in search results
    */
   returnFields?: string[];
@@ -58,7 +73,7 @@ export interface SearchableConfig {
   /**
    * Synonyms for better search results
    */
-  synonyms?: Record<string, string[]>;
+  synonyms?: Record<string, string[]> | string[];
 
   /**
    * Stop words to be ignored
@@ -94,6 +109,16 @@ export interface SearchQuery {
    * Facet filters
    */
   facetFilters?: Record<string, string | string[]>;
+
+  /**
+   * Facets to retrieve
+   */
+  facets?: string[];
+
+  /**
+   * Fields to retrieve
+   */
+  fields?: string[];
 
   /**
    * Pagination
@@ -135,14 +160,20 @@ export interface SearchQuery {
   geo?: {
     lat: number;
     lng: number;
-    radius?: number; // in meters
+    location?: { lat: number; lon: number }; // Elasticsearch format
+    radius?: number | string; // in meters or with unit
     unit?: 'km' | 'mi';
   };
 
   /**
    * Typo tolerance
    */
-  typoTolerance?: boolean;
+  typoTolerance?:
+    | boolean
+    | {
+        enabled: boolean;
+        maxTypos?: number;
+      };
 
   /**
    * Minimum match score
@@ -194,6 +225,11 @@ export interface SearchResult<T = any> {
   processingTimeMs: number;
 
   /**
+   * Query execution time (ms) - alias
+   */
+  took?: number;
+
+  /**
    * Facets (aggregations)
    */
   facets?: Record<string, FacetResult[]>;
@@ -203,6 +239,11 @@ export interface SearchResult<T = any> {
  * Search hit (single result)
  */
 export interface SearchHit<T = any> {
+  /**
+   * Document ID
+   */
+  id?: string;
+
   /**
    * Document data
    */
@@ -217,6 +258,11 @@ export interface SearchHit<T = any> {
    * Highlighted fields
    */
   highlights?: Record<string, string>;
+
+  /**
+   * Highlight (alias for highlights)
+   */
+  highlight?: Record<string, string[]>;
 
   /**
    * Matched fields
@@ -278,7 +324,19 @@ export interface ISearchDriver {
   /**
    * Create index
    */
-  createIndex(indexName: string, config: SearchableConfig): Promise<void>;
+  createIndex(
+    indexName: string,
+    config:
+      | SearchableConfig
+      | {
+          searchableFields?: string[];
+          filterableFields?: string[];
+          sortableFields?: string[];
+          synonyms?: string[] | Record<string, string[]>;
+          stopWords?: string[];
+          rankingRules?: string[];
+        },
+  ): Promise<void>;
 
   /**
    * Delete index
@@ -298,12 +356,12 @@ export interface ISearchDriver {
   /**
    * Get document count in index
    */
-  count(indexName: string, filters?: SearchFilter[]): Promise<number>;
+  count(indexName: string, filters?: SearchFilter[] | SearchQuery): Promise<number>;
 
   /**
    * Suggest/Autocomplete
    */
-  suggest(indexName: string, query: string, limit?: number): Promise<string[]>;
+  suggest(indexName: string, query: string, field?: string, limit?: number): Promise<string[]>;
 
   /**
    * Get similar documents
@@ -311,6 +369,7 @@ export interface ISearchDriver {
   moreLikeThis<T = any>(
     indexName: string,
     documentId: string,
+    fields?: string[],
     limit?: number,
   ): Promise<SearchResult<T>>;
 
@@ -318,6 +377,11 @@ export interface ISearchDriver {
    * Flush index (commit changes)
    */
   flush(indexName: string): Promise<void>;
+
+  /**
+   * Get index statistics
+   */
+  getStats(indexName: string): Promise<IndexStats>;
 
   /**
    * Health check
@@ -413,5 +477,67 @@ export interface IndexStats {
   indexName: string;
   documentCount: number;
   sizeBytes?: number;
+  sizeInBytes?: number; // Alias for backward compatibility
   lastUpdated?: Date;
+}
+
+/**
+ * Module options and async options for dependency injection
+ */
+export type SearchModuleOptions = SearchModuleConfig;
+
+export interface SearchModuleAsyncOptions {
+  useFactory: (...args: any[]) => Promise<SearchModuleConfig> | SearchModuleConfig;
+  inject?: any[];
+}
+
+/**
+ * Driver-specific configurations (for type exports)
+ */
+export interface ElasticsearchConfig {
+  node: string | string[];
+  auth?: {
+    username: string;
+    password: string;
+    apiKey?: string;
+  };
+  maxRetries?: number;
+  requestTimeout?: number;
+  sniffOnStart?: boolean;
+}
+
+export interface AlgoliaConfig {
+  applicationId: string;
+  apiKey: string;
+  adminApiKey?: string;
+}
+
+export interface MeilisearchConfig {
+  host: string;
+  apiKey?: string;
+}
+
+export interface DatabaseSearchConfig {
+  type: 'postgresql' | 'mysql';
+  host?: string;
+  port?: number;
+  database?: string;
+  username?: string;
+  password?: string;
+  poolSize?: number;
+  schema?: string;
+}
+
+/**
+ * Additional types for search functionality
+ */
+export interface SearchSuggestion {
+  text: string;
+  score?: number;
+}
+
+export interface SearchAggregation {
+  field: string;
+  value: any;
+  count: number;
 }

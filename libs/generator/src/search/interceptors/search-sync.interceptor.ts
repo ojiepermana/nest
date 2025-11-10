@@ -96,11 +96,12 @@ export function AutoSync(options: SyncOptions) {
       switch (opts.operation) {
         case 'create': {
           if (Array.isArray(data)) {
-            await searchService.importSearchable(
-              opts.modelName,
-              data as { id: string; data: any }[],
-              idField,
-            );
+            // Transform array data to include id field
+            const documents = data.map((item) => ({
+              id: String(item[idField]),
+              data: item,
+            }));
+            await searchService.importSearchable(opts.modelName, documents);
           } else {
             await searchService.makeSearchable(opts.modelName, data, String(data[idField]));
           }
@@ -176,11 +177,12 @@ export class SearchSyncInterceptor implements NestInterceptor {
             switch (operation) {
               case 'create': {
                 if (Array.isArray(data)) {
-                  await this.searchService.importSearchable(
-                    this.modelName,
-                    data as { id: string; data: any }[],
-                    idField,
-                  );
+                  // Transform array data to include id field
+                  const documents = data.map((item: any) => ({
+                    id: String(item[idField]),
+                    data: item,
+                  }));
+                  await this.searchService.importSearchable(this.modelName, documents);
                 } else {
                   await this.searchService.makeSearchable(
                     this.modelName,

@@ -45,11 +45,14 @@ export interface GenerateCommandOptions {
     auditLog?: boolean;
     softDelete?: boolean;
     fileUpload?: boolean;
+    rbac?: boolean;
   };
   skipPrompts?: boolean;
   // CLI flags
   enableAudit?: boolean;
   storageProvider?: 'local' | 's3' | 'gcs' | 'azure';
+  enableRbac?: boolean;
+  rbacDefaultPermissions?: string[]; // e.g., ['read', 'create', 'update', 'delete']
 }
 
 export class GenerateCommand {
@@ -217,6 +220,7 @@ export class GenerateCommand {
         auditLog: providedFeatures.auditLog ?? false,
         softDelete: providedFeatures.softDelete ?? false,
         fileUpload: providedFeatures.fileUpload ?? false,
+        rbac: providedFeatures.rbac ?? false,
       };
     }
 
@@ -265,6 +269,12 @@ export class GenerateCommand {
         name: 'fileUpload',
         message: '📁 Enable file upload? (auto-detects file columns)',
         default: this.config?.features?.fileUpload ?? false,
+      },
+      {
+        type: 'confirm',
+        name: 'rbac',
+        message: '🔐 Enable RBAC? (role-based access control with permissions)',
+        default: this.config?.features?.rbac ?? false,
       },
     ]);
 

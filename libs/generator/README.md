@@ -15,6 +15,8 @@ Before installing, ensure you have:
 
 > ⚠️ **Warning**: This library requires Node.js 24+. Installation on older versions will show warnings and may cause runtime errors.
 
+> ⚠️ **Database Requirements**: PostgreSQL 18+ or MySQL 8.0+ is **strictly required**. The library uses version-specific features like UUID v7 (PostgreSQL) and JSON functions (MySQL 8+). See [Database Compatibility Matrix](./DATABASE_COMPATIBILITY.md) for details.
+
 ## Features
 
 ✅ **No ORM** - Uses native database drivers (PostgreSQL, MySQL)

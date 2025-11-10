@@ -167,6 +167,36 @@ export class InitCommand {
         `Connection pool: ${result.pool.total} total, ${result.pool.idle} idle, ${result.pool.waiting} waiting`,
       );
 
+      // Validate database version
+      Logger.step('Validating database version...');
+      const validation = await connectionManager.validateDatabaseVersion();
+
+      if (!validation.valid) {
+        Logger.warn('\n⚠️  Database version does not meet minimum requirements!');
+        Logger.warn(`   Current: ${validation.version}`);
+        Logger.warn(`   Minimum: ${validation.minimumVersion}`);
+
+        if (validation.warnings.length > 0) {
+          validation.warnings.forEach((warning) => Logger.warn(`   ${warning}`));
+        }
+
+        const { continueAnyway } = await inquirer.prompt([
+          {
+            type: 'confirm',
+            name: 'continueAnyway',
+            message: 'Continue with incompatible database version?',
+            default: false,
+          },
+        ]);
+
+        if (!continueAnyway) {
+          await connectionManager.disconnect();
+          throw new Error('Database version requirement not met. Please upgrade your database.');
+        }
+
+        Logger.warn('Continuing with potentially incompatible database version...');
+      }
+
       await connectionManager.disconnect();
     } catch (error) {
       Logger.error('Database connection failed', error);

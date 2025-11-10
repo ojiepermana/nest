@@ -1,4 +1,19 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpStatus, HttpCode, ParseIntPipe, ValidationPipe, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  HttpStatus,
+  HttpCode,
+  ParseIntPipe,
+  ValidationPipe,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { UsersService } from '../services/users.service';
 import { Users } from '../entities/users.entity';
 import { CreateUsersDto } from '../dto/create-users.dto';
@@ -11,9 +26,12 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody } from 
 export class UsersController {
   constructor(private readonly service: UsersService) {}
 
-
   @ApiOperation({ summary: 'Create a new users' })
-  @ApiResponse({ status: 201, description: 'The users has been successfully created.', type: Users })
+  @ApiResponse({
+    status: 201,
+    description: 'The users has been successfully created.',
+    type: Users,
+  })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
   @ApiBody({ type: CreateUsersDto })
   @Post()
@@ -31,9 +49,24 @@ export class UsersController {
 
   @ApiOperation({ summary: 'Get userss with filters and pagination' })
   @ApiResponse({ status: 200, description: 'Return filtered userss with pagination.' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 20, max: 100)' })
-  @ApiQuery({ name: 'sort', required: false, type: String, description: 'Sort field and order (e.g., name:ASC)' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 20, max: 100)',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sort field and order (e.g., name:ASC)',
+  })
   @Get('filter')
   async findWithFilters(
     @Query() filterDto: UsersFilterDto,
@@ -69,7 +102,11 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'Update a users' })
-  @ApiResponse({ status: 200, description: 'The users has been successfully updated.', type: Users })
+  @ApiResponse({
+    status: 200,
+    description: 'The users has been successfully updated.',
+    type: Users,
+  })
   @ApiResponse({ status: 404, description: 'Users not found.' })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
   @ApiParam({ name: 'id', type: Number, description: 'Users ID' })
@@ -91,5 +128,4 @@ export class UsersController {
   async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.service.remove(id);
   }
-
 }

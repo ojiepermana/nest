@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { UsersRepository } from '../repositories/users.repository';
 import { Users } from '../entities/users.entity';
 import { CreateUsersDto } from '../dto/create-users.dto';
@@ -13,7 +18,6 @@ export class UsersService {
     private readonly dataSource: DataSource,
   ) {}
 
-
   /**
    * Create a new users
    */
@@ -22,7 +26,7 @@ export class UsersService {
     await this.validateUniqueConstraints(createDto);
 
     const users = await this.repository.create(createDto);
-    
+
     return users;
   }
 
@@ -38,7 +42,7 @@ export class UsersService {
    */
   async findOne(id: number): Promise<Users> {
     const users = await this.repository.findOne(id);
-    
+
     return users;
   }
 
@@ -48,12 +52,12 @@ export class UsersService {
   async update(id: number, updateDto: UpdateUsersDto): Promise<Users> {
     // Validate exists
     await this.findOne(id);
-    
+
     // Validate unique constraints
     await this.validateUniqueConstraints(updateDto, id);
 
     const users = await this.repository.update(id, updateDto);
-    
+
     return users;
   }
 
@@ -67,19 +71,21 @@ export class UsersService {
     await this.repository.remove(id);
   }
 
-
   /**
    * Find userss with filters
    */
   async findWithFilters(
     filterDto: UsersFilterDto,
-    options?: { page?: number; limit?: number; sort?: Array<{ field: string; order: 'ASC' | 'DESC' }> },
+    options?: {
+      page?: number;
+      limit?: number;
+      sort?: Array<{ field: string; order: 'ASC' | 'DESC' }>;
+    },
   ): Promise<{ data: Users[]; total: number; page: number; limit: number }> {
     const result = await this.repository.findWithFilters(filterDto, options);
-    
+
     return result;
   }
-
 
   /**
    * Count userss
@@ -126,5 +132,4 @@ export class UsersService {
       await queryRunner.release();
     }
   }
-
 }

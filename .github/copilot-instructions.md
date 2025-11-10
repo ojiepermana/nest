@@ -99,26 +99,6 @@ nest-generator generate users --features.audit=true  # With audit
 
 ---
 
-## 🐛 Common Issues
-
-**Dependency in wrong place**:
-
-```bash
-rm -rf libs/generator/node_modules
-npm install
-```
-
-**Build errors**:
-
-```bash
-rm -rf dist
-npm run build:generator
-```
-
-**Import errors**: Use path aliases `@ojiepermana/nest-generator`
-
----
-
 ## 📚 Documentation
 
 **See full docs**: `docs/generator/INDEX.md`
@@ -129,23 +109,6 @@ npm run build:generator
 - `docs/generator/FEATURES.md` - All features
 - `docs/generator/audit/AUDIT_GUIDE.md` - Audit trail
 - `docs/workspace/PUBLISHING.md` - Publishing guide
-
----
-
-## 📊 Feature Score: 119/100 ✅
-
-| Feature     | Score | Status  |
-| ----------- | ----- | ------- |
-| Core CRUD   | 10/10 | ✅ Done |
-| Queries     | 10/10 | ✅ Done |
-| Validation  | 10/10 | ✅ Done |
-| Security    | 10/10 | ✅ Done |
-| Caching     | 10/10 | ✅ Done |
-| Swagger     | 10/10 | ✅ Done |
-| Export      | 10/10 | ✅ Done |
-| Audit       | +6    | ✅ Done |
-| File Upload | +6    | ✅ Done |
-| Search      | +13   | ✅ Done |
 
 ---
 

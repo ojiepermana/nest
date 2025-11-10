@@ -1,0 +1,627 @@
+# Best Practices
+
+Production-ready patterns and recommendations for **@ojiepermana/nest-generator**.
+
+## Table of Contents
+
+- [Project Structure](#project-structure)
+- [Metadata Management](#metadata-management)
+- [Code Generation](#code-generation)
+- [Security](#security)
+- [Performance](#performance)
+- [Error Handling](#error-handling)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Monitoring](#monitoring)
+
+---
+
+## Project Structure
+
+### ✅ Recommended Directory Layout
+
+```
+my-app/
+├── apps/                          # Microservices (if applicable)
+│   ├── gateway/
+│   ├── user-service/
+│   └── post-service/
+├── libs/                          # Shared libraries
+│   ├── common/                    # Common utilities
+│   ├── database/                  # Database config
+│   └── rbac/                      # RBAC module
+├── src/
+│   ├── modules/                   # Generated modules
+│   │   ├── users/
+│   │   ├── posts/
+│   │   └── comments/
+│   ├── audit/                     # Audit module (global)
+│   ├── cache/                     # Cache module (global)
+│   ├── config/                    # Configuration
+│   ├── filters/                   # Exception filters
+│   ├── guards/                    # Global guards
+│   ├── interceptors/              # Global interceptors
+│   ├── middleware/                # Global middleware
+│   ├── pipes/                     # Global pipes
+│   └── utils/                     # Utilities
+├── test/                          # E2E tests
+├── .env.example                   # Environment template
+├── .nvmrc                         # Node.js version
+├── docker-compose.yml             # Local development
+├── Dockerfile                     # Production image
+└── nest-cli.json                  # NestJS config
+```
+
+### ✅ Separate Concerns
+
+**DO:**
+
+```typescript
+// users/users.controller.ts - HTTP layer
+@Controller('users')
+export class UsersController {}
+
+// users/users.service.ts - Business logic
+@Injectable()
+export class UsersService {}
+
+// users/users.repository.ts - Data access
+@Injectable()
+export class UsersRepository {}
+```
+
+**DON'T:**
+
+```typescript
+// ❌ Business logic in controller
+@Controller('users')
+export class UsersController {
+  @Post()
+  async create(@Body() dto: CreateDto) {
+    // ❌ SQL queries directly in controller
+    const result = await this.pool.query('INSERT INTO...');
+  }
+}
+```
+
+---
+
+## Metadata Management
+
+### ✅ Version Control Metadata
+
+```bash
+# Export metadata to SQL
+pg_dump -U postgres -d myapp -t meta.* > metadata-schema.sql
+
+# Commit to git
+git add metadata-schema.sql
+git commit -m "Update metadata schema"
+```
+
+### ✅ Use Metadata Conventions
+
+```sql
+-- Naming: schema.table
+INSERT INTO meta.table_metadata (schema_name, table_name)
+VALUES ('users', 'profile');  -- ✅ users.profile
+
+-- Column naming: snake_case
+INSERT INTO meta.column_metadata (column_name)
+VALUES ('first_name');  -- ✅
+
+-- Avoid
+VALUES ('firstName');   -- ❌ camelCase
+VALUES ('FIRST_NAME');  -- ❌ UPPERCASE
+```
+
+### ✅ Document Metadata
+
+```sql
+-- Add descriptions
+INSERT INTO meta.table_metadata (
+  table_name,
+  table_purpose  -- ✅ Explain purpose
+) VALUES (
+  'user_profile',
+  'Stores user profile information including avatar, bio, and preferences'
+);
+
+INSERT INTO meta.column_metadata (
+  column_name,
+  swagger_description  -- ✅ API documentation
+) VALUES (
+  'avatar_url',
+  'URL to user avatar image (max 5MB, JPEG/PNG only)'
+);
+```
+
+### ✅ Validate Metadata Before Generation
+
+```sql
+-- Check required fields
+SELECT t.table_name, COUNT(c.id) as column_count
+FROM meta.table_metadata t
+LEFT JOIN meta.column_metadata c ON t.id = c.table_metadata_id
+GROUP BY t.table_name
+HAVING COUNT(c.id) = 0;  -- Tables with no columns!
+
+-- Check for missing primary keys
+SELECT t.table_name
+FROM meta.table_metadata t
+WHERE NOT EXISTS (
+  SELECT 1 FROM meta.column_metadata c
+  WHERE c.table_metadata_id = t.id AND c.is_primary_key = true
+);
+```
+
+---
+
+## Code Generation
+
+### ✅ Generate Once, Customize Carefully
+
+```bash
+# Initial generation
+nest-generator generate users.profile
+
+# ✅ Customize in separate files
+src/modules/users-profile/
+├── users-profile.controller.ts    # Generated
+├── users-profile.service.ts       # Generated
+├── users-profile.custom.service.ts  # ✅ Your custom logic
+└── extensions/
+    └── custom-methods.ts           # ✅ Additional methods
+```
+
+### ✅ Use Block Markers for Custom Code
+
+```typescript
+// users-profile.service.ts
+export class UsersProfileService {
+  // <generator:methods>
+  // Generated methods here
+  // </generator:methods>
+
+  // <custom:methods>
+  // Your custom methods - won't be overwritten
+  async customBusinessLogic() {
+    // Safe from regeneration
+  }
+  // </custom:methods>
+}
+```
+
+### ✅ Track Generated Files
+
+```bash
+# .gitignore
+# Keep generated files in version control
+# but mark them clearly
+
+# Generated by @ojiepermana/nest-generator
+# DO NOT edit directly - update metadata instead
+src/modules/*/dto/*.dto.ts
+src/modules/*/*.repository.ts
+```
+
+---
+
+## Security
+
+### ✅ Always Validate Input
+
+```typescript
+// ✅ Use class-validator
+import { IsString, IsEmail, Length, IsOptional } from 'class-validator';
+
+export class CreateUserDto {
+  @IsString()
+  @Length(2, 50)
+  name: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @Length(8, 100)
+  password: string;
+
+  @IsOptional()
+  @IsString()
+  bio?: string;
+}
+
+// ✅ Enable whitelist in main.ts
+app.useGlobalPipes(new ValidationPipe({
+  whitelist: true,           // Remove non-whitelisted properties
+  forbidNonWhitelisted: true, // Throw error on extra properties
+  transform: true,            // Auto-transform to DTO class
+}));
+```
+
+### ✅ Use Parameterized Queries
+
+```typescript
+// ✅ SAFE - Parameterized
+const query = 'SELECT * FROM users WHERE email = $1';
+await pool.query(query, [email]);
+
+// ❌ UNSAFE - SQL Injection risk
+const query = `SELECT * FROM users WHERE email = '${email}'`;
+await pool.query(query);
+```
+
+### ✅ Implement Rate Limiting
+
+```typescript
+// app.module.ts
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+
+@Module({
+  imports: [
+    ThrottlerModule.forRoot({
+      ttl: 60,    // 60 seconds
+      limit: 10,  // 10 requests per ttl
+    }),
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
+})
+```
+
+### ✅ Hash Sensitive Data
+
+```typescript
+import * as bcrypt from 'bcrypt';
+
+// ✅ Hash passwords
+async create(dto: CreateUserDto) {
+  const hashedPassword = await bcrypt.hash(dto.password, 10);
+  return this.repository.create({
+    ...dto,
+    password: hashedPassword,
+  });
+}
+
+// ✅ Never log sensitive data
+this.logger.log(`User created: ${user.email}`);  // ✅
+this.logger.log(`Password: ${user.password}`);   // ❌
+```
+
+### ✅ Use HTTPS in Production
+
+```typescript
+// main.ts (production)
+import * as fs from 'fs';
+import * as https from 'https';
+
+const httpsOptions = {
+  key: fs.readFileSync('./secrets/private-key.pem'),
+  cert: fs.readFileSync('./secrets/certificate.pem'),
+};
+
+const app = await NestFactory.create(AppModule, { httpsOptions });
+```
+
+---
+
+## Performance
+
+### ✅ Use Caching Strategically
+
+```typescript
+// ✅ Cache read-heavy data
+@Injectable()
+export class UsersService {
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(3600)  // 1 hour
+  async findOne(id: string) {
+    return this.repository.findOne(id);
+  }
+
+  async update(id: string, dto: UpdateDto) {
+    // ✅ Invalidate cache on update
+    await this.cacheManager.del(`users:${id}`);
+    return this.repository.update(id, dto);
+  }
+}
+```
+
+### ✅ Optimize Database Queries
+
+```sql
+-- ✅ Add indexes on filtered columns
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_created_at ON users(created_at DESC);
+
+-- ✅ Index foreign keys
+CREATE INDEX idx_posts_user_id ON posts(user_id);
+
+-- ✅ Composite indexes for multi-column filters
+CREATE INDEX idx_posts_user_status ON posts(user_id, status);
+```
+
+### ✅ Use Pagination
+
+```typescript
+// ✅ Always paginate lists
+@Get()
+async findAll(
+  @Query('page') page: number = 1,
+  @Query('limit') limit: number = 20,
+) {
+  const offset = (page - 1) * limit;
+  const [data, total] = await this.repository.findAndCount({
+    offset,
+    limit,
+  });
+
+  return {
+    data,
+    meta: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+}
+```
+
+### ✅ Stream Large Results
+
+```typescript
+// ✅ For large exports
+@Get('export')
+async export(@Res() res: Response) {
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename=users.csv');
+
+  const stream = await this.repository.stream();
+  stream.pipe(res);
+}
+```
+
+---
+
+## Error Handling
+
+### ✅ Use Proper HTTP Status Codes
+
+```typescript
+import { NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+
+@Get(':id')
+async findOne(@Param('id') id: string) {
+  const user = await this.service.findOne(id);
+  if (!user) {
+    throw new NotFoundException(`User ${id} not found`);  // 404
+  }
+  return user;
+}
+
+@Post()
+async create(@Body() dto: CreateDto) {
+  const exists = await this.service.findByEmail(dto.email);
+  if (exists) {
+    throw new ConflictException('Email already exists');  // 409
+  }
+  return this.service.create(dto);
+}
+```
+
+### ✅ Create Custom Exceptions
+
+```typescript
+// exceptions/business.exception.ts
+export class InsufficientBalanceException extends BadRequestException {
+  constructor(required: number, available: number) {
+    super(`Insufficient balance. Required: ${required}, Available: ${available}`);
+  }
+}
+
+// Usage
+if (account.balance < amount) {
+  throw new InsufficientBalanceException(amount, account.balance);
+}
+```
+
+### ✅ Global Exception Filter
+
+```typescript
+// filters/http-exception.filter.ts
+@Catch()
+export class HttpExceptionFilter implements ExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse();
+    const request = ctx.getRequest();
+
+    const status = exception instanceof HttpException
+      ? exception.getStatus()
+      : HttpStatus.INTERNAL_SERVER_ERROR;
+
+    const message = exception instanceof HttpException
+      ? exception.getResponse()
+      : 'Internal server error';
+
+    // ✅ Structured error response
+    response.status(status).json({
+      statusCode: status,
+      timestamp: new Date().toISOString(),
+      path: request.url,
+      error: message,
+    });
+
+    // ✅ Log errors
+    this.logger.error(
+      `${request.method} ${request.url}`,
+      exception instanceof Error ? exception.stack : exception,
+    );
+  }
+}
+```
+
+---
+
+## Testing
+
+### ✅ Write Unit Tests
+
+```typescript
+// users.service.spec.ts
+describe('UsersService', () => {
+  let service: UsersService;
+  let repository: UsersRepository;
+
+  beforeEach(async () => {
+    const module = await Test.createTestingModule({
+      providers: [
+        UsersService,
+        {
+          provide: UsersRepository,
+          useValue: {
+            findOne: jest.fn(),
+            create: jest.fn(),
+          },
+        },
+      ],
+    }).compile();
+
+    service = module.get<UsersService>(UsersService);
+    repository = module.get<UsersRepository>(UsersRepository);
+  });
+
+  it('should find user by id', async () => {
+    const user = { id: '123', name: 'John' };
+    jest.spyOn(repository, 'findOne').mockResolvedValue(user);
+
+    expect(await service.findOne('123')).toBe(user);
+    expect(repository.findOne).toHaveBeenCalledWith('123');
+  });
+});
+```
+
+### ✅ Write E2E Tests
+
+```typescript
+// test/users.e2e-spec.ts
+describe('Users (e2e)', () => {
+  let app: INestApplication;
+
+  beforeAll(async () => {
+    const moduleFixture = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    await app.init();
+  });
+
+  it('/users (GET)', () => {
+    return request(app.getHttpServer())
+      .get('/users')
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.data).toBeInstanceOf(Array);
+      });
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+});
+```
+
+---
+
+## Deployment
+
+### ✅ Use Environment Variables
+
+```typescript
+// config/database.config.ts
+export default () => ({
+  database: {
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT, 10) || 5432,
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
+  },
+});
+```
+
+### ✅ Use Docker
+
+```dockerfile
+# Dockerfile
+FROM node:24-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:24-alpine
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+EXPOSE 3000
+CMD ["node", "dist/main"]
+```
+
+### ✅ Health Checks
+
+```typescript
+@Get('health')
+@HealthCheck()
+check() {
+  return this.health.check([
+    () => this.db.pingCheck('database'),
+    () => this.redis.pingCheck('redis'),
+    () => this.disk.checkStorage('storage', { thresholdPercent: 0.9 }),
+  ]);
+}
+```
+
+---
+
+## Monitoring
+
+### ✅ Use Structured Logging
+
+```typescript
+this.logger.log({
+  message: 'User created',
+  userId: user.id,
+  email: user.email,
+  timestamp: new Date(),
+});
+```
+
+### ✅ Track Metrics
+
+```typescript
+import { Counter, Histogram } from 'prom-client';
+
+const requestCounter = new Counter({
+  name: 'http_requests_total',
+  help: 'Total HTTP requests',
+  labelNames: ['method', 'route', 'status'],
+});
+
+const requestDuration = new Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'HTTP request duration',
+});
+```
+
+---
+
+**More examples:** [EXAMPLES.md](./EXAMPLES.md)

@@ -2,7 +2,7 @@
 
 Complete documentation for the NestJS metadata-driven CRUD generator library.
 
-## � Quick Start
+## 🚀 Quick Start
 
 **New to the generator?** Start here:
 
@@ -10,7 +10,16 @@ Complete documentation for the NestJS metadata-driven CRUD generator library.
 - [⚡ Installation](../../libs/generator/README.md#installation) - npm install instructions
 - [✅ Requirements](./REQUIREMENTS.md) - System requirements checklist
 
-## 🔥 Most Used Guides
+## 🎯 Quickstart Guides (NEW!)
+
+Fast-track guides for specific features:
+
+- [🔐 RBAC in 10 Minutes](./quickstart/RBAC_QUICKSTART.md) - Role-based access control
+- [� Audit in 5 Minutes](./quickstart/AUDIT_QUICKSTART.md) - Audit trail setup
+- [📤 File Upload in 7 Minutes](./quickstart/UPLOAD_QUICKSTART.md) - Multi-cloud storage
+- [🌐 Microservices in 15 Minutes](./quickstart/MICROSERVICES_QUICKSTART.md) - Distributed architecture
+
+## �🔥 Most Used Guides
 
 Quick links to the most popular documentation:
 
@@ -19,6 +28,13 @@ Quick links to the most popular documentation:
 - [📤 File Upload](./FILE_UPLOAD.md) - Handle file uploads (S3, GCS, Azure, Local)
 - [💾 Caching](./CACHING.md) - Add Redis caching
 - [🗄️ Database Setup](./DATABASE.md) - PostgreSQL & MySQL configuration
+
+## 🛠️ Essential Guides (NEW!)
+
+- [🐛 Troubleshooting](./TROUBLESHOOTING.md) - Common issues and solutions
+- [📦 Migration Guide](./MIGRATION.md) - Upgrade between versions
+- [✨ Best Practices](./BEST_PRACTICES.md) - Production-ready patterns
+- [💡 Real-World Examples](./EXAMPLES.md) - Blog, E-commerce, SaaS, Healthcare, Social Media
 
 ## 📖 By Use Case
 
@@ -118,16 +134,26 @@ Quick links to the most popular documentation:
 
 ```
 docs/generator/
-├── INDEX.md                    (this file)
-├── QUICKSTART.md              (5-minute tutorial)
-├── REQUIREMENTS.md            (system requirements)
-├── DATABASE.md                (database setup)
-├── FEATURE_STATUS.md          (implementation status)
-├── FEATURE_SCORING.md         (feature analysis)
-├── CACHING.md                 (Redis caching)
-├── FILE_UPLOAD.md             (file upload guide)
-├── AUDIT_CLI.md               (audit CLI usage)
-├── DOCUMENTATION_ANALYSIS.md  (this documentation plan)
+├── INDEX.md                       (this file - navigation hub)
+├── QUICKSTART.md                  (5-minute getting started)
+├── REQUIREMENTS.md                (system requirements)
+├── DATABASE.md                    (database setup guide)
+├── FEATURE_STATUS.md              (implementation status)
+├── FEATURE_SCORING.md             (feature analysis 104.5/100)
+├── CACHING.md                     (Redis caching guide)
+├── FILE_UPLOAD.md                 (file upload multi-cloud)
+├── AUDIT_CLI.md                   (audit CLI usage)
+├── TROUBLESHOOTING.md             (common issues & fixes)
+├── MIGRATION.md                   (version upgrade guide)
+├── BEST_PRACTICES.md              (production tips)
+├── EXAMPLES.md                    (real-world use cases)
+├── DOCUMENTATION_ANALYSIS.md      (refactoring plan)
+│
+├── quickstart/                    (NEW! Fast-track guides)
+│   ├── RBAC_QUICKSTART.md         (10 minutes)
+│   ├── AUDIT_QUICKSTART.md        (5 minutes)
+│   ├── UPLOAD_QUICKSTART.md       (7 minutes)
+│   └── MICROSERVICES_QUICKSTART.md (15 minutes)
 │
 ├── audit/
 │   ├── AUDIT_DOCUMENTATION.md (complete guide)

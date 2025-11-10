@@ -165,25 +165,35 @@ export class GenerateCommand {
    * Fetch table metadata and columns
    */
   private async fetchMetadata(
-    tableName: string,
+    tableInput: string,
   ): Promise<{ tableMetadata: TableMetadata; columns: ColumnMetadata[] }> {
     if (!this.metadataRepo || !this.config) {
       throw new Error('Metadata repository not initialized');
     }
 
-    const schema = this.config.database.schema || 'public';
+    // Parse schema.table format
+    let schema: string;
+    let tableName: string;
 
-    Logger.info(`\n📊 Fetching metadata for table: ${tableName}`);
+    if (tableInput.includes('.')) {
+      [schema, tableName] = tableInput.split('.');
+    } else {
+      schema = this.config.database.schema || 'public';
+      tableName = tableInput;
+    }
+
+    Logger.info(`\n📊 Fetching metadata for table: ${schema}.${tableName}`);
 
     const tableMetadata = await this.metadataRepo.getTableMetadata(schema, tableName);
     if (!tableMetadata) {
-      Logger.error(`❌ Table metadata not found for: ${tableName}`);
+      Logger.error(`❌ Table metadata not found for: ${schema}.${tableName}`);
+      Logger.info(`💡 Make sure metadata exists in meta.table_metadata table`);
       process.exit(1);
     }
 
     const columns = await this.metadataRepo.getColumnsByTableId(tableMetadata.id);
     if (columns.length === 0) {
-      Logger.error(`❌ No columns found for table: ${tableName}`);
+      Logger.error(`❌ No columns found for table: ${schema}.${tableName}`);
       process.exit(1);
     }
 

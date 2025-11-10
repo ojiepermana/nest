@@ -29,7 +29,6 @@ export class MetadataRepository {
       FROM ${this.dialect.quoteIdentifier('meta.table_metadata')}
       WHERE schema_name = ${this.dialect.getParameterPlaceholder(1)}
         AND table_name = ${this.dialect.getParameterPlaceholder(2)}
-        AND status = 'active'
     `;
 
     const result = await this.connection.query<TableMetadata>(query, [schema, tableName]);
@@ -44,7 +43,6 @@ export class MetadataRepository {
     const query = `
       SELECT *
       FROM ${this.dialect.quoteIdentifier('meta.table_metadata')}
-      WHERE status = 'active'
       ORDER BY schema_name, table_name
     `;
 

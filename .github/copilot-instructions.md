@@ -1373,10 +1373,12 @@ When working with this codebase:
 
 **Internal Documentation**:
 
-- `libs/generator/DEEP_ANALYSIS_SCORE.md` - Detailed feature analysis
-- `libs/generator/PROGRESS_REPORT.md` - Recent implementation summary
-- `libs/generator/AUDIT_CLI_INTEGRATION.md` - Audit trail guide
-- `libs/generator/prompt.md` - Original specifications
+- `docs/generator/INDEX.md` - Complete documentation index
+- `docs/generator/DEEP_ANALYSIS_SCORE.md` - Detailed feature analysis
+- `docs/generator/PROGRESS_REPORT.md` - Recent implementation summary
+- `docs/generator/audit/AUDIT_DOCUMENTATION.md` - Audit trail complete guide
+- `docs/generator/rbac/RBAC_GUIDE.md` - RBAC complete guide (1432 lines)
+- `docs/generator/prompt.md` - Original specifications
 
 **External References**:
 

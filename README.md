@@ -47,7 +47,7 @@ npm install @ojiepermana/nest-generator
 - 🔐 Role expiration and active status
 - 🔐 Redis caching for performance
 - 🔐 92 passing tests
-- 📖 [Complete RBAC Guide](./libs/generator/src/rbac/RBAC_GUIDE.md) (1432 lines)
+- 📖 [Complete RBAC Guide](./docs/generator/rbac/RBAC_GUIDE.md) (1432 lines)
 
 **Test Coverage:** 579/585 passing (99%)
 
@@ -131,8 +131,10 @@ export class UsersController {
 
 📖 **Documentation:**
 
-- [Generator Deep Analysis](./libs/generator/DEEP_ANALYSIS_SCORE.md)
-- [RBAC Complete Guide](./libs/generator/src/rbac/RBAC_GUIDE.md)
+- [Complete Documentation Index](./docs/generator/INDEX.md)
+- [Generator Deep Analysis](./docs/generator/DEEP_ANALYSIS_SCORE.md)
+- [RBAC Complete Guide](./docs/generator/rbac/RBAC_GUIDE.md)
+- [Audit Trail Guide](./docs/generator/audit/AUDIT_DOCUMENTATION.md)
 - [Publishing Guide](./PUBLISHING.md)
 
 ### Development Setup
@@ -225,10 +227,12 @@ npm run publish:all-libs
 
 ### Generator Documentation
 
-- **[Generator Deep Analysis & Score](./libs/generator/DEEP_ANALYSIS_SCORE.md)** - Complete feature analysis and scoring
-- **[RBAC Complete Guide](./libs/generator/src/rbac/RBAC_GUIDE.md)** - Comprehensive RBAC documentation (1432 lines)
-- **[Audit Trail Integration](./libs/generator/AUDIT_CLI_INTEGRATION.md)** - Audit trail setup and usage
-- **[Progress Reports](./libs/generator/PROGRESS_REPORT.md)** - Implementation progress and milestones
+- **[Complete Documentation Index](./docs/generator/INDEX.md)** - All generator documentation in one place
+- **[Generator Deep Analysis & Score](./docs/generator/DEEP_ANALYSIS_SCORE.md)** - Complete feature analysis and scoring
+- **[RBAC Complete Guide](./docs/generator/rbac/RBAC_GUIDE.md)** - Comprehensive RBAC documentation (1432 lines)
+- **[Audit Trail Documentation](./docs/generator/audit/AUDIT_DOCUMENTATION.md)** - Audit trail setup and usage
+- **[File Upload Guide](./docs/generator/FILE_UPLOAD_GUIDE.md)** - Multi-provider file upload implementation
+- **[Progress Reports](./docs/generator/PROGRESS_REPORT.md)** - Implementation progress and milestones
 
 ### Publishing & Development
 

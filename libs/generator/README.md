@@ -2,6 +2,19 @@
 
 A powerful code generator library for NestJS applications that creates production-ready CRUD modules from database metadata.
 
+## Requirements
+
+Before installing, ensure you have:
+
+- **NestJS** 11.x or higher
+- **Node.js** 24.0.0 or higher
+- **npm** 10.0.0 or higher
+- **Database**:
+  - PostgreSQL 18+ **OR**
+  - MySQL 8+
+
+> ⚠️ **Warning**: This library requires Node.js 24+. Installation on older versions will show warnings and may cause runtime errors.
+
 ## Features
 
 ✅ **No ORM** - Uses native database drivers (PostgreSQL, MySQL)
@@ -165,12 +178,6 @@ Role-based access control with field-level permissions.
 ### Search Integration
 
 Elasticsearch/Algolia for full-text search.
-
-## Requirements
-
-- NestJS 11.x
-- Node.js 18+
-- PostgreSQL 12+ or MySQL 8+
 
 ## License
 

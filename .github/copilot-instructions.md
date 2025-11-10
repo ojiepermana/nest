@@ -1374,11 +1374,12 @@ When working with this codebase:
 **Internal Documentation**:
 
 - `docs/generator/INDEX.md` - Complete documentation index
-- `docs/generator/DEEP_ANALYSIS_SCORE.md` - Detailed feature analysis
-- `docs/generator/PROGRESS_REPORT.md` - Recent implementation summary
+- `docs/generator/QUICKSTART.md` - 5-minute getting started guide (NEW!)
+- `docs/generator/FEATURE_SCORING.md` - Detailed feature analysis (104.5/100)
+- `docs/generator/FEATURE_STATUS.md` - Implementation status and capabilities
 - `docs/generator/audit/AUDIT_DOCUMENTATION.md` - Audit trail complete guide
 - `docs/generator/rbac/RBAC_GUIDE.md` - RBAC complete guide (1432 lines)
-- `docs/generator/prompt.md` - Original specifications
+- `docs/generator/archive/specs/prompt.md` - Original specifications (archived)
 
 **External References**:
 

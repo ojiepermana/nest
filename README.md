@@ -132,7 +132,8 @@ export class UsersController {
 📖 **Documentation:**
 
 - [Complete Documentation Index](./docs/generator/INDEX.md)
-- [Generator Deep Analysis](./docs/generator/DEEP_ANALYSIS_SCORE.md)
+- [Quick Start Guide](./docs/generator/QUICKSTART.md)
+- [Feature Scoring](./docs/generator/FEATURE_SCORING.md)
 - [RBAC Complete Guide](./docs/generator/rbac/RBAC_GUIDE.md)
 - [Audit Trail Guide](./docs/generator/audit/AUDIT_DOCUMENTATION.md)
 - [Publishing Guide](./PUBLISHING.md)
@@ -228,11 +229,15 @@ npm run publish:all-libs
 ### Generator Documentation
 
 - **[Complete Documentation Index](./docs/generator/INDEX.md)** - All generator documentation in one place
-- **[Generator Deep Analysis & Score](./docs/generator/DEEP_ANALYSIS_SCORE.md)** - Complete feature analysis and scoring
+- **[Quick Start Guide](./docs/generator/QUICKSTART.md)** - Get started in 5 minutes (NEW!)
+- **[Feature Scoring](./docs/generator/FEATURE_SCORING.md)** - Complete feature analysis (104.5/100)
+- **[Feature Status](./docs/generator/FEATURE_STATUS.md)** - Implementation progress and capabilities
 - **[RBAC Complete Guide](./docs/generator/rbac/RBAC_GUIDE.md)** - Comprehensive RBAC documentation (1432 lines)
 - **[Audit Trail Documentation](./docs/generator/audit/AUDIT_DOCUMENTATION.md)** - Audit trail setup and usage
-- **[File Upload Guide](./docs/generator/FILE_UPLOAD_GUIDE.md)** - Multi-provider file upload implementation
-- **[Progress Reports](./docs/generator/PROGRESS_REPORT.md)** - Implementation progress and milestones
+- **[File Upload Guide](./docs/generator/FILE_UPLOAD.md)** - Multi-provider file upload implementation
+- **[Caching Guide](./docs/generator/CACHING.md)** - Redis caching implementation
+- **[Database Guide](./docs/generator/DATABASE.md)** - PostgreSQL & MySQL setup
+- **[Requirements](./docs/generator/REQUIREMENTS.md)** - System requirements compliance
 
 ### Publishing & Development
 

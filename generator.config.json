@@ -1,0 +1,12 @@
+{
+  "architecture": "standalone",
+  "database": {
+    "type": "postgresql",
+    "host": "127.0.0.1",
+    "port": 5432,
+    "username": "root",
+    "password": "",
+    "database": "best",
+    "ssl": false
+  }
+}

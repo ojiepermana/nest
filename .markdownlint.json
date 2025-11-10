@@ -1,22 +1,22 @@
 {
-    "default": true,
-    "MD013": false,
-    "MD033": false,
-    "MD041": false,
-    "MD014": false,
-    "MD026": false,
-    "MD036": false,
-    "MD051": false,
-    "MD022": {
-        "lines_above": 1,
-        "lines_below": 1
-    },
-    "MD024": {
-        "siblings_only": true
-    },
-    "MD029": false,
-    "MD032": true,
-    "MD031": true,
-    "MD040": false,
-    "MD019": true
+  "default": true,
+  "MD013": false,
+  "MD033": false,
+  "MD041": false,
+  "MD014": false,
+  "MD026": false,
+  "MD036": false,
+  "MD051": false,
+  "MD022": {
+    "lines_above": 1,
+    "lines_below": 1
+  },
+  "MD024": {
+    "siblings_only": true
+  },
+  "MD029": false,
+  "MD032": true,
+  "MD031": true,
+  "MD040": false,
+  "MD019": true
 }

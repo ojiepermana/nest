@@ -113,11 +113,11 @@ These commands can be integrated into CI/CD pipelines:
 
 ## 📦 Installed Tools
 
-| Tool              | Version | Purpose                        |
-| ----------------- | ------- | ------------------------------ |
-| Prettier          | Latest  | Code formatting                |
-| markdownlint-cli  | Latest  | Markdown linting               |
-| ESLint            | Latest  | TypeScript/JavaScript linting  |
+| Tool             | Version | Purpose                       |
+| ---------------- | ------- | ----------------------------- |
+| Prettier         | Latest  | Code formatting               |
+| markdownlint-cli | Latest  | Markdown linting              |
+| ESLint           | Latest  | TypeScript/JavaScript linting |
 
 ## 🔧 VS Code Setup (Recommended)
 

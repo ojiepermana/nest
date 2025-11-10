@@ -38,7 +38,14 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:api": "./test-api.sh",
+    "test:api:http": "httpyac users-scenario.http --all",
+    "test:api:verbose": "httpyac users-scenario.http --all --verbose",
+    "test:api:junit": "httpyac users-scenario.http --all --junit --output test-results.xml",
+    "test:load": "k6 run k6-test.js",
+    "test:load:vus": "k6 run --vus 10 --duration 30s k6-test.js",
+    "test:load:smoke": "k6 run --vus 1 --duration 10s k6-test.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.8",
@@ -78,6 +85,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "globals": "^16.5.0",
+    "httpyac": "^6.16.7",
     "jest": "^30.2.0",
     "markdownlint-cli": "^0.45.0",
     "prettier": "^3.6.2",

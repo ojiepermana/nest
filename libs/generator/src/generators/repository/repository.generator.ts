@@ -910,7 +910,7 @@ export class ${repositoryName} {
     const placeholders = values.map((_, i) => \`$\${i + 1}\`).join(', ');
     
     const query = \`
-      INSERT INTO ${schemaName}.${tableName} (\${columns.join(', ')})
+      INSERT INTO "${schemaName}"."${tableName}" (\${columns.join(', ')})
       VALUES (\${placeholders})
       RETURNING *
     \`;
@@ -923,7 +923,7 @@ export class ${repositoryName} {
    * Find all ${toCamelCase(entityName)}s
    */
   async findAll(): Promise<any[]> {
-    const query = \`SELECT * FROM ${schemaName}.${tableName} ORDER BY ${pkName}\`;
+    const query = \`SELECT * FROM "${schemaName}"."${tableName}" ORDER BY ${pkName}\`;
     const result = await this.pool.query(query);
     return result.rows;
   }
@@ -932,7 +932,7 @@ export class ${repositoryName} {
    * Find one ${toCamelCase(entityName)} by ID
    */
   async findOne(id: ${pkType}): Promise<any | null> {
-    const query = \`SELECT * FROM ${schemaName}.${tableName} WHERE ${pkName} = $1\`;
+    const query = \`SELECT * FROM "${schemaName}"."${tableName}" WHERE ${pkName} = $1\`;
     const result = await this.pool.query(query, [id]);
     return result.rows[0] || null;
   }
@@ -955,7 +955,7 @@ export class ${repositoryName} {
     });
 
     const whereClause = conditions.length > 0 ? \`WHERE \${conditions.join(' AND ')}\` : '';
-    const query = \`SELECT * FROM ${schemaName}.${tableName} \${whereClause} ORDER BY ${pkName}\`;
+    const query = \`SELECT * FROM "${schemaName}"."${tableName}" \${whereClause} ORDER BY ${pkName}\`;
     
     const result = await this.pool.query(query, values);
     return result.rows;
@@ -972,7 +972,7 @@ export class ${repositoryName} {
     const values = [...entries.map(([_, value]) => value), id];
     
     const query = \`
-      UPDATE ${schemaName}.${tableName}
+      UPDATE "${schemaName}"."${tableName}"
       SET \${setClauses}
       WHERE ${pkName} = $\${values.length}
       RETURNING *
@@ -986,7 +986,7 @@ export class ${repositoryName} {
    * Delete ${toCamelCase(entityName)}
    */
   async delete(id: ${pkType}): Promise<boolean> {
-    const query = \`DELETE FROM ${schemaName}.${tableName} WHERE ${pkName} = $1\`;
+    const query = \`DELETE FROM "${schemaName}"."${tableName}" WHERE ${pkName} = $1\`;
     const result = await this.pool.query(query, [id]);
     return (result.rowCount ?? 0) > 0;
   }
@@ -995,7 +995,7 @@ export class ${repositoryName} {
    * Count ${toCamelCase(entityName)}s
    */
   async count(): Promise<number> {
-    const query = \`SELECT COUNT(*) as count FROM ${schemaName}.${tableName}\`;
+    const query = \`SELECT COUNT(*) as count FROM "${schemaName}"."${tableName}"\`;
     const result = await this.pool.query(query);
     return parseInt(result.rows[0].count, 10);
   }
@@ -1004,7 +1004,7 @@ export class ${repositoryName} {
    * Check if ${toCamelCase(entityName)} exists
    */
   async exists(id: ${pkType}): Promise<boolean> {
-    const query = \`SELECT 1 FROM ${schemaName}.${tableName} WHERE ${pkName} = $1 LIMIT 1\`;
+    const query = \`SELECT 1 FROM "${schemaName}"."${tableName}" WHERE ${pkName} = $1 LIMIT 1\`;
     const result = await this.pool.query(query, [id]);
     return result.rows.length > 0;
   }

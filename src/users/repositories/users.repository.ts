@@ -17,7 +17,7 @@ export class UsersRepository {
     const placeholders = values.map((_, i) => `$${i + 1}`).join(', ');
     
     const query = `
-      INSERT INTO user.users (${columns.join(', ')})
+      INSERT INTO "user"."users" (${columns.join(', ')})
       VALUES (${placeholders})
       RETURNING *
     `;
@@ -30,7 +30,7 @@ export class UsersRepository {
    * Find all userss
    */
   async findAll(): Promise<any[]> {
-    const query = `SELECT * FROM user.users ORDER BY id`;
+    const query = `SELECT * FROM "user"."users" ORDER BY id`;
     const result = await this.pool.query(query);
     return result.rows;
   }
@@ -39,7 +39,7 @@ export class UsersRepository {
    * Find one users by ID
    */
   async findOne(id: string): Promise<any | null> {
-    const query = `SELECT * FROM user.users WHERE id = $1`;
+    const query = `SELECT * FROM "user"."users" WHERE id = $1`;
     const result = await this.pool.query(query, [id]);
     return result.rows[0] || null;
   }
@@ -62,7 +62,7 @@ export class UsersRepository {
     });
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-    const query = `SELECT * FROM user.users ${whereClause} ORDER BY id`;
+    const query = `SELECT * FROM "user"."users" ${whereClause} ORDER BY id`;
     
     const result = await this.pool.query(query, values);
     return result.rows;
@@ -79,7 +79,7 @@ export class UsersRepository {
     const values = [...entries.map(([_, value]) => value), id];
     
     const query = `
-      UPDATE user.users
+      UPDATE "user"."users"
       SET ${setClauses}
       WHERE id = $${values.length}
       RETURNING *
@@ -93,7 +93,7 @@ export class UsersRepository {
    * Delete users
    */
   async delete(id: string): Promise<boolean> {
-    const query = `DELETE FROM user.users WHERE id = $1`;
+    const query = `DELETE FROM "user"."users" WHERE id = $1`;
     const result = await this.pool.query(query, [id]);
     return (result.rowCount ?? 0) > 0;
   }
@@ -102,7 +102,7 @@ export class UsersRepository {
    * Count userss
    */
   async count(): Promise<number> {
-    const query = `SELECT COUNT(*) as count FROM user.users`;
+    const query = `SELECT COUNT(*) as count FROM "user"."users"`;
     const result = await this.pool.query(query);
     return parseInt(result.rows[0].count, 10);
   }
@@ -111,7 +111,7 @@ export class UsersRepository {
    * Check if users exists
    */
   async exists(id: string): Promise<boolean> {
-    const query = `SELECT 1 FROM user.users WHERE id = $1 LIMIT 1`;
+    const query = `SELECT 1 FROM "user"."users" WHERE id = $1 LIMIT 1`;
     const result = await this.pool.query(query, [id]);
     return result.rows.length > 0;
   }

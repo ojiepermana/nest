@@ -2,7 +2,30 @@
 
 This is a NestJS monorepo for developing and publishing scoped npm packages (`@ojiepermana/nest-generator` and `@ojiepermana/nest`).
 
-## 📌 CRITICAL CONTEXT - READ FIRST
+## � DOCUMENTATION RULES
+
+**Important**: All documentation files (`.md` files) **EXCEPT `README.md`** should be placed in the appropriate `docs/` subdirectory:
+
+- **Workspace documentation** → `docs/workspace/`
+  - Publishing guides (PUBLISHING.md, QUICK-PUBLISH.md)
+  - Development guides (LOCAL_TESTING.md, CODE_QUALITY.md)
+  - Checklists (CHECKLIST.md)
+  - Session summaries and progress tracking
+  - Changelog
+
+- **Generator library documentation** → `docs/generator/`
+  - Feature guides (RBAC, Audit, File Upload, Search)
+  - API documentation
+  - Architecture guides
+  - Examples and tutorials
+
+- **NestJS-specific documentation** → `docs/nestjs/`
+  - NestJS patterns and best practices
+  - Framework-specific guides
+
+**Exception**: Only `README.md` files should remain at root and library levels as the primary entry point.
+
+## �📌 CRITICAL CONTEXT - READ FIRST
 
 **Library Purpose**: `@ojiepermana/nest-generator` is a **metadata-driven NestJS CRUD generator** that generates complete, production-ready modules from database schema metadata. NO ORM - uses native database drivers (pg/mysql2) with raw SQL for maximum performance and control.
 

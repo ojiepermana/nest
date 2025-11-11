@@ -199,7 +199,16 @@ export function getSwaggerDecorator(column: ColumnMetadata): string {
   }
 
   if (column.swagger_example) {
-    options.push(`example: ${column.swagger_example}`);
+    // Determine if we need to quote the example value
+    const tsType = mapToTypeScriptType(column.data_type);
+    let exampleValue = column.swagger_example;
+
+    // Quote string values if not already quoted
+    if (tsType === 'string' && !exampleValue.startsWith("'") && !exampleValue.startsWith('"')) {
+      exampleValue = `'${exampleValue.replace(/'/g, "\\'")}'`;
+    }
+
+    options.push(`example: ${exampleValue}`);
   }
 
   const tsType = mapToTypeScriptType(column.data_type);

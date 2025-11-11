@@ -641,9 +641,12 @@ export class ${serviceName} {`;
 
     const validations = uniqueColumns.map((col) => {
       const fieldName = col.column_name;
+      const pkColumn = this.getPrimaryKeyColumn();
+      const pkName = pkColumn?.column_name || 'id';
+
       return `    if ('${fieldName}' in data && data.${fieldName}) {
-      const existing = await this.repository.findOneBy({ ${fieldName}: data.${fieldName} } as any);
-      if (existing && (!${excludeIdParam} || existing.id !== ${excludeIdParam})) {
+      const existing = await this.repository.findOne(data.${fieldName} as string);
+      if (existing && (!${excludeIdParam} || existing.${pkName} !== ${excludeIdParam})) {
         throw new ConflictException('${fieldName} already exists');
       }
     }`;

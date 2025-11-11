@@ -84,11 +84,16 @@ export class GenerateCommand {
     // Step 7: Generate all files
     this.generateFiles(tableMetadata, columns, features, outputPath);
 
-    // Step 8: Summary
+    // Step 8: Auto-register module to app.module.ts
+    const moduleName = this.toModuleName(tableName.split('.').pop() || tableName);
+    const moduleClassName = `${this.toPascalCase(moduleName)}Module`;
+    this.registerModuleToApp(outputPath, moduleName, moduleClassName);
+
+    // Step 9: Summary
     Logger.success('\n✅ Generation complete!');
     Logger.info(`\n📁 Files created in: ${outputPath}`);
     Logger.info('\n📝 Next steps:');
-    Logger.info('   1. Import the module in your app.module.ts');
+    Logger.info('   1. Module auto-registered to app.module.ts ✓');
     Logger.info('   2. Run migrations if needed');
     Logger.info('   3. Start your application');
 
@@ -463,6 +468,83 @@ export * from './controllers/${moduleName}.controller';
    */
   private writeFile(filePath: string, content: string): void {
     writeFileSync(filePath, content, 'utf-8');
+  }
+
+  /**
+   * Register generated module to app.module.ts
+   */
+  private registerModuleToApp(
+    outputPath: string,
+    moduleName: string,
+    moduleClassName: string,
+  ): void {
+    try {
+      const appModulePath = join(outputPath, 'app.module.ts');
+
+      if (!existsSync(appModulePath)) {
+        Logger.warn('⚠ app.module.ts not found, skipping auto-registration');
+        return;
+      }
+
+      let appModuleContent = readFileSync(appModulePath, 'utf-8');
+
+      // Check if already imported
+      if (appModuleContent.includes(`from './${moduleName}/${moduleName}.module'`)) {
+        Logger.info('   ℹ Module already registered in app.module.ts');
+        return;
+      }
+
+      // Add import statement after last import
+      const lastImportMatch = appModuleContent.match(/import.*from.*['"];?\n(?!import)/);
+      if (lastImportMatch && lastImportMatch.index !== undefined) {
+        const insertPos = lastImportMatch.index + lastImportMatch[0].length;
+        const importStatement = `import { ${moduleClassName} } from './${moduleName}/${moduleName}.module';\n`;
+        appModuleContent =
+          appModuleContent.slice(0, insertPos) +
+          importStatement +
+          appModuleContent.slice(insertPos);
+      }
+
+      // Add to imports array
+      const importsMatch = appModuleContent.match(/imports:\s*\[([^\]]*)\]/s);
+      if (importsMatch) {
+        const importsContent = importsMatch[1].trim();
+        const lastModule = importsContent.split(',').pop()?.trim() || '';
+
+        // Add module with proper indentation
+        const newImports = importsContent
+          ? `${importsContent.trimEnd()},\n    ${moduleClassName},`
+          : `\n    ${moduleClassName},\n  `;
+
+        appModuleContent = appModuleContent.replace(
+          /imports:\s*\[([^\]]*)\]/s,
+          `imports: [${newImports}]`,
+        );
+      }
+
+      writeFileSync(appModulePath, appModuleContent, 'utf-8');
+      Logger.success(`   ✓ Module registered to app.module.ts`);
+    } catch (error) {
+      Logger.error(`   ✗ Failed to register module: ${(error as Error).message}`);
+      Logger.warn('   ℹ Please manually add the module to app.module.ts');
+    }
+  }
+
+  /**
+   * Convert table name to module name (kebab-case)
+   */
+  private toModuleName(tableName: string): string {
+    return this.toKebabCase(tableName);
+  }
+
+  /**
+   * Convert to PascalCase
+   */
+  private toPascalCase(str: string): string {
+    return str
+      .split(/[-_.]/)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join('');
   }
 
   /**

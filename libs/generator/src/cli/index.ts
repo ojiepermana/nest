@@ -10,6 +10,7 @@
 import { Command } from 'commander';
 import { InitCommand } from './commands/init.command';
 import { GenerateCommand } from './commands/generate.command';
+import { DeleteCommand } from './commands/delete.command';
 import { Logger } from '../utils/logger.util';
 
 const program = new Command();
@@ -91,13 +92,24 @@ program
     Logger.warn('List command not implemented yet (Task 21)');
   });
 
-// Remove command (placeholder for Task 21)
+// Delete command
 program
-  .command('remove <table>')
-  .description('Remove generated module (format: schema.table)')
-  .action(async (table: string) => {
-    Logger.warn('Remove command not implemented yet (Task 21)');
-    Logger.info(`Would remove module for: ${table}`);
+  .command('delete [module]')
+  .description('Delete generated CRUD module and clean up from app.module.ts')
+  .option('--skip-prompts', 'Skip interactive prompts')
+  .option('--force', 'Skip confirmation prompt')
+  .action(async (module: string | undefined, options: any) => {
+    try {
+      const deleteCommand = new DeleteCommand();
+      await deleteCommand.execute({
+        moduleName: module,
+        skipPrompts: options.skipPrompts,
+        force: options.force,
+      });
+    } catch (error) {
+      Logger.error('Delete command failed', error as Error);
+      process.exit(1);
+    }
   });
 
 // Parse command-line arguments

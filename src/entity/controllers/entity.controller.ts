@@ -1,4 +1,18 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpStatus, HttpCode, ValidationPipe, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  HttpStatus,
+  HttpCode,
+  ValidationPipe,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { EntityService } from '../services/entity.service';
 import { Entity } from '../entities/entity.entity';
 import { CreateEntityDto } from '../dto/create-entity.dto';
@@ -12,9 +26,12 @@ import { RequirePermission } from '@ojiepermana/nest-generator/rbac';
 export class EntityController {
   constructor(private readonly service: EntityService) {}
 
-
   @ApiOperation({ summary: 'Create a new entity' })
-  @ApiResponse({ status: 201, description: 'The entity has been successfully created.', type: Entity })
+  @ApiResponse({
+    status: 201,
+    description: 'The entity has been successfully created.',
+    type: Entity,
+  })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
   @ApiBody({ type: CreateEntityDto })
   @RequirePermission('entity.create')
@@ -26,9 +43,24 @@ export class EntityController {
 
   @ApiOperation({ summary: 'Get all entitys with pagination' })
   @ApiResponse({ status: 200, description: 'Return all entitys with pagination.' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 20, max: 100)' })
-  @ApiQuery({ name: 'sort', required: false, type: String, description: 'Sort field and order (e.g., name:ASC)' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 20, max: 100)',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sort field and order (e.g., name:ASC)',
+  })
   @RequirePermission('entity.read')
   @Get()
   async findAll(
@@ -43,18 +75,36 @@ export class EntityController {
         })
       : undefined;
 
-    return this.service.findWithFilters({}, {
-      page: page ? Number(page) : undefined,
-      limit: limit ? Number(limit) : undefined,
-      sort: sortOptions,
-    });
+    return this.service.findWithFilters(
+      {},
+      {
+        page: page ? Number(page) : undefined,
+        limit: limit ? Number(limit) : undefined,
+        sort: sortOptions,
+      },
+    );
   }
 
   @ApiOperation({ summary: 'Get entitys with filters and pagination' })
   @ApiResponse({ status: 200, description: 'Return filtered entitys with pagination.' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 20, max: 100)' })
-  @ApiQuery({ name: 'sort', required: false, type: String, description: 'Sort field and order (e.g., name:ASC)' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 20, max: 100)',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sort field and order (e.g., name:ASC)',
+  })
   @Get('filter')
   async findWithFilters(
     @Query() filterDto: EntityFilterDto,
@@ -91,7 +141,11 @@ export class EntityController {
   }
 
   @ApiOperation({ summary: 'Update a entity' })
-  @ApiResponse({ status: 200, description: 'The entity has been successfully updated.', type: Entity })
+  @ApiResponse({
+    status: 200,
+    description: 'The entity has been successfully updated.',
+    type: Entity,
+  })
   @ApiResponse({ status: 404, description: 'Entity not found.' })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
   @ApiParam({ name: 'id', type: String, description: 'Entity ID' })
@@ -115,5 +169,4 @@ export class EntityController {
   async remove(@Param('id') id: string): Promise<void> {
     await this.service.remove(id);
   }
-
 }

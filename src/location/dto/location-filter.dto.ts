@@ -1,4 +1,14 @@
-import { IsOptional, IsString, IsArray, ArrayMinSize, ArrayMaxSize, IsBoolean, IsInt, Min, Max } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsArray,
+  ArrayMinSize,
+  ArrayMaxSize,
+  IsBoolean,
+  IsInt,
+  Min,
+  Max,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -19,42 +29,66 @@ export class FilterLocationDto {
   /**
    * Record creation timestamp (Not equal to)
    */
-  @ApiProperty({ description: 'Record creation timestamp (Not equal to)', required: false, type: Date })
+  @ApiProperty({
+    description: 'Record creation timestamp (Not equal to)',
+    required: false,
+    type: Date,
+  })
   @IsOptional()
   createdAt_ne?: Date;
 
   /**
    * Record creation timestamp (Greater than)
    */
-  @ApiProperty({ description: 'Record creation timestamp (Greater than)', required: false, type: Date })
+  @ApiProperty({
+    description: 'Record creation timestamp (Greater than)',
+    required: false,
+    type: Date,
+  })
   @IsOptional()
   createdAt_gt?: Date;
 
   /**
    * Record creation timestamp (Greater than or equal)
    */
-  @ApiProperty({ description: 'Record creation timestamp (Greater than or equal)', required: false, type: Date })
+  @ApiProperty({
+    description: 'Record creation timestamp (Greater than or equal)',
+    required: false,
+    type: Date,
+  })
   @IsOptional()
   createdAt_gte?: Date;
 
   /**
    * Record creation timestamp (Less than)
    */
-  @ApiProperty({ description: 'Record creation timestamp (Less than)', required: false, type: Date })
+  @ApiProperty({
+    description: 'Record creation timestamp (Less than)',
+    required: false,
+    type: Date,
+  })
   @IsOptional()
   createdAt_lt?: Date;
 
   /**
    * Record creation timestamp (Less than or equal)
    */
-  @ApiProperty({ description: 'Record creation timestamp (Less than or equal)', required: false, type: Date })
+  @ApiProperty({
+    description: 'Record creation timestamp (Less than or equal)',
+    required: false,
+    type: Date,
+  })
   @IsOptional()
   createdAt_lte?: Date;
 
   /**
    * Record creation timestamp (Pattern match)
    */
-  @ApiProperty({ description: 'Record creation timestamp (Pattern match)', required: false, type: 'string' })
+  @ApiProperty({
+    description: 'Record creation timestamp (Pattern match)',
+    required: false,
+    type: 'string',
+  })
   @IsOptional()
   @IsString()
   createdAt_like?: string;
@@ -62,7 +96,11 @@ export class FilterLocationDto {
   /**
    * Record creation timestamp (In array)
    */
-  @ApiProperty({ description: 'Record creation timestamp (In array)', required: false, type: [Date] })
+  @ApiProperty({
+    description: 'Record creation timestamp (In array)',
+    required: false,
+    type: [Date],
+  })
   @IsOptional()
   @IsArray()
   createdAt_in?: Date[];
@@ -70,7 +108,11 @@ export class FilterLocationDto {
   /**
    * Record creation timestamp (Between two values)
    */
-  @ApiProperty({ description: 'Record creation timestamp (Between two values)', required: false, type: 'array' })
+  @ApiProperty({
+    description: 'Record creation timestamp (Between two values)',
+    required: false,
+    type: 'array',
+  })
   @IsOptional()
   @IsArray()
   @ArrayMinSize(2)
@@ -80,7 +122,11 @@ export class FilterLocationDto {
   /**
    * Record creation timestamp (Is null/not null)
    */
-  @ApiProperty({ description: 'Record creation timestamp (Is null/not null)', required: false, type: 'boolean' })
+  @ApiProperty({
+    description: 'Record creation timestamp (Is null/not null)',
+    required: false,
+    type: 'boolean',
+  })
   @IsOptional()
   @IsBoolean()
   createdAt_null?: boolean;
@@ -109,7 +155,11 @@ export class FilterLocationDto {
   /**
    * Soft delete timestamp (Greater than or equal)
    */
-  @ApiProperty({ description: 'Soft delete timestamp (Greater than or equal)', required: false, type: Date })
+  @ApiProperty({
+    description: 'Soft delete timestamp (Greater than or equal)',
+    required: false,
+    type: Date,
+  })
   @IsOptional()
   deletedAt_gte?: Date;
 
@@ -123,14 +173,22 @@ export class FilterLocationDto {
   /**
    * Soft delete timestamp (Less than or equal)
    */
-  @ApiProperty({ description: 'Soft delete timestamp (Less than or equal)', required: false, type: Date })
+  @ApiProperty({
+    description: 'Soft delete timestamp (Less than or equal)',
+    required: false,
+    type: Date,
+  })
   @IsOptional()
   deletedAt_lte?: Date;
 
   /**
    * Soft delete timestamp (Pattern match)
    */
-  @ApiProperty({ description: 'Soft delete timestamp (Pattern match)', required: false, type: 'string' })
+  @ApiProperty({
+    description: 'Soft delete timestamp (Pattern match)',
+    required: false,
+    type: 'string',
+  })
   @IsOptional()
   @IsString()
   deletedAt_like?: string;
@@ -146,7 +204,11 @@ export class FilterLocationDto {
   /**
    * Soft delete timestamp (Between two values)
    */
-  @ApiProperty({ description: 'Soft delete timestamp (Between two values)', required: false, type: 'array' })
+  @ApiProperty({
+    description: 'Soft delete timestamp (Between two values)',
+    required: false,
+    type: 'array',
+  })
   @IsOptional()
   @IsArray()
   @ArrayMinSize(2)
@@ -156,7 +218,11 @@ export class FilterLocationDto {
   /**
    * Soft delete timestamp (Is null/not null)
    */
-  @ApiProperty({ description: 'Soft delete timestamp (Is null/not null)', required: false, type: 'boolean' })
+  @ApiProperty({
+    description: 'Soft delete timestamp (Is null/not null)',
+    required: false,
+    type: 'boolean',
+  })
   @IsOptional()
   @IsBoolean()
   deletedAt_null?: boolean;
@@ -164,49 +230,77 @@ export class FilterLocationDto {
   /**
    * Primary key - unique identifier (Equal to)
    */
-  @ApiProperty({ description: 'Primary key - unique identifier (Equal to)', required: false, type: 'string' })
+  @ApiProperty({
+    description: 'Primary key - unique identifier (Equal to)',
+    required: false,
+    type: 'string',
+  })
   @IsOptional()
   id_eq?: string;
 
   /**
    * Primary key - unique identifier (Not equal to)
    */
-  @ApiProperty({ description: 'Primary key - unique identifier (Not equal to)', required: false, type: 'string' })
+  @ApiProperty({
+    description: 'Primary key - unique identifier (Not equal to)',
+    required: false,
+    type: 'string',
+  })
   @IsOptional()
   id_ne?: string;
 
   /**
    * Primary key - unique identifier (Greater than)
    */
-  @ApiProperty({ description: 'Primary key - unique identifier (Greater than)', required: false, type: 'string' })
+  @ApiProperty({
+    description: 'Primary key - unique identifier (Greater than)',
+    required: false,
+    type: 'string',
+  })
   @IsOptional()
   id_gt?: string;
 
   /**
    * Primary key - unique identifier (Greater than or equal)
    */
-  @ApiProperty({ description: 'Primary key - unique identifier (Greater than or equal)', required: false, type: 'string' })
+  @ApiProperty({
+    description: 'Primary key - unique identifier (Greater than or equal)',
+    required: false,
+    type: 'string',
+  })
   @IsOptional()
   id_gte?: string;
 
   /**
    * Primary key - unique identifier (Less than)
    */
-  @ApiProperty({ description: 'Primary key - unique identifier (Less than)', required: false, type: 'string' })
+  @ApiProperty({
+    description: 'Primary key - unique identifier (Less than)',
+    required: false,
+    type: 'string',
+  })
   @IsOptional()
   id_lt?: string;
 
   /**
    * Primary key - unique identifier (Less than or equal)
    */
-  @ApiProperty({ description: 'Primary key - unique identifier (Less than or equal)', required: false, type: 'string' })
+  @ApiProperty({
+    description: 'Primary key - unique identifier (Less than or equal)',
+    required: false,
+    type: 'string',
+  })
   @IsOptional()
   id_lte?: string;
 
   /**
    * Primary key - unique identifier (Pattern match)
    */
-  @ApiProperty({ description: 'Primary key - unique identifier (Pattern match)', required: false, type: 'string' })
+  @ApiProperty({
+    description: 'Primary key - unique identifier (Pattern match)',
+    required: false,
+    type: 'string',
+  })
   @IsOptional()
   @IsString()
   id_like?: string;
@@ -214,7 +308,11 @@ export class FilterLocationDto {
   /**
    * Primary key - unique identifier (In array)
    */
-  @ApiProperty({ description: 'Primary key - unique identifier (In array)', required: false, type: [String] })
+  @ApiProperty({
+    description: 'Primary key - unique identifier (In array)',
+    required: false,
+    type: [String],
+  })
   @IsOptional()
   @IsArray()
   id_in?: string[];
@@ -222,7 +320,11 @@ export class FilterLocationDto {
   /**
    * Primary key - unique identifier (Between two values)
    */
-  @ApiProperty({ description: 'Primary key - unique identifier (Between two values)', required: false, type: 'array' })
+  @ApiProperty({
+    description: 'Primary key - unique identifier (Between two values)',
+    required: false,
+    type: 'array',
+  })
   @IsOptional()
   @IsArray()
   @ArrayMinSize(2)
@@ -232,7 +334,11 @@ export class FilterLocationDto {
   /**
    * Primary key - unique identifier (Is null/not null)
    */
-  @ApiProperty({ description: 'Primary key - unique identifier (Is null/not null)', required: false, type: 'boolean' })
+  @ApiProperty({
+    description: 'Primary key - unique identifier (Is null/not null)',
+    required: false,
+    type: 'boolean',
+  })
   @IsOptional()
   @IsBoolean()
   id_null?: boolean;
@@ -240,49 +346,77 @@ export class FilterLocationDto {
   /**
    * Last update timestamp (auto-updated) (Equal to)
    */
-  @ApiProperty({ description: 'Last update timestamp (auto-updated) (Equal to)', required: false, type: Date })
+  @ApiProperty({
+    description: 'Last update timestamp (auto-updated) (Equal to)',
+    required: false,
+    type: Date,
+  })
   @IsOptional()
   updatedAt_eq?: Date;
 
   /**
    * Last update timestamp (auto-updated) (Not equal to)
    */
-  @ApiProperty({ description: 'Last update timestamp (auto-updated) (Not equal to)', required: false, type: Date })
+  @ApiProperty({
+    description: 'Last update timestamp (auto-updated) (Not equal to)',
+    required: false,
+    type: Date,
+  })
   @IsOptional()
   updatedAt_ne?: Date;
 
   /**
    * Last update timestamp (auto-updated) (Greater than)
    */
-  @ApiProperty({ description: 'Last update timestamp (auto-updated) (Greater than)', required: false, type: Date })
+  @ApiProperty({
+    description: 'Last update timestamp (auto-updated) (Greater than)',
+    required: false,
+    type: Date,
+  })
   @IsOptional()
   updatedAt_gt?: Date;
 
   /**
    * Last update timestamp (auto-updated) (Greater than or equal)
    */
-  @ApiProperty({ description: 'Last update timestamp (auto-updated) (Greater than or equal)', required: false, type: Date })
+  @ApiProperty({
+    description: 'Last update timestamp (auto-updated) (Greater than or equal)',
+    required: false,
+    type: Date,
+  })
   @IsOptional()
   updatedAt_gte?: Date;
 
   /**
    * Last update timestamp (auto-updated) (Less than)
    */
-  @ApiProperty({ description: 'Last update timestamp (auto-updated) (Less than)', required: false, type: Date })
+  @ApiProperty({
+    description: 'Last update timestamp (auto-updated) (Less than)',
+    required: false,
+    type: Date,
+  })
   @IsOptional()
   updatedAt_lt?: Date;
 
   /**
    * Last update timestamp (auto-updated) (Less than or equal)
    */
-  @ApiProperty({ description: 'Last update timestamp (auto-updated) (Less than or equal)', required: false, type: Date })
+  @ApiProperty({
+    description: 'Last update timestamp (auto-updated) (Less than or equal)',
+    required: false,
+    type: Date,
+  })
   @IsOptional()
   updatedAt_lte?: Date;
 
   /**
    * Last update timestamp (auto-updated) (Pattern match)
    */
-  @ApiProperty({ description: 'Last update timestamp (auto-updated) (Pattern match)', required: false, type: 'string' })
+  @ApiProperty({
+    description: 'Last update timestamp (auto-updated) (Pattern match)',
+    required: false,
+    type: 'string',
+  })
   @IsOptional()
   @IsString()
   updatedAt_like?: string;
@@ -290,7 +424,11 @@ export class FilterLocationDto {
   /**
    * Last update timestamp (auto-updated) (In array)
    */
-  @ApiProperty({ description: 'Last update timestamp (auto-updated) (In array)', required: false, type: [Date] })
+  @ApiProperty({
+    description: 'Last update timestamp (auto-updated) (In array)',
+    required: false,
+    type: [Date],
+  })
   @IsOptional()
   @IsArray()
   updatedAt_in?: Date[];
@@ -298,7 +436,11 @@ export class FilterLocationDto {
   /**
    * Last update timestamp (auto-updated) (Between two values)
    */
-  @ApiProperty({ description: 'Last update timestamp (auto-updated) (Between two values)', required: false, type: 'array' })
+  @ApiProperty({
+    description: 'Last update timestamp (auto-updated) (Between two values)',
+    required: false,
+    type: 'array',
+  })
   @IsOptional()
   @IsArray()
   @ArrayMinSize(2)
@@ -308,7 +450,11 @@ export class FilterLocationDto {
   /**
    * Last update timestamp (auto-updated) (Is null/not null)
    */
-  @ApiProperty({ description: 'Last update timestamp (auto-updated) (Is null/not null)', required: false, type: 'boolean' })
+  @ApiProperty({
+    description: 'Last update timestamp (auto-updated) (Is null/not null)',
+    required: false,
+    type: 'boolean',
+  })
   @IsOptional()
   @IsBoolean()
   updatedAt_null?: boolean;

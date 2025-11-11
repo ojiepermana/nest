@@ -8,6 +8,6 @@ import { LocationRepository } from './repositories/location.repository';
   imports: [CacheModule.register()],
   controllers: [LocationController],
   providers: [LocationService, LocationRepository],
-  exports: [LocationService, LocationRepository]
+  exports: [LocationService, LocationRepository],
 })
 export class LocationModule {}

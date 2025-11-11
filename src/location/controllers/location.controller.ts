@@ -1,4 +1,18 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpStatus, HttpCode, ValidationPipe, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  HttpStatus,
+  HttpCode,
+  ValidationPipe,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { LocationService } from '../services/location.service';
 import { Location } from '../entities/location.entity';
 import { CreateLocationDto } from '../dto/create-location.dto';
@@ -12,9 +26,12 @@ import { RequirePermission } from '@ojiepermana/nest-generator/rbac';
 export class LocationController {
   constructor(private readonly service: LocationService) {}
 
-
   @ApiOperation({ summary: 'Create a new location' })
-  @ApiResponse({ status: 201, description: 'The location has been successfully created.', type: Location })
+  @ApiResponse({
+    status: 201,
+    description: 'The location has been successfully created.',
+    type: Location,
+  })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
   @ApiBody({ type: CreateLocationDto })
   @RequirePermission('location.create')
@@ -26,9 +43,24 @@ export class LocationController {
 
   @ApiOperation({ summary: 'Get all locations with pagination' })
   @ApiResponse({ status: 200, description: 'Return all locations with pagination.' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 20, max: 100)' })
-  @ApiQuery({ name: 'sort', required: false, type: String, description: 'Sort field and order (e.g., name:ASC)' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 20, max: 100)',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sort field and order (e.g., name:ASC)',
+  })
   @RequirePermission('location.read')
   @Get()
   async findAll(
@@ -43,18 +75,36 @@ export class LocationController {
         })
       : undefined;
 
-    return this.service.findWithFilters({}, {
-      page: page ? Number(page) : undefined,
-      limit: limit ? Number(limit) : undefined,
-      sort: sortOptions,
-    });
+    return this.service.findWithFilters(
+      {},
+      {
+        page: page ? Number(page) : undefined,
+        limit: limit ? Number(limit) : undefined,
+        sort: sortOptions,
+      },
+    );
   }
 
   @ApiOperation({ summary: 'Get locations with filters and pagination' })
   @ApiResponse({ status: 200, description: 'Return filtered locations with pagination.' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 20, max: 100)' })
-  @ApiQuery({ name: 'sort', required: false, type: String, description: 'Sort field and order (e.g., name:ASC)' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 20, max: 100)',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sort field and order (e.g., name:ASC)',
+  })
   @Get('filter')
   async findWithFilters(
     @Query() filterDto: LocationFilterDto,
@@ -91,7 +141,11 @@ export class LocationController {
   }
 
   @ApiOperation({ summary: 'Update a location' })
-  @ApiResponse({ status: 200, description: 'The location has been successfully updated.', type: Location })
+  @ApiResponse({
+    status: 200,
+    description: 'The location has been successfully updated.',
+    type: Location,
+  })
   @ApiResponse({ status: 404, description: 'Location not found.' })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
   @ApiParam({ name: 'id', type: String, description: 'Location ID' })
@@ -115,5 +169,4 @@ export class LocationController {
   async remove(@Param('id') id: string): Promise<void> {
     await this.service.remove(id);
   }
-
 }

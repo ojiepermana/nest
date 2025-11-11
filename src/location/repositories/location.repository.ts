@@ -15,13 +15,13 @@ export class LocationRepository {
     const columns = Object.keys(dto);
     const values = Object.values(dto);
     const placeholders = values.map((_, i) => `$${i + 1}`).join(', ');
-    
+
     const query = `
       INSERT INTO "entity"."location" (${columns.join(', ')})
       VALUES (${placeholders})
       RETURNING *
     `;
-    
+
     const result = await this.pool.query(query, values);
     return result.rows[0];
   }
@@ -49,7 +49,11 @@ export class LocationRepository {
    */
   async findWithFilters(
     filter: LocationFilterDto,
-    options?: { page?: number; limit?: number; sort?: Array<{ field: string; order: 'ASC' | 'DESC' }> },
+    options?: {
+      page?: number;
+      limit?: number;
+      sort?: Array<{ field: string; order: 'ASC' | 'DESC' }>;
+    },
   ): Promise<{ data: any[]; total: number }> {
     const conditions: string[] = [];
     const values: any[] = [];
@@ -66,7 +70,7 @@ export class LocationRepository {
     });
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-    
+
     // Get total count
     const countQuery = `SELECT COUNT(*) as total FROM "entity"."location" ${whereClause}`;
     const countResult = await this.pool.query(countQuery, values);
@@ -75,7 +79,7 @@ export class LocationRepository {
     // Build ORDER BY clause
     let orderByClause = `ORDER BY id`;
     if (options?.sort && options.sort.length > 0) {
-      const sortClauses = options.sort.map(s => `${s.field} ${s.order}`).join(', ');
+      const sortClauses = options.sort.map((s) => `${s.field} ${s.order}`).join(', ');
       orderByClause = `ORDER BY ${sortClauses}`;
     }
 
@@ -104,14 +108,14 @@ export class LocationRepository {
 
     const setClauses = entries.map(([key], i) => `${key} = $${i + 1}`).join(', ');
     const values = [...entries.map(([_, value]) => value), id];
-    
+
     const query = `
       UPDATE "entity"."location"
       SET ${setClauses}
       WHERE id = $${values.length}
       RETURNING *
     `;
-    
+
     const result = await this.pool.query(query, values);
     return result.rows[0] || null;
   }

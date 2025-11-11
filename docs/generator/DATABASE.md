@@ -151,6 +151,7 @@ If an incompatible version is detected, you'll see:
    ```
 
 3. **Restore and migrate**
+
    ```bash
    psql -d mydb -f backup.sql
    ```
@@ -180,6 +181,7 @@ If an incompatible version is detected, you'll see:
    ```
 
 4. **Restore data**
+
    ```bash
    mysql -u root -p mydb < backup.sql
    ```

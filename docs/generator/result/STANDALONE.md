@@ -12,16 +12,16 @@ nest-generator generate entity.entity
 
 ### Enabled Features
 
-| Feature | Status | Description |
-|---------|--------|-------------|
-| ✅ Swagger/OpenAPI | **Enabled** | Auto-generated API documentation |
-| ✅ DTO Validation | **Enabled** | class-validator decorators on all DTOs |
-| ✅ Pagination | **Enabled** | Filter endpoint with page/limit support |
-| ✅ Caching | **Enabled** | Redis-compatible caching with TTL |
-| ✅ Audit Logging | **Enabled** | Tracks CREATE/UPDATE/DELETE operations |
-| ✅ Soft Delete | **Enabled** | Records marked as deleted without removal |
-| ✅ File Upload | **Enabled** | Auto-detects file columns (avatarDocId) |
-| ✅ RBAC | **Enabled** | Role-based access control integration |
+| Feature            | Status      | Description                               |
+| ------------------ | ----------- | ----------------------------------------- |
+| ✅ Swagger/OpenAPI | **Enabled** | Auto-generated API documentation          |
+| ✅ DTO Validation  | **Enabled** | class-validator decorators on all DTOs    |
+| ✅ Pagination      | **Enabled** | Filter endpoint with page/limit support   |
+| ✅ Caching         | **Enabled** | Redis-compatible caching with TTL         |
+| ✅ Audit Logging   | **Enabled** | Tracks CREATE/UPDATE/DELETE operations    |
+| ✅ Soft Delete     | **Enabled** | Records marked as deleted without removal |
+| ✅ File Upload     | **Enabled** | Auto-detects file columns (avatarDocId)   |
+| ✅ RBAC            | **Enabled** | Role-based access control integration     |
 
 ---
 
@@ -58,25 +58,25 @@ src/entity/
 
 ```typescript
 export class Entity {
-  id?: string;                    // Primary key - UUID
-  businessEntityId?: string;      // Required foreign key
-  code?: string;                  // Unique code (NOT NULL)
-  regionCode?: string;            // Required field
-  name?: string;                  // Optional name
-  email?: string;                 // Optional email
-  localPhone?: string;            // Optional phone
-  address?: string;               // Optional address
-  postcode?: string;              // Optional postcode
-  brand?: string;                 // Optional brand
-  type?: string;                  // Optional type
-  status?: string;                // Record status
-  birthDate?: Date;               // Optional date field
-  avatarDocId?: string;           // File upload field
-  oldId?: string;                 // Legacy migration ID
-  createdAt?: Date;               // Auto-timestamp
-  updatedAt?: Date;               // Auto-timestamp
-  createdBy?: string;             // Audit field
-  deletedAt?: Date;               // Soft delete timestamp
+  id?: string; // Primary key - UUID
+  businessEntityId?: string; // Required foreign key
+  code?: string; // Unique code (NOT NULL)
+  regionCode?: string; // Required field
+  name?: string; // Optional name
+  email?: string; // Optional email
+  localPhone?: string; // Optional phone
+  address?: string; // Optional address
+  postcode?: string; // Optional postcode
+  brand?: string; // Optional brand
+  type?: string; // Optional type
+  status?: string; // Record status
+  birthDate?: Date; // Optional date field
+  avatarDocId?: string; // File upload field
+  oldId?: string; // Legacy migration ID
+  createdAt?: Date; // Auto-timestamp
+  updatedAt?: Date; // Auto-timestamp
+  createdBy?: string; // Audit field
+  deletedAt?: Date; // Soft delete timestamp
 }
 ```
 
@@ -162,14 +162,14 @@ email?: string;
 
 **Methods:**
 
-| Method | SQL Operation | Description |
-|--------|---------------|-------------|
-| `create()` | INSERT | Creates new record with RETURNING * |
-| `findAll()` | SELECT * | Retrieves all records ordered by ID |
-| `findOne()` | SELECT WHERE id | Finds single record by primary key |
-| `findWithFilters()` | SELECT WHERE | Dynamic filtering with AND conditions |
-| `update()` | UPDATE WHERE id | Partial update with RETURNING * |
-| `delete()` | DELETE WHERE id | Hard delete (soft delete in service) |
+| Method              | SQL Operation   | Description                           |
+| ------------------- | --------------- | ------------------------------------- |
+| `create()`          | INSERT          | Creates new record with RETURNING \*  |
+| `findAll()`         | SELECT \*       | Retrieves all records ordered by ID   |
+| `findOne()`         | SELECT WHERE id | Finds single record by primary key    |
+| `findWithFilters()` | SELECT WHERE    | Dynamic filtering with AND conditions |
+| `update()`          | UPDATE WHERE id | Partial update with RETURNING \*      |
+| `delete()`          | DELETE WHERE id | Hard delete (soft delete in service)  |
 
 **Query Example:**
 
@@ -180,8 +180,8 @@ VALUES ($1, $2, $3, ...)
 RETURNING *
 
 // Filtered SELECT
-SELECT * FROM "entity"."entity" 
-WHERE status = $1 AND type = $2 
+SELECT * FROM "entity"."entity"
+WHERE status = $1 AND type = $2
 ORDER BY id
 ```
 
@@ -268,14 +268,14 @@ async validateUniqueConstraints(data, excludeId?): Promise<void> {
 
 #### 📍 **Endpoints**
 
-| Method | Route | Description | Status |
-|--------|-------|-------------|--------|
-| POST | `/entity` | Create new entity | 201 Created |
-| GET | `/entity` | Get all entities | 200 OK |
-| GET | `/entity/filter` | Get with filters & pagination | 200 OK |
-| GET | `/entity/:id` | Get single entity by ID | 200 OK / 404 Not Found |
-| PUT | `/entity/:id` | Update entity | 200 OK / 404 Not Found |
-| DELETE | `/entity/:id` | Delete entity | 204 No Content / 404 Not Found |
+| Method | Route            | Description                   | Status                         |
+| ------ | ---------------- | ----------------------------- | ------------------------------ |
+| POST   | `/entity`        | Create new entity             | 201 Created                    |
+| GET    | `/entity`        | Get all entities              | 200 OK                         |
+| GET    | `/entity/filter` | Get with filters & pagination | 200 OK                         |
+| GET    | `/entity/:id`    | Get single entity by ID       | 200 OK / 404 Not Found         |
+| PUT    | `/entity/:id`    | Update entity                 | 200 OK / 404 Not Found         |
+| DELETE | `/entity/:id`    | Delete entity                 | 204 No Content / 404 Not Found |
 
 #### 📝 **Swagger Documentation**
 
@@ -315,7 +315,11 @@ GET /entity/filter?page=1&limit=20&sort=name:ASC,createdAt:DESC&status=active
 
 ```json
 {
-  "data": [{ /* entity objects */ }],
+  "data": [
+    {
+      /* entity objects */
+    }
+  ],
   "total": 150,
   "page": 1,
   "limit": 20
@@ -333,7 +337,7 @@ GET /entity/filter?page=1&limit=20&sort=name:ASC,createdAt:DESC&status=active
   imports: [CacheModule.register()],
   controllers: [EntityController],
   providers: [EntityService, EntityRepository],
-  exports: [EntityService, EntityRepository]
+  exports: [EntityService, EntityRepository],
 })
 export class EntityModule {}
 ```
@@ -482,7 +486,9 @@ REDIS_PORT=6379
   "entity_type": "Entity",
   "entity_id": "uuid-generated",
   "action": "CREATE",
-  "new_values": { /* full DTO */ },
+  "new_values": {
+    /* full DTO */
+  },
   "user_id": "system"
 }
 ```
@@ -587,27 +593,27 @@ REDIS_PORT=6379
 
 ### Column Details
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | UUID | PRIMARY KEY | Auto-generated unique identifier |
-| `business_entity_id` | VARCHAR | NOT NULL | Required foreign key |
-| `code` | VARCHAR | NOT NULL, UNIQUE | Unique identification code |
-| `region_code` | VARCHAR | NOT NULL | Required region |
-| `name` | VARCHAR | NULL | Optional name/title |
-| `email` | VARCHAR | NULL | Optional email address |
-| `local_phone` | VARCHAR | NULL | Optional phone number |
-| `address` | TEXT | NULL | Optional address |
-| `postcode` | VARCHAR | NULL | Optional postal code |
-| `brand` | VARCHAR | NULL | Optional brand |
-| `type` | VARCHAR | NULL | Optional entity type |
-| `status` | VARCHAR | NULL | Record status (ACTIVE/INACTIVE) |
-| `birth_date` | DATE | NULL | Optional date of birth |
-| `avatar_doc_id` | VARCHAR | NULL | File upload reference |
-| `old_id` | VARCHAR | NULL | Legacy system ID |
-| `created_at` | TIMESTAMP | DEFAULT NOW() | Auto-timestamp |
-| `updated_at` | TIMESTAMP | DEFAULT NOW() | Auto-updated timestamp |
-| `created_by` | VARCHAR | NULL | Audit: creator user |
-| `deleted_at` | TIMESTAMP | NULL | Soft delete timestamp |
+| Column               | Type      | Constraints      | Description                      |
+| -------------------- | --------- | ---------------- | -------------------------------- |
+| `id`                 | UUID      | PRIMARY KEY      | Auto-generated unique identifier |
+| `business_entity_id` | VARCHAR   | NOT NULL         | Required foreign key             |
+| `code`               | VARCHAR   | NOT NULL, UNIQUE | Unique identification code       |
+| `region_code`        | VARCHAR   | NOT NULL         | Required region                  |
+| `name`               | VARCHAR   | NULL             | Optional name/title              |
+| `email`              | VARCHAR   | NULL             | Optional email address           |
+| `local_phone`        | VARCHAR   | NULL             | Optional phone number            |
+| `address`            | TEXT      | NULL             | Optional address                 |
+| `postcode`           | VARCHAR   | NULL             | Optional postal code             |
+| `brand`              | VARCHAR   | NULL             | Optional brand                   |
+| `type`               | VARCHAR   | NULL             | Optional entity type             |
+| `status`             | VARCHAR   | NULL             | Record status (ACTIVE/INACTIVE)  |
+| `birth_date`         | DATE      | NULL             | Optional date of birth           |
+| `avatar_doc_id`      | VARCHAR   | NULL             | File upload reference            |
+| `old_id`             | VARCHAR   | NULL             | Legacy system ID                 |
+| `created_at`         | TIMESTAMP | DEFAULT NOW()    | Auto-timestamp                   |
+| `updated_at`         | TIMESTAMP | DEFAULT NOW()    | Auto-updated timestamp           |
+| `created_by`         | VARCHAR   | NULL             | Audit: creator user              |
+| `deleted_at`         | TIMESTAMP | NULL             | Soft delete timestamp            |
 
 **Total Columns:** 19  
 **Required Fields:** 3 (id, business_entity_id, code, region_code)  
@@ -737,12 +743,12 @@ describe('Entity API (e2e)', () => {
 
    ```typescript
    import * as redisStore from 'cache-manager-redis-store';
-   
+
    CacheModule.register({
      store: redisStore,
      host: process.env.REDIS_HOST,
      port: process.env.REDIS_PORT,
-   })
+   });
    ```
 
 3. **Add pagination to findAll:**
@@ -806,11 +812,13 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Enable validation globally
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    transform: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   // Swagger configuration
   const config = new DocumentBuilder()
@@ -950,13 +958,13 @@ Once your application is running, navigate to the Swagger UI URL in your browser
 
 **Step 3:** Set query parameters:
 
-| Parameter | Value | Description |
-|-----------|-------|-------------|
-| `status` | `ACTIVE` | Filter by status |
-| `type` | `CUSTOMER` | Filter by type |
-| `page` | `1` | Page number |
-| `limit` | `10` | Items per page |
-| `sort` | `name:ASC` | Sort by name ascending |
+| Parameter | Value      | Description            |
+| --------- | ---------- | ---------------------- |
+| `status`  | `ACTIVE`   | Filter by status       |
+| `type`    | `CUSTOMER` | Filter by type         |
+| `page`    | `1`        | Page number            |
+| `limit`   | `10`       | Items per page         |
+| `sort`    | `name:ASC` | Sort by name ascending |
 
 **Step 4:** Click **"Execute"**
 
@@ -1123,25 +1131,25 @@ Each endpoint shows the expected request structure:
 
 ```json
 {
-  "businessEntityId": "string",  // Required
-  "code": "string",               // Required
-  "regionCode": "string",         // Required
-  "name": "string",               // Optional
-  "email": "string (email)",      // Optional, validated as email
-  "localPhone": "string",         // Optional
-  "address": "string",            // Optional
-  "postcode": "string",           // Optional
-  "brand": "string",              // Optional
-  "type": "string",               // Optional
-  "status": "string",             // Optional
-  "birthDate": "string (date)",   // Optional
-  "avatarDocId": "string"         // Optional (file reference)
+  "businessEntityId": "string", // Required
+  "code": "string", // Required
+  "regionCode": "string", // Required
+  "name": "string", // Optional
+  "email": "string (email)", // Optional, validated as email
+  "localPhone": "string", // Optional
+  "address": "string", // Optional
+  "postcode": "string", // Optional
+  "brand": "string", // Optional
+  "type": "string", // Optional
+  "status": "string", // Optional
+  "birthDate": "string (date)", // Optional
+  "avatarDocId": "string" // Optional (file reference)
 }
 ```
 
 **Visual Indicators:**
 
-- 🔴 **Red asterisk (*)** - Required field
+- 🔴 **Red asterisk (\*)** - Required field
 - 🔵 **Blue text** - Optional field
 - 📋 **Format hints** - Email, date, etc.
 
@@ -1190,15 +1198,15 @@ Each endpoint shows possible responses:
 
 Each endpoint documents all possible status codes:
 
-| Code | Description | When |
-|------|-------------|------|
-| `200` | OK | Successful GET, PUT requests |
-| `201` | Created | Successful POST request |
-| `204` | No Content | Successful DELETE request |
-| `400` | Bad Request | Validation failed |
-| `404` | Not Found | Entity doesn't exist |
-| `409` | Conflict | Unique constraint violation |
-| `500` | Internal Server Error | Unexpected server error |
+| Code  | Description           | When                         |
+| ----- | --------------------- | ---------------------------- |
+| `200` | OK                    | Successful GET, PUT requests |
+| `201` | Created               | Successful POST request      |
+| `204` | No Content            | Successful DELETE request    |
+| `400` | Bad Request           | Validation failed            |
+| `404` | Not Found             | Entity doesn't exist         |
+| `409` | Conflict              | Unique constraint violation  |
+| `500` | Internal Server Error | Unexpected server error      |
 
 ---
 
@@ -1224,7 +1232,7 @@ Swagger auto-generates example values from your DTOs:
 You can customize examples using `@ApiProperty()`:
 
 ```typescript
-@ApiProperty({ 
+@ApiProperty({
   description: 'Unique code',
   example: 'CUST-001',
   type: 'string'
@@ -1285,9 +1293,7 @@ code: string;
 ```json
 {
   "statusCode": 400,
-  "message": [
-    "email must be an email"
-  ],
+  "message": ["email must be an email"],
   "error": "Bad Request"
 }
 ```
@@ -1301,7 +1307,7 @@ code: string;
 ```json
 {
   "businessEntityId": "be-123",
-  "code": "CUST-001",  // Already exists
+  "code": "CUST-001", // Already exists
   "regionCode": "US"
 }
 ```
@@ -1484,7 +1490,7 @@ Already configured with `@ApiTags('entity')`:
 ```typescript
 @ApiTags('entity')
 @Controller('entity')
-export class EntityController { }
+export class EntityController {}
 ```
 
 For multiple tags:
@@ -1498,9 +1504,9 @@ For multiple tags:
 #### **3. Deprecate Endpoints**
 
 ```typescript
-@ApiOperation({ 
+@ApiOperation({
   summary: 'Get entity (deprecated)',
-  deprecated: true 
+  deprecated: true
 })
 @Get('old')
 async oldMethod() { }
@@ -1571,7 +1577,7 @@ async createWithRelations(dto: CreateEntityDto): Promise<Entity> {
   const queryRunner = this.dataSource.createQueryRunner();
   await queryRunner.connect();
   await queryRunner.startTransaction();
-  
+
   try {
     const entity = await this.repository.create(dto);
     // Create related records...
@@ -1706,6 +1712,6 @@ npm run test:e2e
 
 ---
 
-*Generated on: November 11, 2025*  
-*Generator Version: @ojiepermana/nest-generator v1.1.2*  
-*Architecture: Standalone (Single Application)*
+_Generated on: November 11, 2025_  
+_Generator Version: @ojiepermana/nest-generator v1.1.2_  
+_Architecture: Standalone (Single Application)_

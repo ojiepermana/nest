@@ -477,14 +477,13 @@ export class ${serviceName} {`;
     }
 
     method += `
-    const data = await this.repository.findWithFilters(filterDto);
-    const total = data.length;
+    const { data, total } = await this.repository.findWithFilters(filterDto, options);
     
     const result = {
       data,
       total,
       page: options?.page || 1,
-      limit: options?.limit || 10,
+      limit: options?.limit || 20,
     };`;
 
     if (this.options.enableCaching) {

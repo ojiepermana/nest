@@ -940,14 +940,18 @@ export class ${repositoryName} {
   /**
    * Find ${toCamelCase(entityName)}s with filters
    */
-  async findWithFilters(filter: ${entityName}FilterDto): Promise<any[]> {
+  async findWithFilters(
+    filter: ${entityName}FilterDto,
+    options?: { page?: number; limit?: number; sort?: Array<{ field: string; order: 'ASC' | 'DESC' }> },
+  ): Promise<{ data: any[]; total: number }> {
     const conditions: string[] = [];
     const values: any[] = [];
     let paramIndex = 1;
 
-    // Build WHERE conditions from filter
+    // Build WHERE conditions from filter (skip pagination fields)
+    const paginationFields = ['page', 'limit', 'sort'];
     Object.entries(filter).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
+      if (value !== undefined && value !== null && !paginationFields.includes(key)) {
         conditions.push(\`\${key} = $\${paramIndex}\`);
         values.push(value);
         paramIndex++;
@@ -955,10 +959,33 @@ export class ${repositoryName} {
     });
 
     const whereClause = conditions.length > 0 ? \`WHERE \${conditions.join(' AND ')}\` : '';
-    const query = \`SELECT * FROM "${schemaName}"."${tableName}" \${whereClause} ORDER BY ${pkName}\`;
     
-    const result = await this.pool.query(query, values);
-    return result.rows;
+    // Get total count
+    const countQuery = \`SELECT COUNT(*) as total FROM "${schemaName}"."${tableName}" \${whereClause}\`;
+    const countResult = await this.pool.query(countQuery, values);
+    const total = parseInt(countResult.rows[0].total, 10);
+
+    // Build ORDER BY clause
+    let orderByClause = \`ORDER BY ${pkName}\`;
+    if (options?.sort && options.sort.length > 0) {
+      const sortClauses = options.sort.map(s => \`\${s.field} \${s.order}\`).join(', ');
+      orderByClause = \`ORDER BY \${sortClauses}\`;
+    }
+
+    // Build pagination
+    const page = options?.page || 1;
+    const limit = Math.min(options?.limit || 20, 100); // Max 100 items per page
+    const offset = (page - 1) * limit;
+
+    // Get paginated data
+    const dataQuery = \`SELECT * FROM "${schemaName}"."${tableName}" \${whereClause} \${orderByClause} LIMIT $\${paramIndex} OFFSET $\${paramIndex + 1}\`;
+    const dataValues = [...values, limit, offset];
+    const dataResult = await this.pool.query(dataQuery, dataValues);
+
+    return {
+      data: dataResult.rows,
+      total,
+    };
   }
 
   /**

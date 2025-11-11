@@ -3,88 +3,12 @@ import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 /**
- * Filter entity DTO
+ * Filter location DTO
  * Auto-generated from metadata
  * Supports query operators: _eq, _ne, _gt, _gte, _lt, _lte, _like, _in, _between, _null
  */
 
-export class FilterEntityDto {
-  /**
-   * Unique code for identification (Equal to)
-   */
-  @ApiProperty({ description: 'Unique code for identification (Equal to)', required: false, type: 'string' })
-  @IsOptional()
-  code_eq?: string;
-
-  /**
-   * Unique code for identification (Not equal to)
-   */
-  @ApiProperty({ description: 'Unique code for identification (Not equal to)', required: false, type: 'string' })
-  @IsOptional()
-  code_ne?: string;
-
-  /**
-   * Unique code for identification (Greater than)
-   */
-  @ApiProperty({ description: 'Unique code for identification (Greater than)', required: false, type: 'string' })
-  @IsOptional()
-  code_gt?: string;
-
-  /**
-   * Unique code for identification (Greater than or equal)
-   */
-  @ApiProperty({ description: 'Unique code for identification (Greater than or equal)', required: false, type: 'string' })
-  @IsOptional()
-  code_gte?: string;
-
-  /**
-   * Unique code for identification (Less than)
-   */
-  @ApiProperty({ description: 'Unique code for identification (Less than)', required: false, type: 'string' })
-  @IsOptional()
-  code_lt?: string;
-
-  /**
-   * Unique code for identification (Less than or equal)
-   */
-  @ApiProperty({ description: 'Unique code for identification (Less than or equal)', required: false, type: 'string' })
-  @IsOptional()
-  code_lte?: string;
-
-  /**
-   * Unique code for identification (Pattern match)
-   */
-  @ApiProperty({ description: 'Unique code for identification (Pattern match)', required: false, type: 'string' })
-  @IsOptional()
-  @IsString()
-  code_like?: string;
-
-  /**
-   * Unique code for identification (In array)
-   */
-  @ApiProperty({ description: 'Unique code for identification (In array)', required: false, type: [String] })
-  @IsOptional()
-  @IsArray()
-  code_in?: string[];
-
-  /**
-   * Unique code for identification (Between two values)
-   */
-  @ApiProperty({ description: 'Unique code for identification (Between two values)', required: false, type: 'array' })
-  @IsOptional()
-  @IsArray()
-  @ArrayMinSize(2)
-  @ArrayMaxSize(2)
-  code_between?: [string, string];
-
-  /**
-   * Unique code for identification (Is null/not null)
-   */
-  @ApiProperty({ description: 'Unique code for identification (Is null/not null)', required: false, type: 'boolean' })
-  @IsOptional()
-  @IsBoolean()
-  code_null?: boolean;
-
+export class FilterLocationDto {
   /**
    * Record creation timestamp (Equal to)
    */
@@ -314,82 +238,6 @@ export class FilterEntityDto {
   id_null?: boolean;
 
   /**
-   * Record status (active/inactive) (Equal to)
-   */
-  @ApiProperty({ description: 'Record status (active/inactive) (Equal to)', required: false, type: 'string' })
-  @IsOptional()
-  status_eq?: string;
-
-  /**
-   * Record status (active/inactive) (Not equal to)
-   */
-  @ApiProperty({ description: 'Record status (active/inactive) (Not equal to)', required: false, type: 'string' })
-  @IsOptional()
-  status_ne?: string;
-
-  /**
-   * Record status (active/inactive) (Greater than)
-   */
-  @ApiProperty({ description: 'Record status (active/inactive) (Greater than)', required: false, type: 'string' })
-  @IsOptional()
-  status_gt?: string;
-
-  /**
-   * Record status (active/inactive) (Greater than or equal)
-   */
-  @ApiProperty({ description: 'Record status (active/inactive) (Greater than or equal)', required: false, type: 'string' })
-  @IsOptional()
-  status_gte?: string;
-
-  /**
-   * Record status (active/inactive) (Less than)
-   */
-  @ApiProperty({ description: 'Record status (active/inactive) (Less than)', required: false, type: 'string' })
-  @IsOptional()
-  status_lt?: string;
-
-  /**
-   * Record status (active/inactive) (Less than or equal)
-   */
-  @ApiProperty({ description: 'Record status (active/inactive) (Less than or equal)', required: false, type: 'string' })
-  @IsOptional()
-  status_lte?: string;
-
-  /**
-   * Record status (active/inactive) (Pattern match)
-   */
-  @ApiProperty({ description: 'Record status (active/inactive) (Pattern match)', required: false, type: 'string' })
-  @IsOptional()
-  @IsString()
-  status_like?: string;
-
-  /**
-   * Record status (active/inactive) (In array)
-   */
-  @ApiProperty({ description: 'Record status (active/inactive) (In array)', required: false, type: [String] })
-  @IsOptional()
-  @IsArray()
-  status_in?: string[];
-
-  /**
-   * Record status (active/inactive) (Between two values)
-   */
-  @ApiProperty({ description: 'Record status (active/inactive) (Between two values)', required: false, type: 'array' })
-  @IsOptional()
-  @IsArray()
-  @ArrayMinSize(2)
-  @ArrayMaxSize(2)
-  status_between?: [string, string];
-
-  /**
-   * Record status (active/inactive) (Is null/not null)
-   */
-  @ApiProperty({ description: 'Record status (active/inactive) (Is null/not null)', required: false, type: 'boolean' })
-  @IsOptional()
-  @IsBoolean()
-  status_null?: boolean;
-
-  /**
    * Last update timestamp (auto-updated) (Equal to)
    */
   @ApiProperty({ description: 'Last update timestamp (auto-updated) (Equal to)', required: false, type: Date })
@@ -511,4 +359,4 @@ export class FilterEntityDto {
 }
 
 // Export alias for compatibility
-export { FilterEntityDto as EntityFilterDto };
+export { FilterLocationDto as LocationFilterDto };

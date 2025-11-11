@@ -30,6 +30,7 @@ This creates a global symlink to the local build at:
    - Update `.env` file with credentials
 
 3. **Initialize metadata schema:**
+
    ```bash
    nest-generator init
    ```

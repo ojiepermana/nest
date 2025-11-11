@@ -1193,6 +1193,7 @@ When adding new features (like Audit Trail or File Upload were added):
 
 3. **CLI Integration**:
    - Update `generate.command.ts`:
+
      ```typescript
      interface Features {
        audit?: boolean;
@@ -1200,6 +1201,7 @@ When adding new features (like Audit Trail or File Upload were added):
        newFeature?: boolean; // Add new feature flag
      }
      ```
+
    - Add interactive prompts
    - Pass feature flag to generators
 
@@ -1484,8 +1486,8 @@ When working with this codebase:
 
 **External References**:
 
-- NestJS Docs: https://docs.nestjs.com
-- class-validator: https://github.com/typestack/class-validator
-- Handlebars: https://handlebarsjs.com/
-- PostgreSQL: https://www.postgresql.org/docs/
-- MySQL: https://dev.mysql.com/doc/
+- NestJS Docs: <https://docs.nestjs.com>
+- class-validator: <https://github.com/typestack/class-validator>
+- Handlebars: <https://handlebarsjs.com/>
+- PostgreSQL: <https://www.postgresql.org/docs/>
+- MySQL: <https://dev.mysql.com/doc/>

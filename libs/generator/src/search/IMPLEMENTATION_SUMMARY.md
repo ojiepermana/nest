@@ -417,10 +417,10 @@ stopWords: ['the', 'a', 'an'];
 
 ## 📚 Resources
 
-- **Elasticsearch Guide**: https://www.elastic.co/guide/
-- **Laravel Scout**: https://laravel.com/docs/scout
-- **NestJS Documentation**: https://docs.nestjs.com
-- **TypeScript Handbook**: https://www.typescriptlang.org/docs/
+- **Elasticsearch Guide**: <https://www.elastic.co/guide/>
+- **Laravel Scout**: <https://laravel.com/docs/scout>
+- **NestJS Documentation**: <https://docs.nestjs.com>
+- **TypeScript Handbook**: <https://www.typescriptlang.org/docs/>
 
 ## ✨ Highlights
 

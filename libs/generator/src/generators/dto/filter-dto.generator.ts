@@ -154,6 +154,13 @@ export class FilterDtoGenerator {
       }
     });
 
+    // Add pagination fields
+    const paginationFields = this.generatePaginationFields();
+    properties.push(...paginationFields);
+
+    // Add decorators for pagination fields
+    allDecorators.push('@IsOptional()', '@IsInt()', '@Min()', '@Max()', '@IsString()');
+
     // Generate imports
     const imports = this.generateImports(allDecorators);
 
@@ -206,6 +213,65 @@ export class FilterDtoGenerator {
       default:
         return baseType;
     }
+  }
+
+  /**
+   * Generate pagination fields (page, limit, sort)
+   */
+  private generatePaginationFields(): string[] {
+    const fields: string[] = [];
+
+    // Page field
+    fields.push(`  /**
+   * Page number for pagination (default: 1)
+   */
+  @ApiProperty({
+    description: 'Page number (default: 1)',
+    required: false,
+    type: 'number',
+    example: 1,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page?: number;
+`);
+
+    // Limit field
+    fields.push(`  /**
+   * Number of items per page (default: 20, max: 100)
+   */
+  @ApiProperty({
+    description: 'Items per page (default: 20, max: 100)',
+    required: false,
+    type: 'number',
+    example: 20,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit?: number;
+`);
+
+    // Sort field
+    fields.push(`  /**
+   * Sort field and order (e.g., 'name:ASC' or 'created_at:DESC,name:ASC')
+   */
+  @ApiProperty({
+    description: 'Sort field and order (e.g., name:ASC or created_at:DESC,name:ASC)',
+    required: false,
+    type: 'string',
+    example: 'created_at:DESC',
+  })
+  @IsOptional()
+  @IsString()
+  sort?: string;
+`);
+
+    return fields;
   }
 
   /**
@@ -278,7 +344,9 @@ export class FilterDtoGenerator {
         if (
           decoratorName.startsWith('Is') ||
           decoratorName === 'ArrayMinSize' ||
-          decoratorName === 'ArrayMaxSize'
+          decoratorName === 'ArrayMaxSize' ||
+          decoratorName === 'Min' ||
+          decoratorName === 'Max'
         ) {
           validatorDecorators.add(decoratorName);
         }
@@ -291,6 +359,9 @@ export class FilterDtoGenerator {
         `import { ${Array.from(validatorDecorators).join(', ')} } from 'class-validator';`,
       );
     }
+
+    // Class-transformer imports (for @Type decorator used in pagination)
+    imports.push(`import { Type } from 'class-transformer';`);
 
     // Swagger imports
     if (this.options.includeSwagger && decorators.some((d) => d.includes('@ApiProperty'))) {

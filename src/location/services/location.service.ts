@@ -1,114 +1,114 @@
 import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
-import { EntityRepository } from '../repositories/entity.repository';
-import { Entity } from '../entities/entity.entity';
-import { CreateEntityDto } from '../dto/create-entity.dto';
-import { UpdateEntityDto } from '../dto/update-entity.dto';
-import { EntityFilterDto } from '../dto/entity-filter.dto';
+import { LocationRepository } from '../repositories/location.repository';
+import { Location } from '../entities/location.entity';
+import { CreateLocationDto } from '../dto/create-location.dto';
+import { UpdateLocationDto } from '../dto/update-location.dto';
+import { LocationFilterDto } from '../dto/location-filter.dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject } from '@nestjs/common';
 import type { Cache } from 'cache-manager';
 import { AuditLogService } from '@ojiepermana/nest-generator/audit';
 
 @Injectable()
-export class EntityService {
+export class LocationService {
   constructor(
-    private readonly repository: EntityRepository,
+    private readonly repository: LocationRepository,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly auditLogService: AuditLogService,
   ) {}
 
 
   /**
-   * Create a new entity
+   * Create a new location
    */
-  async create(createDto: CreateEntityDto): Promise<Entity> {
+  async create(createDto: CreateLocationDto): Promise<Location> {
     // Validate unique constraints
     await this.validateUniqueConstraints(createDto);
 
-    const entity = await this.repository.create(createDto);
+    const location = await this.repository.create(createDto);
     
     // Invalidate cache
     await this.invalidateCache();
     
     // Log audit
     await this.auditLogService.log({
-      entity_type: 'Entity',
-      entity_id: String(entity.id),
+      entity_type: 'Location',
+      entity_id: String(location.id),
       action: 'CREATE',
       new_values: createDto,
       user_id: 'system', // TODO: Get from context
     });
     
-    return entity;
+    return location;
   }
 
   /**
-   * Find all entitys
+   * Find all locations
    */
-  async findAll(): Promise<Entity[]> {
-    const cacheKey = 'entity:all';
-    const cached = await this.cacheManager.get<Entity[]>(cacheKey);
+  async findAll(): Promise<Location[]> {
+    const cacheKey = 'location:all';
+    const cached = await this.cacheManager.get<Location[]>(cacheKey);
     
     if (cached) {
       return cached;
     }
     
-    const entitys = await this.repository.findAll();
-    await this.cacheManager.set(cacheKey, entitys, 300); // 5 minutes
+    const locations = await this.repository.findAll();
+    await this.cacheManager.set(cacheKey, locations, 300); // 5 minutes
     
-    return entitys;
+    return locations;
   }
 
   /**
-   * Find one entity by ID
+   * Find one location by ID
    */
-  async findOne(id: string): Promise<Entity> {
-    const cacheKey = `entity:${id}`;
-    const cached = await this.cacheManager.get<Entity>(cacheKey);
+  async findOne(id: string): Promise<Location> {
+    const cacheKey = `location:${id}`;
+    const cached = await this.cacheManager.get<Location>(cacheKey);
     
     if (cached) {
       return cached;
     }
     
-    const entity = await this.repository.findOne(id);
+    const location = await this.repository.findOne(id);
     
-    if (entity) {
-      await this.cacheManager.set(cacheKey, entity, 300);
+    if (location) {
+      await this.cacheManager.set(cacheKey, location, 300);
     }
     
-    return entity;
+    return location;
   }
 
   /**
-   * Update a entity
+   * Update a location
    */
-  async update(id: string, updateDto: UpdateEntityDto): Promise<Entity> {
+  async update(id: string, updateDto: UpdateLocationDto): Promise<Location> {
     // Validate exists
     await this.findOne(id);
     
     // Validate unique constraints
     await this.validateUniqueConstraints(updateDto, id);
 
-    const entity = await this.repository.update(id, updateDto);
+    const location = await this.repository.update(id, updateDto);
     
     // Invalidate cache
     await this.invalidateCache();
-    await this.cacheManager.del(`entity:${id}`);
+    await this.cacheManager.del(`location:${id}`);
     
     // Log audit
     await this.auditLogService.log({
-      entity_type: 'Entity',
+      entity_type: 'Location',
       entity_id: String(id),
       action: 'UPDATE',
       new_values: updateDto,
       user_id: 'system', // TODO: Get from context
     });
     
-    return entity;
+    return location;
   }
 
   /**
-   * Remove a entity
+   * Remove a location
    */
   async remove(id: string): Promise<void> {
     // Validate exists
@@ -118,11 +118,11 @@ export class EntityService {
     
     // Invalidate cache
     await this.invalidateCache();
-    await this.cacheManager.del(`entity:${id}`);
+    await this.cacheManager.del(`location:${id}`);
     
     // Log audit
     await this.auditLogService.log({
-      entity_type: 'Entity',
+      entity_type: 'Location',
       entity_id: String(id),
       action: 'DELETE',
       user_id: 'system', // TODO: Get from context
@@ -131,14 +131,14 @@ export class EntityService {
 
 
   /**
-   * Find entitys with filters
+   * Find locations with filters
    */
   async findWithFilters(
-    filterDto: EntityFilterDto,
+    filterDto: LocationFilterDto,
     options?: { page?: number; limit?: number; sort?: Array<{ field: string; order: 'ASC' | 'DESC' }> },
-  ): Promise<{ data: Entity[]; total: number; page: number; limit: number }> {
-    const cacheKey = `entity:filter:${JSON.stringify({ filterDto, options })}`;
-    const cached = await this.cacheManager.get<{ data: Entity[]; total: number; page: number; limit: number }>(cacheKey);
+  ): Promise<{ data: Location[]; total: number; page: number; limit: number }> {
+    const cacheKey = `location:filter:${JSON.stringify({ filterDto, options })}`;
+    const cached = await this.cacheManager.get<{ data: Location[]; total: number; page: number; limit: number }>(cacheKey);
     
     if (cached) {
       return cached;
@@ -160,10 +160,10 @@ export class EntityService {
 
 
   /**
-   * Count entitys
+   * Count locations
    */
   async count(): Promise<number> {
-    const cacheKey = 'entity:count';
+    const cacheKey = 'location:count';
     const cached = await this.cacheManager.get<number>(cacheKey);
     
     if (cached !== undefined) {
@@ -177,10 +177,10 @@ export class EntityService {
   }
 
   /**
-   * Check if entity exists
+   * Check if location exists
    */
   async exists(id: number): Promise<boolean> {
-    const cacheKey = `entity:${id}:exists`;
+    const cacheKey = `location:${id}:exists`;
     const cached = await this.cacheManager.get<boolean>(cacheKey);
     
     if (cached !== undefined) {
@@ -197,7 +197,7 @@ export class EntityService {
    * Validate unique constraints
    */
   private async validateUniqueConstraints(
-    data: CreateEntityDto | UpdateEntityDto,
+    data: CreateLocationDto | UpdateLocationDto,
     excludeId?: string,
   ): Promise<void> {
     // Add custom validation logic here based on unique columns
@@ -211,11 +211,11 @@ export class EntityService {
   }
 
   /**
-   * Invalidate all cache for entity
+   * Invalidate all cache for location
    */
   private async invalidateCache(): Promise<void> {
     // Invalidate common cache keys
-    await this.cacheManager.del('entity:all');
+    await this.cacheManager.del('location:all');
     
     // Note: cache-manager v5 doesn't support listing all keys
     // For production, consider using a cache with pattern-based deletion

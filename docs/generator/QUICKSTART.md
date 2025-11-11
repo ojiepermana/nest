@@ -269,7 +269,7 @@ Check database credentials in `generator.config.json`
 
 - 📚 [Complete Documentation Index](./INDEX.md)
 - 💬 [GitHub Issues](https://github.com/ojiepermana/nest/issues)
-- 📧 Email: me@ojiepermana.com
+- 📧 Email: <me@ojiepermana.com>
 
 ## Tips & Tricks
 

@@ -5,9 +5,10 @@ import { CreateEntityDto } from '../dto/create-entity.dto';
 import { UpdateEntityDto } from '../dto/update-entity.dto';
 import { EntityFilterDto } from '../dto/entity-filter.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
+import { RequirePermission } from '@ojiepermana/nest-generator/rbac';
 
-@ApiTags('entity')
-@Controller('entity')
+@ApiTags('entity/entity')
+@Controller('entity/entity')
 export class EntityController {
   constructor(private readonly service: EntityService) {}
 
@@ -15,14 +16,18 @@ export class EntityController {
   @ApiOperation({ summary: 'Create a new entity' })
   @ApiResponse({ status: 201, description: 'The entity has been successfully created.', type: Entity })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
-  @ApiBody({ type: CreateEntityDto })  @Post()
+  @ApiBody({ type: CreateEntityDto })
+  @RequirePermission('entity.create')
+  @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Body(ValidationPipe) createDto: CreateEntityDto): Promise<Entity> {
     return this.service.create(createDto);
   }
 
   @ApiOperation({ summary: 'Get all entitys' })
-  @ApiResponse({ status: 200, description: 'Return all entitys.', type: [Entity] })  @Get()
+  @ApiResponse({ status: 200, description: 'Return all entitys.', type: [Entity] })
+  @RequirePermission('entity.read')
+  @Get()
   async findAll(): Promise<Entity[]> {
     return this.service.findAll();
   }
@@ -56,7 +61,9 @@ export class EntityController {
   @ApiOperation({ summary: 'Get a entity by ID' })
   @ApiResponse({ status: 200, description: 'Return the entity.', type: Entity })
   @ApiResponse({ status: 404, description: 'Entity not found.' })
-  @ApiParam({ name: 'id', type: String, description: 'Entity ID' })  @Get(':id')
+  @ApiParam({ name: 'id', type: String, description: 'Entity ID' })
+  @RequirePermission('entity.read')
+  @Get(':id')
   async findOne(@Param('id') id: string): Promise<Entity> {
     const entity = await this.service.findOne(id);
     if (!entity) {
@@ -70,7 +77,9 @@ export class EntityController {
   @ApiResponse({ status: 404, description: 'Entity not found.' })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
   @ApiParam({ name: 'id', type: String, description: 'Entity ID' })
-  @ApiBody({ type: UpdateEntityDto })  @Put(':id')
+  @ApiBody({ type: UpdateEntityDto })
+  @RequirePermission('entity.update')
+  @Put(':id')
   async update(
     @Param('id') id: string,
     @Body(ValidationPipe) updateDto: UpdateEntityDto,
@@ -81,7 +90,9 @@ export class EntityController {
   @ApiOperation({ summary: 'Delete a entity' })
   @ApiResponse({ status: 204, description: 'The entity has been successfully deleted.' })
   @ApiResponse({ status: 404, description: 'Entity not found.' })
-  @ApiParam({ name: 'id', type: String, description: 'Entity ID' })  @Delete(':id')
+  @ApiParam({ name: 'id', type: String, description: 'Entity ID' })
+  @RequirePermission('entity.delete')
+  @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string): Promise<void> {
     await this.service.remove(id);

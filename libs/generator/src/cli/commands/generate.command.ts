@@ -89,13 +89,25 @@ export class GenerateCommand {
     const moduleClassName = `${this.toPascalCase(moduleName)}Module`;
     this.registerModuleToApp(outputPath, moduleName, moduleClassName);
 
-    // Step 9: Summary
+    // Step 9: Auto-configure Swagger if enabled
+    if (features.swagger) {
+      this.configureSwagger(outputPath, tableName, moduleName);
+    }
+
+    // Step 10: Summary
     Logger.success('\n✅ Generation complete!');
     Logger.info(`\n📁 Files created in: ${outputPath}`);
     Logger.info('\n📝 Next steps:');
     Logger.info('   1. Module auto-registered to app.module.ts ✓');
-    Logger.info('   2. Run migrations if needed');
-    Logger.info('   3. Start your application');
+    if (features.swagger) {
+      Logger.info('   2. Swagger configured in main.ts ✓');
+      Logger.info('   3. Access Swagger UI at: http://localhost:3000/api');
+      Logger.info('   4. Run migrations if needed');
+      Logger.info('   5. Start your application');
+    } else {
+      Logger.info('   2. Run migrations if needed');
+      Logger.info('   3. Start your application');
+    }
 
     await this.cleanup();
   }
@@ -536,6 +548,81 @@ export * from './controllers/${moduleName}.controller';
     } catch (error) {
       Logger.error(`   ✗ Failed to register module: ${(error as Error).message}`);
       Logger.warn('   ℹ Please manually add the module to app.module.ts');
+    }
+  }
+
+  /**
+   * Configure Swagger in main.ts
+   */
+  private configureSwagger(outputPath: string, tableName: string, moduleName: string): void {
+    try {
+      // main.ts is in the parent directory of outputPath (which is typically 'src')
+      const mainTsPath = join(outputPath, 'main.ts');
+
+      if (!existsSync(mainTsPath)) {
+        Logger.warn('⚠ main.ts not found, skipping Swagger configuration');
+        return;
+      }
+
+      let mainContent = readFileSync(mainTsPath, 'utf-8');
+
+      // Check if Swagger already configured
+      if (mainContent.includes('SwaggerModule')) {
+        Logger.info('   ℹ Swagger already configured in main.ts');
+        return;
+      }
+
+      // Add Swagger imports
+      const lastImportMatch = mainContent.match(/import.*from.*['"];?\n(?!import)/);
+      if (lastImportMatch && lastImportMatch.index !== undefined) {
+        const insertPos = lastImportMatch.index + lastImportMatch[0].length;
+        const swaggerImports = `import { ValidationPipe } from '@nestjs/common';\nimport { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';\n`;
+        mainContent =
+          mainContent.slice(0, insertPos) + swaggerImports + mainContent.slice(insertPos);
+      }
+
+      // Add Swagger configuration before app.listen()
+      const listenMatch = mainContent.match(/await app\.listen\(/);
+      if (listenMatch && listenMatch.index !== undefined) {
+        const swaggerConfig = `
+  // Enable validation globally
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  }));
+
+  // Swagger/OpenAPI configuration
+  const config = new DocumentBuilder()
+    .setTitle('API Documentation')
+    .setDescription('Auto-generated CRUD API documentation')
+    .setVersion('1.0')
+    .addTag('${moduleName}', '${this.toPascalCase(moduleName)} CRUD operations')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
+
+  `;
+
+        mainContent =
+          mainContent.slice(0, listenMatch.index) +
+          swaggerConfig +
+          mainContent.slice(listenMatch.index);
+      }
+
+      // Update console.log to include Swagger URL
+      mainContent = mainContent.replace(
+        /console\.log\(`Application is running on: http:\/\/localhost:\$\{port\}`\);/,
+        `console.log(\`Application is running on: http://localhost:\${port}\`);\n  console.log(\`Swagger documentation: http://localhost:\${port}/api\`);`,
+      );
+
+      writeFileSync(mainTsPath, mainContent, 'utf-8');
+      Logger.success(`   ✓ Swagger configured in main.ts`);
+    } catch (error) {
+      Logger.error(`   ✗ Failed to configure Swagger: ${(error as Error).message}`);
+      Logger.warn('   ℹ Please manually add Swagger configuration to main.ts');
     }
   }
 

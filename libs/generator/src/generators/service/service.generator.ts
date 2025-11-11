@@ -73,7 +73,7 @@ ${customMethods}
       imports.push(
         "import { CACHE_MANAGER } from '@nestjs/cache-manager';",
         "import { Inject } from '@nestjs/common';",
-        "import { Cache } from 'cache-manager';",
+        "import type { Cache } from 'cache-manager';",
       );
     }
 
@@ -159,10 +159,11 @@ export class ${serviceName} {`;
       
       // Log audit
       await this.auditLogService.log({
-        entity: '${entityName}',
-        entityId: ${camelName}.${pkColumn?.column_name || 'id'},
+        entity_type: '${entityName}',
+        entity_id: String(${camelName}.${pkColumn?.column_name || 'id'}),
         action: 'CREATE',
-        data: createDto,
+        new_values: createDto,
+        user_id: 'system', // TODO: Get from context
       });`;
       }
 
@@ -188,10 +189,11 @@ export class ${serviceName} {`;
     
     // Log audit
     await this.auditLogService.log({
-      entity: '${entityName}',
-      entityId: ${camelName}.${pkColumn?.column_name || 'id'},
+      entity_type: '${entityName}',
+      entity_id: String(${camelName}.${pkColumn?.column_name || 'id'}),
       action: 'CREATE',
-      data: createDto,
+      new_values: createDto,
+      user_id: 'system', // TODO: Get from context
     });`;
       }
 
@@ -321,10 +323,11 @@ export class ${serviceName} {`;
       
       // Log audit
       await this.auditLogService.log({
-        entity: '${entityName}',
-        entityId: id,
+        entity_type: '${entityName}',
+        entity_id: String(id),
         action: 'UPDATE',
-        data: updateDto,
+        new_values: updateDto,
+        user_id: 'system', // TODO: Get from context
       });`;
       }
 
@@ -351,10 +354,11 @@ export class ${serviceName} {`;
     
     // Log audit
     await this.auditLogService.log({
-      entity: '${entityName}',
-      entityId: id,
+      entity_type: '${entityName}',
+      entity_id: String(id),
       action: 'UPDATE',
-      data: updateDto,
+      new_values: updateDto,
+      user_id: 'system', // TODO: Get from context
     });`;
       }
 
@@ -398,9 +402,10 @@ export class ${serviceName} {`;
       
       // Log audit
       await this.auditLogService.log({
-        entity: '${entityName}',
-        entityId: id,
+        entity_type: '${entityName}',
+        entity_id: String(id),
         action: 'DELETE',
+        user_id: 'system', // TODO: Get from context
       });`;
       }
 
@@ -425,9 +430,10 @@ export class ${serviceName} {`;
     
     // Log audit
     await this.auditLogService.log({
-      entity: '${entityName}',
-      entityId: id,
+      entity_type: '${entityName}',
+      entity_id: String(id),
       action: 'DELETE',
+      user_id: 'system', // TODO: Get from context
     });`;
       }
     }
@@ -590,13 +596,12 @@ export class ${serviceName} {`;
    * Invalidate all cache for ${camelName}
    */
   private async invalidateCache(): Promise<void> {
-    // Invalidate all related cache keys
-    const keys = await this.cacheManager.store.keys();
-    const ${camelName}Keys = keys.filter((key: string) => key.startsWith('${cacheKey}:'));
+    // Invalidate common cache keys
+    await this.cacheManager.del('${cacheKey}:all');
     
-    for (const key of ${camelName}Keys) {
-      await this.cacheManager.del(key);
-    }
+    // Note: cache-manager v5 doesn't support listing all keys
+    // For production, consider using a cache with pattern-based deletion
+    // or maintain a list of cache keys in your application
   }
 `;
     }

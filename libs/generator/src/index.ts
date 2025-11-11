@@ -25,6 +25,9 @@ export * from './metadata';
 // Code generators
 export * from './generators';
 
+// Audit trail
+export * from './audit';
+
 // CLI commands
 export * from './cli/commands/init.command';
 

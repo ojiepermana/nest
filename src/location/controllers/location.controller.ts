@@ -24,12 +24,30 @@ export class LocationController {
     return this.service.create(createDto);
   }
 
-  @ApiOperation({ summary: 'Get all locations' })
-  @ApiResponse({ status: 200, description: 'Return all locations.', type: [Location] })
+  @ApiOperation({ summary: 'Get all locations with pagination' })
+  @ApiResponse({ status: 200, description: 'Return all locations with pagination.' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 20, max: 100)' })
+  @ApiQuery({ name: 'sort', required: false, type: String, description: 'Sort field and order (e.g., name:ASC)' })
   @RequirePermission('location.read')
   @Get()
-  async findAll(): Promise<Location[]> {
-    return this.service.findAll();
+  async findAll(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('sort') sort?: string,
+  ): Promise<{ data: Location[]; total: number; page: number; limit: number }> {
+    const sortOptions = sort
+      ? sort.split(',').map((s) => {
+          const [field, order] = s.split(':');
+          return { field, order: (order?.toUpperCase() || 'ASC') as 'ASC' | 'DESC' };
+        })
+      : undefined;
+
+    return this.service.findWithFilters({}, {
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+      sort: sortOptions,
+    });
   }
 
   @ApiOperation({ summary: 'Get locations with filters and pagination' })

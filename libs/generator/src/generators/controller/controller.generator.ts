@@ -237,8 +237,11 @@ export class ${controllerName} {`;
 
     if (this.options.enableSwagger) {
       endpoint += `
-  @ApiOperation({ summary: 'Get all ${camelName}s' })
-  @ApiResponse({ status: 200, description: 'Return all ${camelName}s.', type: [${entityName}] })`;
+  @ApiOperation({ summary: 'Get all ${camelName}s with pagination' })
+  @ApiResponse({ status: 200, description: 'Return all ${camelName}s with pagination.' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 20, max: 100)' })
+  @ApiQuery({ name: 'sort', required: false, type: String, description: 'Sort field and order (e.g., name:ASC)' })`;
     }
 
     // Add RBAC decorator
@@ -247,8 +250,23 @@ export class ${controllerName} {`;
     }
 
     endpoint += `  @Get()
-  async findAll(): Promise<${entityName}[]> {
-    return this.service.findAll();
+  async findAll(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('sort') sort?: string,
+  ): Promise<{ data: ${entityName}[]; total: number; page: number; limit: number }> {
+    const sortOptions = sort
+      ? sort.split(',').map((s) => {
+          const [field, order] = s.split(':');
+          return { field, order: (order?.toUpperCase() || 'ASC') as 'ASC' | 'DESC' };
+        })
+      : undefined;
+
+    return this.service.findWithFilters({}, {
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+      sort: sortOptions,
+    });
   }
 `;
 

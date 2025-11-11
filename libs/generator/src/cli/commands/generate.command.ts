@@ -445,6 +445,8 @@ export class GenerateCommand {
       enableValidation: features.validation,
       enablePagination: features.pagination,
       enableFileUpload: features.fileUpload,
+      enableRbac: features.rbac,
+      rbacResourceName: moduleName, // Use module name as resource (e.g., 'entity', 'location')
       storageProvider:
         (process.env.STORAGE_PROVIDER as 'local' | 's3' | 'gcs' | 'azure') || 'local',
     });

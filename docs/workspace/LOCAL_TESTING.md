@@ -12,12 +12,14 @@ npm link
 ```
 
 This creates a global symlink to the local build at:
+
 - Binary: `libs/generator/dist/cli/index.js`
 - Global command: `nest-generator`
 
 ## 📋 Prerequisites
 
 1. **Build the generator first:**
+
    ```bash
    npm run build:generator
    ```
@@ -41,6 +43,7 @@ nest-generator init
 ```
 
 This creates:
+
 - `meta.table_metadata` - Table configurations
 - `meta.column_metadata` - Column definitions
 - `meta.generated_files` - File tracking

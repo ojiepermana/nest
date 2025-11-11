@@ -508,13 +508,22 @@ export * from './controllers/${moduleName}.controller';
       // Add to imports array
       const importsMatch = appModuleContent.match(/imports:\s*\[([^\]]*)\]/s);
       if (importsMatch) {
-        const importsContent = importsMatch[1].trim();
-        const lastModule = importsContent.split(',').pop()?.trim() || '';
+        const importsContent = importsMatch[1];
 
-        // Add module with proper indentation
-        const newImports = importsContent
-          ? `${importsContent.trimEnd()},\n    ${moduleClassName},`
-          : `\n    ${moduleClassName},\n  `;
+        // Extract indentation from existing imports
+        const indentMatch = importsContent.match(/\n(\s+)/);
+        const indent = indentMatch ? indentMatch[1] : '    ';
+
+        // Clean up trailing whitespace and commas
+        let cleanedImports = importsContent.trimEnd();
+        if (cleanedImports.endsWith(',')) {
+          cleanedImports = cleanedImports.slice(0, -1).trimEnd();
+        }
+
+        // Add new module with proper formatting and closing bracket on new line
+        const newImports = cleanedImports
+          ? `${cleanedImports},\n${indent}${moduleClassName},\n  `
+          : `\n${indent}${moduleClassName},\n  `;
 
         appModuleContent = appModuleContent.replace(
           /imports:\s*\[([^\]]*)\]/s,

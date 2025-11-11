@@ -313,7 +313,7 @@ DECLARE
   uuid_bytes BYTEA;
 BEGIN
   timestamp := (EXTRACT(EPOCH FROM clock_timestamp()) * 1000)::BIGINT;
-  uuid_bytes := E'\\x' || LPAD(TO_HEX(timestamp), 12, '0') || 
+  uuid_bytes := E'\\x' || LPAD(TO_HEX(timestamp), 12, '0') ||
                 encode(gen_random_bytes(10), 'hex');
   RETURN uuid_bytes::UUID;
 END;
@@ -480,15 +480,15 @@ nest-generator generate public.users
 
 ## Version Compatibility Matrix
 
-| Generator | Node.js | npm    | NestJS | PostgreSQL | MySQL |
-| --------- | ------- | ------ | ------ | ---------- | ----- |
-| v1.0.5    | 24+     | 11+    | 11+    | 18+        | 8+    |
-| v1.0.4    | 24+     | 11+    | 11+    | 18+        | 8+    |
-| v1.0.3    | 24+     | 10+    | 11+    | 18+        | 8+    |
-| v1.0.2    | 20+     | 9+     | 10+    | 16+        | 8+    |
-| v1.0.1    | 20+     | 9+     | 10+    | 16+        | 8+    |
-| v1.0.0    | 20+     | 9+     | 10+    | 16+        | 8+    |
-| v0.9.x    | 18+     | 8+     | 9+     | 14+        | 5.7+  |
+| Generator | Node.js | npm | NestJS | PostgreSQL | MySQL |
+| --------- | ------- | --- | ------ | ---------- | ----- |
+| v1.0.5    | 24+     | 11+ | 11+    | 18+        | 8+    |
+| v1.0.4    | 24+     | 11+ | 11+    | 18+        | 8+    |
+| v1.0.3    | 24+     | 10+ | 11+    | 18+        | 8+    |
+| v1.0.2    | 20+     | 9+  | 10+    | 16+        | 8+    |
+| v1.0.1    | 20+     | 9+  | 10+    | 16+        | 8+    |
+| v1.0.0    | 20+     | 9+  | 10+    | 16+        | 8+    |
+| v0.9.x    | 18+     | 8+  | 9+     | 14+        | 5.7+  |
 
 ---
 

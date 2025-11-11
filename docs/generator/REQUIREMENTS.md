@@ -21,12 +21,14 @@ The generator library has been analyzed for compliance with minimum requirements
 **Requirement:** Node.js 24.0.0+
 
 **Implementation:**
+
 - ✅ Specified in `package.json` engines field
 - ✅ Validated by npm during installation (shows warning if incompatible)
 - ✅ Checked by `check-requirements.js` during `npm install`
 - ✅ Documented in README.md
 
 **Files:**
+
 ```json
 // libs/generator/package.json
 {
@@ -37,6 +39,7 @@ The generator library has been analyzed for compliance with minimum requirements
 ```
 
 **Validation Output:**
+
 ```
 ✓ Node.js v24.10.0 (Required: 24.0.0+)
 ⚠️ WARNING: Node.js version requirement not met!
@@ -51,12 +54,14 @@ The generator library has been analyzed for compliance with minimum requirements
 **Requirement:** npm 11.0.0+
 
 **Implementation:**
+
 - ✅ Specified in `package.json` engines field
 - ✅ Validated by npm during installation
 - ✅ Checked by `check-requirements.js`
 - ✅ Documented in README.md
 
 **Files:**
+
 ```json
 // libs/generator/package.json
 {
@@ -67,6 +72,7 @@ The generator library has been analyzed for compliance with minimum requirements
 ```
 
 **Validation Output:**
+
 ```
 ✓ npm 11.0.0 (Required: 11.0.0+)
 ⚠️ WARNING: npm version requirement not met!
@@ -82,11 +88,13 @@ The generator library has been analyzed for compliance with minimum requirements
 **Requirement:** NestJS 11.x
 
 **Implementation:**
+
 - ✅ Specified in `peerDependencies`
 - ✅ Checked by `check-requirements.js` during installation
 - ✅ Documented in README.md
 
 **Files:**
+
 ```json
 // libs/generator/package.json
 {
@@ -98,6 +106,7 @@ The generator library has been analyzed for compliance with minimum requirements
 ```
 
 **Validation Output:**
+
 ```
 ✓ NestJS ^11.1.8 (Required: 11.0.0+)
 ⚠️ WARNING: NestJS version requirement not met!
@@ -113,6 +122,7 @@ The generator library has been analyzed for compliance with minimum requirements
 **Requirement:** PostgreSQL 18+ OR MySQL 8.0+
 
 **Implementation:**
+
 - ✅ Checked by `check-requirements.js` during installation (driver detection)
 - ✅ **NEW:** Runtime validation in `DatabaseConnectionManager.validateDatabaseVersion()`
 - ✅ **NEW:** Interactive prompt during `nest-generator init`
@@ -122,11 +132,13 @@ The generator library has been analyzed for compliance with minimum requirements
 #### PostgreSQL 18+
 
 **Features that require PostgreSQL 18:**
+
 - UUID v7 generation (`uuid_generate_v7()`)
 - JSONB performance optimizations
 - Advanced query optimizations
 
 **Implementation:**
+
 ```typescript
 // libs/generator/src/database/connection.manager.ts
 async validateDatabaseVersion(): Promise<ValidationResult> {
@@ -134,7 +146,7 @@ async validateDatabaseVersion(): Promise<ValidationResult> {
     const result = await this.query('SHOW server_version');
     const version = result.rows[0]?.version;
     const majorVersion = parseInt(version.match(/^(\d+)/)[1]);
-    
+
     if (majorVersion < 18) {
       return {
         valid: false,
@@ -149,6 +161,7 @@ async validateDatabaseVersion(): Promise<ValidationResult> {
 ```
 
 **Validation Output:**
+
 ```
 ✓ Database version 18.1 meets minimum requirements (18.0.0+)
 
@@ -161,12 +174,14 @@ async validateDatabaseVersion(): Promise<ValidationResult> {
 #### MySQL 8.0+
 
 **Features that require MySQL 8.0:**
+
 - JSON functions (`JSON_EXTRACT()`, `JSON_CONTAINS()`, `JSON_UNQUOTE()`)
 - Window functions (`ROW_NUMBER()`, `RANK()`)
 - CTEs (Common Table Expressions with `WITH` clause)
 - `UUID()` function
 
 **Implementation:**
+
 ```typescript
 // libs/generator/src/database/connection.manager.ts
 async validateDatabaseVersion(): Promise<ValidationResult> {
@@ -174,7 +189,7 @@ async validateDatabaseVersion(): Promise<ValidationResult> {
     const result = await this.query('SELECT VERSION()');
     const version = result.rows[0]?.version;
     const majorVersion = parseInt(version.match(/^(\d+)/)[1]);
-    
+
     if (majorVersion < 8) {
       return {
         valid: false,
@@ -190,6 +205,7 @@ async validateDatabaseVersion(): Promise<ValidationResult> {
 ```
 
 **Validation Output:**
+
 ```
 ✓ Database version 8.0.35 meets minimum requirements (8.0.0+)
 
@@ -208,23 +224,23 @@ async validateDatabaseVersion(): Promise<ValidationResult> {
 
 #### PostgreSQL Features
 
-| Feature | Location | Requires Version | Fallback Available |
-|---------|----------|------------------|-------------------|
-| **UUID v7** | `postgres.dialect.ts:42` | 18+ | ✅ Custom function created during init |
-| **JSONB Type** | `postgres.dialect.ts:34` | 9.4+ (optimized for 18+) | ⚠️ Works but slower on older versions |
-| **ILIKE Operator** | `postgres.dialect.ts:52` | Any | N/A |
-| **Array Operators** | `postgres.dialect.ts:60` | Any | N/A |
-| **Parameterized Queries** | `postgres.dialect.ts:65` | Any | N/A |
+| Feature                   | Location                 | Requires Version         | Fallback Available                     |
+| ------------------------- | ------------------------ | ------------------------ | -------------------------------------- |
+| **UUID v7**               | `postgres.dialect.ts:42` | 18+                      | ✅ Custom function created during init |
+| **JSONB Type**            | `postgres.dialect.ts:34` | 9.4+ (optimized for 18+) | ⚠️ Works but slower on older versions  |
+| **ILIKE Operator**        | `postgres.dialect.ts:52` | Any                      | N/A                                    |
+| **Array Operators**       | `postgres.dialect.ts:60` | Any                      | N/A                                    |
+| **Parameterized Queries** | `postgres.dialect.ts:65` | Any                      | N/A                                    |
 
 #### MySQL Features
 
-| Feature | Location | Requires Version | Fallback Available |
-|---------|----------|------------------|-------------------|
-| **JSON Functions** | `mysql.dialect.ts:56-63` | 8.0+ | ❌ No fallback |
-| **UUID() Function** | `mysql.dialect.ts:42` | 8.0+ | ❌ No fallback |
-| **JSON Type** | `mysql.dialect.ts:34` | 8.0+ (5.7 has limited support) | ❌ No fallback |
-| **Window Functions** | Used in query generators | 8.0+ | ❌ No fallback |
-| **CTEs** | Used in complex queries | 8.0+ | ❌ No fallback |
+| Feature              | Location                 | Requires Version               | Fallback Available |
+| -------------------- | ------------------------ | ------------------------------ | ------------------ |
+| **JSON Functions**   | `mysql.dialect.ts:56-63` | 8.0+                           | ❌ No fallback     |
+| **UUID() Function**  | `mysql.dialect.ts:42`    | 8.0+                           | ❌ No fallback     |
+| **JSON Type**        | `mysql.dialect.ts:34`    | 8.0+ (5.7 has limited support) | ❌ No fallback     |
+| **Window Functions** | Used in query generators | 8.0+                           | ❌ No fallback     |
+| **CTEs**             | Used in complex queries  | 8.0+                           | ❌ No fallback     |
 
 ### Critical Code Paths
 
@@ -290,11 +306,13 @@ All critical database operations properly use version-appropriate features:
 ### First-Time Installation
 
 **Command:**
+
 ```bash
 npm install @ojiepermana/nest-generator
 ```
 
 **Output for Compatible System:**
+
 ```
 🔍 Checking @ojiepermana/nest-generator requirements...
 
@@ -309,6 +327,7 @@ npm install @ojiepermana/nest-generator
 ```
 
 **Output for Incompatible System:**
+
 ```
 🔍 Checking @ojiepermana/nest-generator requirements...
 
@@ -338,11 +357,13 @@ npm install @ojiepermana/nest-generator
 ### Initialization Experience
 
 **Command:**
+
 ```bash
 nest-generator init
 ```
 
 **Flow with Version Validation:**
+
 ```
 🚀 NestJS Generator Initialization
 
@@ -374,6 +395,7 @@ nest-generator init
 ```
 
 **Flow with Incompatible Database:**
+
 ```
 ⏳ Testing database connection...
 ✅ Connected to POSTGRESQL 16.2
@@ -402,6 +424,7 @@ nest-generator init
 **Test Breakdown:**
 
 #### PostgreSQL Tests (6)
+
 1. ✅ Validate PostgreSQL 18.1 as compatible
 2. ✅ Validate PostgreSQL 20.0 as compatible
 3. ✅ Detect PostgreSQL 16.2 as incompatible
@@ -410,6 +433,7 @@ nest-generator init
 6. ✅ Handle unparseable PostgreSQL version
 
 #### MySQL Tests (5)
+
 7. ✅ Validate MySQL 8.0.35 as compatible
 8. ✅ Validate MySQL 8.4.0 as compatible
 9. ✅ Detect MySQL 5.7 as incompatible
@@ -417,10 +441,12 @@ nest-generator init
 11. ✅ Handle unparseable MySQL version
 
 #### Error Handling Tests (2)
+
 12. ✅ Handle query errors gracefully
 13. ✅ Handle missing version in response
 
 **Test Output:**
+
 ```
 PASS libs/generator/src/database/connection.manager.spec.ts
   DatabaseConnectionManager - Version Validation

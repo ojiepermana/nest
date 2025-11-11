@@ -12,6 +12,7 @@
 ## Quick Summary
 
 ✅ **COMPLETED** (100%):
+
 - Database schemas (PostgreSQL + MySQL) - Production ready
 - Repository layer - All 16 methods implemented (25/25 tests ✅)
 - Service layer - All 20+ methods with Redis caching (29/29 tests ✅)
@@ -30,11 +31,13 @@
 ### 1. Database Schemas ✅ 100%
 
 **Files Created**:
+
 - `libs/generator/src/rbac/schemas/postgresql-rbac.sql` (390 lines)
 - `libs/generator/src/rbac/schemas/mysql-rbac.sql` (350 lines)
 - `libs/generator/src/rbac/schemas/README.md` (180 lines)
 
 **Tables** (6):
+
 1. `permissions` - System permissions (resource.action format)
 2. `roles` - User roles with hierarchy support
 3. `role_permissions` - Many-to-many mapping
@@ -43,11 +46,13 @@
 6. `permission_audit` - Security audit trail
 
 **Helper Functions**:
+
 - PostgreSQL: `get_user_permissions()`, `has_permission()`, `get_role_hierarchy()`
 - MySQL: Stored procedures with same functionality
 
 **Seed Data**:
-- 9 default permissions (users.*, roles.*, permissions.*, system.admin)
+
+- 9 default permissions (users._, roles._, permissions.\*, system.admin)
 - 4 default roles (super_admin, admin, editor, viewer)
 
 ### 2. Repository Layer ✅ 100%
@@ -55,6 +60,7 @@
 **File**: `libs/generator/src/rbac/rbac.repository.ts` (324 lines)
 
 **Core Methods** (10):
+
 - `getUserPermissions()` - Get all permissions (direct + inherited)
 - `getUserRoles()` - Get active roles with expiration check
 - `hasPermission()` - Check single permission
@@ -67,16 +73,19 @@
 - `checkOwnership()` - Resource ownership verification
 
 **Management Methods** (4):
+
 - `assignRoleToUser()` - Assign role with expiration
 - `removeRoleFromUser()` - Revoke role (soft delete)
 - `grantPermissionToRole()` - Grant permission to role
 - `revokePermissionFromRole()` - Remove permission from role
 
 **Admin Methods** (2):
+
 - `createPermission()` - Add new permission
 - `createRole()` - Add new role
 
 **Technical Details**:
+
 - Raw SQL with parameterized queries (NO ORM)
 - PostgreSQL-first, MySQL compatible
 - All queries use indexes for performance
@@ -86,25 +95,30 @@
 **File**: `libs/generator/src/rbac/rbac.service.ts` (460 lines)
 
 **Permission Checks** (3):
+
 - `hasPermission()` - Single permission check
 - `hasAllPermissions()` - Multiple with AND logic
 - `hasAnyPermission()` - Multiple with OR logic
 
 **Role Checks** (3):
+
 - `hasRole()` - Single role check
 - `hasAllRoles()` - Multiple with AND logic
 - `hasAnyRole()` - Multiple with OR logic
 
 **User Context** (3):
+
 - `getUserContext()` - Full user permissions + roles
 - `getUserPermissions()` - Permission list
 - `getUserRoles()` - Role list
 
 **Admin Checks** (2):
+
 - `isAdmin()` - Check if user has admin role
 - `isSuperAdmin()` - Check if super admin
 
 **Advanced Features** (5):
+
 - `checkOwnership()` - Resource ownership verification
 - `filterFields()` - Field-level permissions
 - `buildRowFilters()` - Row-level security (RLS)
@@ -112,12 +126,14 @@
 - `cleanupExpiredRoles()` - Maintenance
 
 **Role Management** (4):
+
 - `assignRole()` - Assign role with optional expiration
 - `removeRole()` - Revoke role
 - `grantPermission()` - Grant permission to role
 - `revokePermission()` - Remove permission from role
 
 **Caching**:
+
 - Redis integration via @nestjs/cache-manager
 - Configurable TTL (default: 300s)
 - Cache key patterns: `rbac:user:{userId}:permission:{permission}`
@@ -126,10 +142,12 @@
 ### 4. Guards ✅ 100%
 
 **Files**:
+
 - `libs/generator/src/rbac/guards/permissions.guard.ts` (177 lines)
 - `libs/generator/src/rbac/guards/roles.guard.ts` (165 lines)
 
 **PermissionsGuard Features**:
+
 - Enforces `@RequirePermission` decorator
 - AND/OR logic support
 - Ownership check integration
@@ -138,6 +156,7 @@
 - Skip permission (`@SkipPermission`)
 
 **RolesGuard Features**:
+
 - Enforces `@RequireRole` decorator
 - AND/OR logic support
 - Active/inactive role filtering
@@ -146,27 +165,31 @@
 - Public route bypass
 
 **Usage**:
+
 ```typescript
 // Global registration
 providers: [
   { provide: APP_GUARD, useClass: PermissionsGuard },
   { provide: APP_GUARD, useClass: RolesGuard },
-]
+];
 ```
 
 ### 5. Decorators ✅ 100%
 
 **Files**:
+
 - `libs/generator/src/rbac/decorators/require-permission.decorator.ts` (173 lines)
 - `libs/generator/src/rbac/decorators/require-role.decorator.ts` (188 lines)
 
 **Permission Decorators**:
+
 - `@RequirePermission(permissions, options)` - Main decorator
 - `@RequireAnyPermission(permissions)` - OR logic shorthand
 - `@RequireAllPermissions(permissions)` - AND logic shorthand
 - `@RequireOwnership(permission, field?)` - Permission + ownership
 
 **Role Decorators**:
+
 - `@RequireRole(roles, options)` - Main decorator
 - `@RequireAnyRole(roles)` - OR logic shorthand
 - `@RequireAllRoles(roles)` - AND logic shorthand
@@ -175,10 +198,12 @@ providers: [
 - `@RequireModerator()` - Moderator shortcut
 
 **Utility Decorators**:
+
 - `@Public()` - Bypass all guards
 - `@SkipPermission()` - Skip permission (but require auth)
 
 **Options**:
+
 ```typescript
 // Permission options
 {
@@ -202,18 +227,21 @@ providers: [
 **Status**: Fully implemented and tested
 
 **Files**:
+
 - `libs/generator/src/generators/controller/controller.generator.ts` (enhanced with RBAC)
 - `libs/generator/src/rbac/permission-seed.generator.ts` (NEW - 194 lines)
 
 **Features**:
 
 ✅ **Controller Generator Integration**:
+
 ```bash
 # Generate controller with RBAC decorators
 nest-generator generate users --features.rbac=true --rbacResourceName=users
 ```
 
 Generated controller includes:
+
 ```typescript
 @RequirePermission('users.create')
 @Post()
@@ -247,32 +275,27 @@ const sql = generator.generateCrudPermissions('products');
 // Generate custom permissions
 const customSql = generator.generateCustomPermissions('products', [
   { action: 'approve', description: 'Approve product listings' },
-  { action: 'export', description: 'Export products to CSV' }
+  { action: 'export', description: 'Export products to CSV' },
 ]);
 
 // Generate role-permission mappings
-const roleSql = generator.generateRolePermissions('admin', [
-  'products.create',
-  'products.update',
-  'products.delete'
-]);
+const roleSql = generator.generateRolePermissions('admin', ['products.create', 'products.update', 'products.delete']);
 
 // Complete setup (permissions + role mappings)
 const completeSql = generator.generateCompleteSetup({
   resource: 'products',
   category: 'products',
-  customPermissions: [
-    { action: 'approve', description: 'Approve products' }
-  ],
+  customPermissions: [{ action: 'approve', description: 'Approve products' }],
   roleMappings: {
     admin: ['create', 'read', 'update', 'delete', 'approve'],
     manager: ['read', 'update'],
-    staff: ['read']
-  }
+    staff: ['read'],
+  },
 });
 ```
 
 Generated SQL features:
+
 - ON CONFLICT DO UPDATE for idempotency
 - Timestamp tracking (created_at, updated_at)
 - Category organization
@@ -283,11 +306,13 @@ Generated SQL features:
 **File**: `libs/generator/src/cli/commands/generate.command.ts`
 
 **Implemented**:
+
 - `--features.rbac` flag support
 - Interactive prompt: "Enable RBAC?"
 - Default permissions configuration option
 
 **Pending**:
+
 - Generator integration (add decorators to generated code)
 - Permission seed SQL generation
 - RBAC module imports in generated files
@@ -295,6 +320,7 @@ Generated SQL features:
 ### 7. Documentation ✅ 100%
 
 **Files**:
+
 - `docs/generator/rbac/RBAC_GUIDE.md` (1570 lines) - Comprehensive API reference
 - `docs/generator/quickstart/RBAC_QUICKSTART.md` (600 lines) - 10-minute setup guide
 - `docs/generator/rbac/RBAC_EXAMPLES.md` (850+ lines) - Real-world usage examples ✨ NEW!
@@ -303,6 +329,7 @@ Generated SQL features:
 **Total Documentation**: 3200+ lines covering every aspect of RBAC
 
 **RBAC_EXAMPLES.md Coverage** (NEW):
+
 - Basic setup with dependency installation
 - Generated code examples (controller + SQL)
 - Permission management patterns
@@ -317,6 +344,7 @@ Generated SQL features:
 - Troubleshooting guide
 
 **Complete Coverage**:
+
 - ✅ Setup instructions (PostgreSQL + MySQL)
 - ✅ All decorator usage examples
 - ✅ Guard configuration
@@ -336,6 +364,7 @@ Generated SQL features:
 **Status**: **104/104 tests passing (100%)** 🎉
 
 **All Suites Passing** (10):
+
 - ✅ `rbac.integration.spec.ts` (11/11) - Integration tests
 - ✅ `rbac.module.spec.ts` (8/8) - Module configuration
 - ✅ `rbac.repository.spec.ts` (25/25) - Database operations
@@ -348,11 +377,13 @@ Generated SQL features:
 - ✅ `permission-seed.generator.spec.ts` (13/13) - SQL generation ✨ NEW!
 
 **Test Breakdown by Category**:
+
 - Core RBAC: 91 tests (repository, service, guards, decorators, integration)
 - Controller Generator: 33 tests (RBAC decorator generation)
 - Permission Seed: 13 tests (SQL generation with ON CONFLICT)
 
 **All Issues Fixed**:
+
 - ✅ Guard tests: Updated all mocks to use `userHasPermission()` and `userHasRole()`
 - ✅ Guard tests: Fixed nested `options` structure in metadata
 - ✅ Repository: Fixed `cleanupExpiredRoles` SQL expectation (no parameters)
@@ -366,17 +397,19 @@ Generated SQL features:
 **Enhancement**: Better defaults and configuration options
 
 **Features**:
+
 ```typescript
 RBACModule.register({
-  isGlobal: true,  // ✨ NEW: Default to global (auto-available everywhere)
+  isGlobal: true, // ✨ NEW: Default to global (auto-available everywhere)
   adminRoles: ['admin', 'super_admin'],
   superAdminRole: 'super_admin',
   useGlobalGuards: true,
-  cache: { enabled: true, ttl: 300 }
-})
+  cache: { enabled: true, ttl: 300 },
+});
 ```
 
 **Benefits**:
+
 - ✅ Global by default (no need to import in every module)
 - ✅ Can disable global for advanced use cases (`isGlobal: false`)
 - ✅ Better JSDoc with usage examples
@@ -426,6 +459,7 @@ RBACModule.register({
 ### Technical Specifications
 
 **Architecture**:
+
 - NO ORM (raw SQL with pg/mysql2)
 - Parameterized queries (SQL injection safe)
 - Repository pattern
@@ -434,18 +468,21 @@ RBACModule.register({
 - Decorator-driven configuration
 
 **Database Requirements**:
+
 - PostgreSQL 18+ OR MySQL 8.0+
 - UUID support
 - JSONB (PostgreSQL) / JSON (MySQL)
 - Recursive CTEs for role hierarchy
 
 **Performance**:
+
 - Indexed queries (all foreign keys)
 - Redis caching (300s default TTL)
 - Efficient JOINs for permission checks
 - Batch operations support
 
 **Security**:
+
 - SQL injection prevention
 - Parameterized queries only
 - Audit trail for all checks
@@ -456,14 +493,13 @@ RBACModule.register({
 ### High Priority (15 min)
 
 **Fix Failing Tests**:
+
 1. Update `permissions.guard.spec.ts` mocks (7 tests)
    - Change `metadata.logic` to `metadata.options.logic`
    - Change `metadata.requireOwnership` to `metadata.options.requireOwnership`
-   
 2. Update `roles.guard.spec.ts` mocks (7 tests)
    - Change `metadata.logic` to `metadata.options.logic`
    - Change `metadata.activeOnly` to `metadata.options.activeOnly`
-   
 3. Fix `rbac.repository.spec.ts` (1 test)
    - Update `cleanupExpiredRoles` SQL expectation
 
@@ -472,73 +508,74 @@ RBACModule.register({
 ### Medium Priority (45 min)
 
 **Generator Integration**:
+
 1. Update `ControllerGenerator`
    - Add `@RequirePermission` decorators to CRUD endpoints
    - Format: `@RequirePermission('{resource}.{action}')`
-   
 2. Update `ServiceGenerator`
    - Add ownership check logic
    - Inject `RBACService` when `--features.rbac=true`
-   
 3. Create permission seed generator
    - Generate SQL INSERT statements for permissions
    - Format: `{schema}.{table}.{action}`
-   
 4. Update module imports
    - Add `RBACModule` to imports
    - Add `RBACService` to providers
 
 **Example Output**:
+
 ```typescript
 @Controller('users')
 export class UsersController {
   @Get()
   @RequirePermission('users.read')
-  async findAll() { }
-  
+  async findAll() {}
+
   @Post()
   @RequirePermission('users.create')
-  async create() { }
-  
+  async create() {}
+
   @Put(':id')
   @RequireOwnership('users.update')
-  async update(@Param('id') id: string) { }
-  
+  async update(@Param('id') id: string) {}
+
   @Delete(':id')
   @RequirePermission('users.delete')
   @RequireAnyRole(['admin', 'super_admin'])
-  async delete(@Param('id') id: string) { }
+  async delete(@Param('id') id: string) {}
 }
 ```
 
 ### Low Priority (40 min)
 
 **Module Enhancement**:
+
 1. Make `RBACModule` global with `@Global()` decorator
 2. Add `ConfigurableModuleBuilder`
    - Cache configuration
    - Admin roles configuration
    - Database connection injection
-   
 3. Create `RBACModuleOptions` interface
 
 **Example**:
+
 ```typescript
 RBACModule.register({
-  cache: { 
-    enabled: true, 
-    ttl: 600 
+  cache: {
+    enabled: true,
+    ttl: 600,
   },
   adminRoles: ['admin', 'super_admin'],
   superAdminRole: 'super_admin',
   database: {
     type: 'postgresql',
-    schema: 'rbac'
-  }
-})
+    schema: 'rbac',
+  },
+});
 ```
 
 **Examples Documentation**:
+
 1. Create `docs/generator/rbac/EXAMPLES.md`
 2. Add real-world examples:
    - Blog system (posts ownership)
@@ -551,25 +588,27 @@ RBACModule.register({
 
 **RBAC Feature**: 10/10 points (100% complete) ✅
 
-| Component | Score | Status |
-|-----------|-------|--------|
-| Database Schema | 1.5/1.5 | ✅ 100% |
-| Repository | 1.5/1.5 | ✅ 100% |
-| Service | 1.5/1.5 | ✅ 100% |
-| Guards | 1.0/1.0 | ✅ 100% |
-| Decorators | 1.0/1.0 | ✅ 100% |
-| Tests | 1.0/1.0 | ✅ 100% (104/104) |
-| Generator Integration | 1.0/1.0 | ✅ 100% (Controller + Permission Seed) |
-| Module Enhancement | 0.5/0.5 | ✅ 100% (isGlobal option) |
-| Documentation | 0.5/0.5 | ✅ 100% (3200+ lines) |
-| **Total** | **10/10** | **100%** ✅ |
+| Component             | Score     | Status                                 |
+| --------------------- | --------- | -------------------------------------- |
+| Database Schema       | 1.5/1.5   | ✅ 100%                                |
+| Repository            | 1.5/1.5   | ✅ 100%                                |
+| Service               | 1.5/1.5   | ✅ 100%                                |
+| Guards                | 1.0/1.0   | ✅ 100%                                |
+| Decorators            | 1.0/1.0   | ✅ 100%                                |
+| Tests                 | 1.0/1.0   | ✅ 100% (104/104)                      |
+| Generator Integration | 1.0/1.0   | ✅ 100% (Controller + Permission Seed) |
+| Module Enhancement    | 0.5/0.5   | ✅ 100% (isGlobal option)              |
+| Documentation         | 0.5/0.5   | ✅ 100% (3200+ lines)                  |
+| **Total**             | **10/10** | **100%** ✅                            |
 
 **Generator Score Update**:
+
 - Previous: 104.5/100
 - RBAC Addition: +8.5 points
 - **New Total**: **113/100** 🎉
 
 **What Changed from 95% → 100%**:
+
 - ✅ Fixed all failing tests (76/91 → 104/104)
 - ✅ Integrated RBAC with controller generator
 - ✅ Created permission seed SQL generator
@@ -613,19 +652,19 @@ import { RequirePermission, RequireOwnership, RequireAnyRole } from '@ojieperman
 export class UsersController {
   @Get()
   @RequirePermission('users.read')
-  async findAll() { }
-  
+  async findAll() {}
+
   @Post()
   @RequirePermission('users.create')
-  async create(@Body() dto: CreateUserDto) { }
-  
+  async create(@Body() dto: CreateUserDto) {}
+
   @Put(':id')
   @RequireOwnership('users.update')
-  async update(@Param('id') id: string, @Body() dto: UpdateUserDto) { }
-  
+  async update(@Param('id') id: string, @Body() dto: UpdateUserDto) {}
+
   @Delete(':id')
   @RequireAnyRole(['admin', 'super_admin'])
-  async delete(@Param('id') id: string) { }
+  async delete(@Param('id') id: string) {}
 }
 ```
 
@@ -636,15 +675,15 @@ import { RBACService } from '@ojiepermana/nest-generator/rbac';
 
 export class UsersService {
   constructor(private readonly rbacService: RBACService) {}
-  
+
   async createUser(userId: string, dto: CreateUserDto) {
     // Check permission
     const hasPermission = await this.rbacService.hasPermission(userId, 'users.create');
-    
+
     if (!hasPermission) {
       throw new ForbiddenException('Insufficient permissions');
     }
-    
+
     // ... create user
   }
 }
@@ -678,21 +717,25 @@ await this.rbacService.revokePermission('editor', 'posts.publish');
 ## Next Steps
 
 ### Immediate (Today - 15 min)
+
 1. Fix guard test mocks
 2. Run full test suite
 3. Verify 100% passing
 
 ### Short-term (This Week - 1 hour)
+
 4. Implement generator integration
 5. Test generated RBAC-enabled modules
 6. Create permission seed data
 
 ### Medium-term (Next Week - 30 min)
+
 7. Enhance RBACModule configuration
 8. Add examples documentation
 9. Update CHANGELOG.md
 
 ### Release
+
 10. Bump version to 1.0.6
 11. Publish to npm
 12. Create GitHub release
@@ -700,6 +743,7 @@ await this.rbacService.revokePermission('editor', 'posts.publish');
 ## Conclusion
 
 ✅ **Major Accomplishments**:
+
 - Complete database schema design (PostgreSQL + MySQL)
 - Fully functional repository and service layers
 - Working guards and decorators
@@ -707,11 +751,13 @@ await this.rbacService.revokePermission('editor', 'posts.publish');
 - 83% test coverage
 
 🎯 **Current Status**:
+
 - RBAC Feature: 85% complete
 - Overall Score: 113/100 (after completion)
 - Production Ready: ✅ Yes (with minor test fixes)
 
 📊 **Impact**:
+
 - Enterprise-grade authorization system
 - Role hierarchy support
 - Field-level and row-level security
@@ -720,6 +766,7 @@ await this.rbacService.revokePermission('editor', 'posts.publish');
 - Fully documented with quickstart
 
 ⏱️ **Time to 100%**: ~2 hours
+
 - Tests: 15 min
 - Generator: 45 min
 - Module: 20 min

@@ -27,16 +27,19 @@ This directory contains all documentation related to workspace management, devel
 ## Quick Links
 
 ### For Publishing
+
 1. [Quick Publish](./QUICK-PUBLISH.md) - Get started in 1 minute
 2. [Pre-Publish Checklist](./CHECKLIST.md) - Verify before publishing
 3. [Complete Guide](./PUBLISHING.md) - Detailed publishing instructions
 
 ### For Development
+
 1. [Libraries Overview](./LIBRARIES.md) - Understand monorepo structure
 2. [Local Testing](./LOCAL_TESTING.md) - Test generator locally
 3. [Code Quality](./CODE_QUALITY.md) - Formatting and standards
 
 ### For Project Management
+
 1. [Changelog](./CHANGELOG.md) - See what's new
 2. [Progress](./PROGRESS.md) - Track feature development
 3. [Session Summaries](./SESSION_SUMMARY.md) - Development history

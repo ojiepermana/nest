@@ -12,11 +12,11 @@ PostgreSQL 18+ is required for optimal functionality. While the library may work
 
 #### PostgreSQL 18+ Features
 
-| Feature | Description | Fallback for Older Versions |
-|---------|-------------|---------------------------|
-| **UUID v7** | Time-ordered UUIDs using `uuid_generate_v7()` | Custom PL/pgSQL function provided in setup |
-| **JSONB Performance** | Enhanced JSONB indexing and operations | Works but slower on older versions |
-| **Parallel Queries** | Better parallel query execution | Limited parallelization |
+| Feature               | Description                                   | Fallback for Older Versions                |
+| --------------------- | --------------------------------------------- | ------------------------------------------ |
+| **UUID v7**           | Time-ordered UUIDs using `uuid_generate_v7()` | Custom PL/pgSQL function provided in setup |
+| **JSONB Performance** | Enhanced JSONB indexing and operations        | Works but slower on older versions         |
+| **Parallel Queries**  | Better parallel query execution               | Limited parallelization                    |
 
 #### Required Extensions
 
@@ -38,13 +38,13 @@ MySQL 8.0+ is **strictly required**. The library will not function correctly wit
 
 #### MySQL 8.0+ Features
 
-| Feature | Description | Why Required |
-|---------|-------------|--------------|
-| **JSON Functions** | `JSON_EXTRACT()`, `JSON_CONTAINS()`, `JSON_UNQUOTE()` | Used for metadata storage and queries |
-| **Window Functions** | `ROW_NUMBER()`, `RANK()`, `DENSE_RANK()` | Used in advanced queries and reporting |
-| **CTEs** | Common Table Expressions with `WITH` clause | Used for complex query generation |
-| **UUID()** | Native UUID generation | Used for primary keys |
-| **Default Expressions** | Complex default values | Used in generated schemas |
+| Feature                 | Description                                           | Why Required                           |
+| ----------------------- | ----------------------------------------------------- | -------------------------------------- |
+| **JSON Functions**      | `JSON_EXTRACT()`, `JSON_CONTAINS()`, `JSON_UNQUOTE()` | Used for metadata storage and queries  |
+| **Window Functions**    | `ROW_NUMBER()`, `RANK()`, `DENSE_RANK()`              | Used in advanced queries and reporting |
+| **CTEs**                | Common Table Expressions with `WITH` clause           | Used for complex query generation      |
+| **UUID()**              | Native UUID generation                                | Used for primary keys                  |
+| **Default Expressions** | Complex default values                                | Used in generated schemas              |
 
 ## Version Detection
 
@@ -73,77 +73,79 @@ If an incompatible version is detected, you'll see:
 
 ### Core CRUD Operations
 
-| Operation | PostgreSQL | MySQL |
-|-----------|-----------|-------|
-| Create | 18+ | 8.0+ |
-| Read (Single) | 18+ | 8.0+ |
-| Read (List) | 18+ | 8.0+ |
-| Update | 18+ | 8.0+ |
-| Delete (Soft) | 18+ | 8.0+ |
-| Delete (Hard) | 18+ | 8.0+ |
+| Operation     | PostgreSQL | MySQL |
+| ------------- | ---------- | ----- |
+| Create        | 18+        | 8.0+  |
+| Read (Single) | 18+        | 8.0+  |
+| Read (List)   | 18+        | 8.0+  |
+| Update        | 18+        | 8.0+  |
+| Delete (Soft) | 18+        | 8.0+  |
+| Delete (Hard) | 18+        | 8.0+  |
 
 ### Advanced Queries
 
-| Feature | PostgreSQL | MySQL | Notes |
-|---------|-----------|-------|-------|
-| **Filtering** | 18+ | 8.0+ | Uses parameterized queries |
-| **Pagination** | 18+ | 8.0+ | `LIMIT/OFFSET` support |
-| **Sorting** | 18+ | 8.0+ | Multi-column sorting |
-| **JOINs** | 18+ | 8.0+ | Auto-detected from foreign keys |
-| **Aggregations** | 18+ | 8.0+ | `COUNT`, `SUM`, `AVG`, `MIN`, `MAX` |
-| **Window Functions** | 18+ | 8.0+ | For ranking and analytics |
-| **CTEs** | 18+ | 8.0+ | Complex query optimization |
-| **Recap Queries** | 18+ | 8.0+ | Monthly/yearly aggregations |
+| Feature              | PostgreSQL | MySQL | Notes                               |
+| -------------------- | ---------- | ----- | ----------------------------------- |
+| **Filtering**        | 18+        | 8.0+  | Uses parameterized queries          |
+| **Pagination**       | 18+        | 8.0+  | `LIMIT/OFFSET` support              |
+| **Sorting**          | 18+        | 8.0+  | Multi-column sorting                |
+| **JOINs**            | 18+        | 8.0+  | Auto-detected from foreign keys     |
+| **Aggregations**     | 18+        | 8.0+  | `COUNT`, `SUM`, `AVG`, `MIN`, `MAX` |
+| **Window Functions** | 18+        | 8.0+  | For ranking and analytics           |
+| **CTEs**             | 18+        | 8.0+  | Complex query optimization          |
+| **Recap Queries**    | 18+        | 8.0+  | Monthly/yearly aggregations         |
 
 ### Data Types
 
 #### PostgreSQL
 
-| Generic Type | PostgreSQL Type | Minimum Version |
-|--------------|----------------|-----------------|
-| UUID | `UUID` | 18+ |
-| JSON | `JSONB` | 18+ (works on 9.4+ but optimized for 18+) |
-| Array | Native arrays | 18+ |
-| Text | `TEXT` | 18+ |
-| Timestamp | `TIMESTAMP` | 18+ |
+| Generic Type | PostgreSQL Type | Minimum Version                           |
+| ------------ | --------------- | ----------------------------------------- |
+| UUID         | `UUID`          | 18+                                       |
+| JSON         | `JSONB`         | 18+ (works on 9.4+ but optimized for 18+) |
+| Array        | Native arrays   | 18+                                       |
+| Text         | `TEXT`          | 18+                                       |
+| Timestamp    | `TIMESTAMP`     | 18+                                       |
 
 #### MySQL
 
-| Generic Type | MySQL Type | Minimum Version |
-|--------------|-----------|-----------------|
-| UUID | `CHAR(36)` | 8.0+ |
-| JSON | `JSON` | 8.0+ (required) |
-| Array | `JSON` array | 8.0+ |
-| Text | `TEXT` | 8.0+ |
-| Timestamp | `DATETIME` | 8.0+ |
+| Generic Type | MySQL Type   | Minimum Version |
+| ------------ | ------------ | --------------- |
+| UUID         | `CHAR(36)`   | 8.0+            |
+| JSON         | `JSON`       | 8.0+ (required) |
+| Array        | `JSON` array | 8.0+            |
+| Text         | `TEXT`       | 8.0+            |
+| Timestamp    | `DATETIME`   | 8.0+            |
 
 ### Generated Features
 
-| Feature | PostgreSQL | MySQL | Notes |
-|---------|-----------|-------|-------|
-| **Audit Trail** | 18+ | 8.0+ | Requires JSONB/JSON support |
-| **RBAC** | 18+ | 8.0+ | Uses metadata tables |
-| **File Upload** | 18+ | 8.0+ | Metadata storage only |
-| **Export (CSV)** | 18+ | 8.0+ | No special requirements |
-| **Export (Excel)** | 18+ | 8.0+ | No special requirements |
-| **Caching** | 18+ | 8.0+ | Redis-based, DB-agnostic |
-| **Rate Limiting** | 18+ | 8.0+ | Application-level |
-| **Search** | 18+ | 8.0+ | External (Elasticsearch/Algolia) |
+| Feature            | PostgreSQL | MySQL | Notes                            |
+| ------------------ | ---------- | ----- | -------------------------------- |
+| **Audit Trail**    | 18+        | 8.0+  | Requires JSONB/JSON support      |
+| **RBAC**           | 18+        | 8.0+  | Uses metadata tables             |
+| **File Upload**    | 18+        | 8.0+  | Metadata storage only            |
+| **Export (CSV)**   | 18+        | 8.0+  | No special requirements          |
+| **Export (Excel)** | 18+        | 8.0+  | No special requirements          |
+| **Caching**        | 18+        | 8.0+  | Redis-based, DB-agnostic         |
+| **Rate Limiting**  | 18+        | 8.0+  | Application-level                |
+| **Search**         | 18+        | 8.0+  | External (Elasticsearch/Algolia) |
 
 ## Upgrade Recommendations
 
 ### From PostgreSQL < 18
 
 1. **Backup your database**
+
    ```bash
    pg_dump mydb > backup.sql
    ```
 
 2. **Upgrade PostgreSQL**
+
    ```bash
    # Ubuntu/Debian
    sudo apt-get install postgresql-18
-   
+
    # macOS (Homebrew)
    brew install postgresql@18
    ```
@@ -156,20 +158,23 @@ If an incompatible version is detected, you'll see:
 ### From MySQL < 8.0
 
 1. **Backup your database**
+
    ```bash
    mysqldump -u root -p mydb > backup.sql
    ```
 
 2. **Upgrade MySQL**
+
    ```bash
    # Ubuntu/Debian
    sudo apt-get install mysql-server-8.0
-   
+
    # macOS (Homebrew)
    brew install mysql@8.0
    ```
 
 3. **Run upgrade process**
+
    ```bash
    mysql_upgrade -u root -p
    ```
@@ -217,7 +222,7 @@ class PostgresDialect {
   generateUUID() {
     return 'uuid_generate_v7()'; // PostgreSQL 18+
   }
-  
+
   jsonExtract(column, path) {
     return `${column}->>'${path}'`; // JSONB operator
   }
@@ -228,7 +233,7 @@ class MySQLDialect {
   generateUUID() {
     return 'UUID()'; // MySQL 8.0+
   }
-  
+
   jsonExtract(column, path) {
     return `JSON_UNQUOTE(JSON_EXTRACT(${column}, '$.${path}'))`; // MySQL 8.0+
   }

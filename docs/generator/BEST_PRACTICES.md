@@ -233,11 +233,13 @@ export class CreateUserDto {
 }
 
 // ✅ Enable whitelist in main.ts
-app.useGlobalPipes(new ValidationPipe({
-  whitelist: true,           // Remove non-whitelisted properties
-  forbidNonWhitelisted: true, // Throw error on extra properties
-  transform: true,            // Auto-transform to DTO class
-}));
+app.useGlobalPipes(
+  new ValidationPipe({
+    whitelist: true, // Remove non-whitelisted properties
+    forbidNonWhitelisted: true, // Throw error on extra properties
+    transform: true, // Auto-transform to DTO class
+  }),
+);
 ```
 
 ### ✅ Use Parameterized Queries
@@ -319,7 +321,7 @@ const app = await NestFactory.create(AppModule, { httpsOptions });
 @Injectable()
 export class UsersService {
   @UseInterceptors(CacheInterceptor)
-  @CacheTTL(3600)  // 1 hour
+  @CacheTTL(3600) // 1 hour
   async findOne(id: string) {
     return this.repository.findOne(id);
   }
@@ -442,13 +444,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse();
     const request = ctx.getRequest();
 
-    const status = exception instanceof HttpException
-      ? exception.getStatus()
-      : HttpStatus.INTERNAL_SERVER_ERROR;
+    const status = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message = exception instanceof HttpException
-      ? exception.getResponse()
-      : 'Internal server error';
+    const message = exception instanceof HttpException ? exception.getResponse() : 'Internal server error';
 
     // ✅ Structured error response
     response.status(status).json({
@@ -459,10 +457,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     });
 
     // ✅ Log errors
-    this.logger.error(
-      `${request.method} ${request.url}`,
-      exception instanceof Error ? exception.stack : exception,
-    );
+    this.logger.error(`${request.method} ${request.url}`, exception instanceof Error ? exception.stack : exception);
   }
 }
 ```

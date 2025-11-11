@@ -85,6 +85,7 @@ nest-generator generate users.profile --features.audit=true
 ```
 
 This automatically:
+
 - Creates `AuditModule` (global)
 - Adds `@AuditLog()` decorator to service methods
 - Tracks CREATE, UPDATE, DELETE operations
@@ -114,7 +115,6 @@ import { AuditLog } from '../../audit/audit-log.decorator';
 
 @Injectable()
 export class UsersProfileService {
-  
   @AuditLog('users.profile', 'create')
   async create(dto: CreateDto, userId: string) {
     // Your create logic
@@ -213,7 +213,7 @@ export class ReportsService {
   async getUserActivity(userId: string, days = 7) {
     const since = new Date();
     since.setDate(since.getDate() - days);
-    
+
     return this.auditQuery.findByUser(userId, { since });
   }
 
@@ -257,10 +257,7 @@ export class AuditController {
 
   @Get('entity/:type/:id')
   @RequirePermission('audit:read')
-  async getEntityHistory(
-    @Param('type') entityType: string,
-    @Param('id') entityId: string,
-  ) {
+  async getEntityHistory(@Param('type') entityType: string, @Param('id') entityId: string) {
     return this.auditQuery.findByEntity(entityType, entityId);
   }
 
@@ -339,7 +336,7 @@ async rollback(entityType: string, entityId: string) {
   }
 
   const previousState = logs[0].old_values;
-  
+
   // Restore previous state
   return this.repository.update(entityId, previousState);
 }
@@ -350,11 +347,11 @@ async rollback(entityType: string, entityId: string) {
 ```typescript
 async exportLogs(filters: any, format: 'json' | 'csv' = 'json') {
   const logs = await this.auditQuery.find(filters);
-  
+
   if (format === 'csv') {
     return this.convertToCSV(logs);
   }
-  
+
   return logs;
 }
 
@@ -367,7 +364,7 @@ private convertToCSV(logs: any[]): string {
     log.user_email || log.user_id,
     JSON.stringify(log.changes),
   ]);
-  
+
   return [headers, ...rows]
     .map(row => row.join(','))
     .join('\n');
@@ -383,7 +380,7 @@ private convertToCSV(logs: any[]): string {
 async login(@Body() dto: LoginDto, @Req() req) {
   try {
     const user = await this.authService.validateUser(dto.email, dto.password);
-    
+
     await this.auditLog.log({
       entityType: 'auth',
       action: 'LOGIN',
@@ -394,7 +391,7 @@ async login(@Body() dto: LoginDto, @Req() req) {
       statusCode: 200,
       metadata: { success: true },
     });
-    
+
     return { token: await this.authService.generateToken(user) };
   } catch (error) {
     await this.auditLog.log({
@@ -406,7 +403,7 @@ async login(@Body() dto: LoginDto, @Req() req) {
       errorMessage: 'Invalid credentials',
       metadata: { success: false },
     });
-    
+
     throw error;
   }
 }
@@ -417,7 +414,7 @@ async login(@Body() dto: LoginDto, @Req() req) {
 ```typescript
 async generateComplianceReport(startDate: Date, endDate: Date) {
   const logs = await this.auditQuery.findByDateRange(startDate, endDate);
-  
+
   return {
     total_operations: logs.length,
     by_action: this.groupBy(logs, 'action'),
@@ -435,11 +432,11 @@ async detectSuspiciousActivity(userId: string) {
   const recentLogs = await this.auditQuery.findByUser(userId, {
     since: new Date(Date.now() - 3600000), // Last hour
   });
-  
+
   const failedLogins = recentLogs.filter(
     l => l.action === 'LOGIN' && l.status_code === 401
   );
-  
+
   if (failedLogins.length > 5) {
     // Send alert
     await this.notificationService.sendAlert({
@@ -456,6 +453,7 @@ async detectSuspiciousActivity(userId: string) {
 ### ❌ No audit logs created
 
 **Check:**
+
 1. Audit table exists: `SELECT * FROM audit.logs LIMIT 1;`
 2. AuditModule is global: `@Global()` decorator present
 3. Service methods have `@AuditLog()` decorator

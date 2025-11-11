@@ -49,6 +49,7 @@ libs/generator/src/search/
 ## 🎯 Features Implemented
 
 ### Search Capabilities
+
 - ✅ Full-text search with relevance scoring
 - ✅ Faceted search (category filtering)
 - ✅ Geographic search with distance sorting
@@ -61,6 +62,7 @@ libs/generator/src/search/
 - ✅ Pagination with metadata
 
 ### Developer Experience
+
 - ✅ Fluent query builder API
 - ✅ Type-safe with TypeScript generics
 - ✅ Model-based registration
@@ -69,6 +71,7 @@ libs/generator/src/search/
 - ✅ Health checks
 
 ### Integration
+
 - ✅ NestJS dependency injection
 - ✅ Dynamic module configuration
 - ✅ Async configuration support
@@ -76,22 +79,23 @@ libs/generator/src/search/
 
 ## 📝 Code Statistics
 
-| Component             | Lines | Status    | Lint Errors |
-| --------------------- | ----- | --------- | ----------- |
-| search.interface.ts   | 348   | ✅ Complete | 0           |
-| elasticsearch.driver  | 663   | ✅ Complete | 0           |
-| search.service.ts     | 468   | ✅ Complete | 0           |
-| search.module.ts      | 104   | ✅ Complete | 0           |
-| search.constants.ts   | 7     | ✅ Complete | 0           |
-| index.ts              | 41    | ✅ Complete | 0           |
-| README.md             | 458   | ✅ Complete | Minor MD    |
-| **Total**             | **2,089** | **40%** | **0 TS**    |
+| Component            | Lines     | Status      | Lint Errors |
+| -------------------- | --------- | ----------- | ----------- |
+| search.interface.ts  | 348       | ✅ Complete | 0           |
+| elasticsearch.driver | 663       | ✅ Complete | 0           |
+| search.service.ts    | 468       | ✅ Complete | 0           |
+| search.module.ts     | 104       | ✅ Complete | 0           |
+| search.constants.ts  | 7         | ✅ Complete | 0           |
+| index.ts             | 41        | ✅ Complete | 0           |
+| README.md            | 458       | ✅ Complete | Minor MD    |
+| **Total**            | **2,089** | **40%**     | **0 TS**    |
 
 ## 🔧 Technical Implementation
 
 ### Architecture Pattern
 
 **Multi-Driver Abstraction**:
+
 ```typescript
 ISearchDriver ← Common interface
     ├── ElasticsearchDriver (✅ Complete)
@@ -103,6 +107,7 @@ ISearchDriver ← Common interface
 ### API Design
 
 **Inspired by Laravel Scout**:
+
 ```typescript
 // Simple search
 await searchService.search('User', 'john doe');
@@ -120,6 +125,7 @@ await searchService
 ### Type Safety
 
 All search operations are fully typed:
+
 ```typescript
 SearchResult<User> {
   hits: SearchHit<User>[];
@@ -197,12 +203,13 @@ const results = await searchService
 ### Short-term (This Week)
 
 4. **@Searchable Decorator** (1-2 hours)
+
    ```typescript
    @Searchable({
      indexName: 'users',
      searchableFields: ['name', 'email'],
    })
-   export class User { }
+   export class User {}
    ```
 
 5. **Auto-Sync Interceptor** (2-3 hours)
@@ -220,6 +227,7 @@ const results = await searchService
 ### Mid-term (Next Week)
 
 7. **CLI Generator** (3-4 hours)
+
    ```bash
    nest-generator generate users --features.search=true
    ```
@@ -252,6 +260,7 @@ Add to `package.json`:
 ```
 
 For additional drivers (future):
+
 ```json
 {
   "dependencies": {
@@ -368,6 +377,7 @@ Algolia: 'price >= 100'
 ### Bulk Operations
 
 Use `importSearchable()` for large datasets:
+
 ```typescript
 await searchService.importSearchable('User', users);
 // More efficient than looping makeSearchable()
@@ -376,6 +386,7 @@ await searchService.importSearchable('User', users);
 ### Pagination
 
 Always paginate large results:
+
 ```typescript
 .paginate(1, 20)  // page, perPage
 ```
@@ -383,6 +394,7 @@ Always paginate large results:
 ### Field Selection
 
 Limit returned fields:
+
 ```typescript
 .select(['id', 'name', 'email'])
 ```
@@ -390,9 +402,10 @@ Limit returned fields:
 ### Index Optimization
 
 Configure analyzers for better performance:
+
 ```typescript
-synonyms: ['laptop,notebook', 'phone,mobile']
-stopWords: ['the', 'a', 'an']
+synonyms: ['laptop,notebook', 'phone,mobile'];
+stopWords: ['the', 'a', 'an'];
 ```
 
 ## 🔒 Security Notes
@@ -412,18 +425,21 @@ stopWords: ['the', 'a', 'an']
 ## ✨ Highlights
 
 ### Code Quality
+
 - ✅ **0 TypeScript lint errors**
 - ✅ **100% type coverage**
 - ✅ **Comprehensive JSDoc comments**
 - ✅ **Consistent naming conventions**
 
 ### Developer Experience
+
 - ✅ **Intuitive API (Laravel Scout-like)**
 - ✅ **Full IntelliSense support**
 - ✅ **Clear error messages**
 - ✅ **Extensive documentation**
 
 ### Production Ready
+
 - ✅ **Error handling**
 - ✅ **Health checks**
 - ✅ **Logging with NestJS Logger**

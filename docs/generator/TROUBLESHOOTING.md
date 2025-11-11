@@ -117,7 +117,7 @@ npm run generate users.profile
 
 ```sql
 -- Check if table exists in metadata
-SELECT * FROM meta.table_metadata 
+SELECT * FROM meta.table_metadata
 WHERE schema_name = 'public' AND table_name = 'users';
 
 -- If not found, add it
@@ -313,13 +313,15 @@ import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    transform: true,
-  }));
-  
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+
   await app.listen(3000);
 }
 ```
@@ -482,7 +484,7 @@ fileFilter: (req, file, cb) => {
   } else {
     cb(new BadRequestException('Invalid file type'), false);
   }
-}
+};
 ```
 
 ### Caching Issues
@@ -740,9 +742,9 @@ export class UsersService {
     const start = Date.now();
     const result = await this.repository.find();
     const duration = Date.now() - start;
-    
+
     this.logger.debug(`findAll took ${duration}ms`);
-    
+
     return result;
   }
 }

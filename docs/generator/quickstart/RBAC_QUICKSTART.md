@@ -128,12 +128,12 @@ SELECT r.id, p.id FROM rbac.roles r, rbac.permissions p WHERE r.name = 'admin';
 
 -- Editor: create, read, update posts
 INSERT INTO rbac.role_permissions (role_id, permission_id)
-SELECT r.id, p.id FROM rbac.roles r, rbac.permissions p 
+SELECT r.id, p.id FROM rbac.roles r, rbac.permissions p
 WHERE r.name = 'editor' AND p.name IN ('posts:create', 'posts:read', 'posts:update', 'users:read');
 
 -- Viewer: read only
 INSERT INTO rbac.role_permissions (role_id, permission_id)
-SELECT r.id, p.id FROM rbac.roles r, rbac.permissions p 
+SELECT r.id, p.id FROM rbac.roles r, rbac.permissions p
 WHERE r.name = 'viewer' AND p.name IN ('posts:read', 'users:read');
 ```
 
@@ -168,7 +168,6 @@ import { RequirePermission, RequireRole } from './rbac/rbac.decorator';
 @Controller('users/profile')
 @UseGuards(RbacGuard)
 export class UsersProfileController {
-  
   // Require specific permission
   @Get()
   @RequirePermission('users:read')
@@ -252,16 +251,10 @@ export class PostsService {
     }
 
     // Check multiple permissions (AND)
-    const hasAll = await this.rbacService.hasAllPermissions(userId, [
-      'posts:publish',
-      'posts:update'
-    ]);
+    const hasAll = await this.rbacService.hasAllPermissions(userId, ['posts:publish', 'posts:update']);
 
     // Check any permission (OR)
-    const hasAny = await this.rbacService.hasAnyPermission(userId, [
-      'posts:publish',
-      'posts:admin'
-    ]);
+    const hasAny = await this.rbacService.hasAnyPermission(userId, ['posts:publish', 'posts:admin']);
 
     // Check role
     const isAdmin = await this.rbacService.hasRole(userId, 'admin');
@@ -302,11 +295,11 @@ async update(@Param('id') id: string, @Req() req, @Body() dto: UpdateDto) {
   const userId = req.user.id;
   const isOwner = await this.rbacService.isOwner(userId, 'users', id);
   const isAdmin = await this.rbacService.hasRole(userId, 'admin');
-  
+
   if (!isOwner && !isAdmin) {
     throw new ForbiddenException('You can only update your own profile');
   }
-  
+
   return this.service.update(id, dto);
 }
 ```
@@ -318,11 +311,11 @@ async update(@Param('id') id: string, @Req() req, @Body() dto: UpdateDto) {
 @RequirePermission('users:read')
 async findOne(@Param('id') id: string, @Req() req) {
   const user = await this.service.findOne(id);
-  
+
   // Filter sensitive fields based on permissions
   const canViewEmail = await this.rbacService.hasPermission(req.user.id, 'users:view_email');
   const canViewPhone = await this.rbacService.hasPermission(req.user.id, 'users:view_phone');
-  
+
   return {
     ...user,
     email: canViewEmail ? user.email : undefined,
@@ -339,14 +332,14 @@ await this.rbacService.createPermission({
   name: 'posts:publish',
   resource: 'posts',
   action: 'publish',
-  description: 'Publish posts to public'
+  description: 'Publish posts to public',
 });
 
 // Create custom role
 await this.rbacService.createRole({
   name: 'publisher',
   description: 'Can publish posts',
-  permissions: ['posts:create', 'posts:read', 'posts:update', 'posts:publish']
+  permissions: ['posts:create', 'posts:read', 'posts:update', 'posts:publish'],
 });
 ```
 
@@ -388,7 +381,7 @@ SELECT * FROM rbac.permissions WHERE name = 'users:read';
 
 ```typescript
 @Controller('users')
-@UseGuards(RbacGuard)  // ← Must be here!
+@UseGuards(RbacGuard) // ← Must be here!
 export class UsersController {}
 ```
 
@@ -396,7 +389,7 @@ And RBAC module is imported:
 
 ```typescript
 @Module({
-  imports: [RbacModule],  // ← Must import!
+  imports: [RbacModule], // ← Must import!
   controllers: [UsersController],
 })
 export class UsersModule {}

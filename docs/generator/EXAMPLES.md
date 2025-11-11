@@ -80,11 +80,11 @@ export class PostsService {
   // <custom:methods>
   async publish(id: string, userId: string) {
     const post = await this.findOne(id);
-    
+
     // Check ownership or admin
     const isOwner = post.user_id === userId;
     const isAdmin = await this.rbacService.hasRole(userId, 'admin');
-    
+
     if (!isOwner && !isAdmin) {
       throw new ForbiddenException('Cannot publish this post');
     }
@@ -93,7 +93,8 @@ export class PostsService {
   }
 
   async getPopularPosts(limit = 10) {
-    return this.repository.query(`
+    return this.repository.query(
+      `
       SELECT p.*, COUNT(c.id) as comment_count
       FROM blog.posts p
       LEFT JOIN blog.comments c ON p.id = c.post_id
@@ -101,7 +102,9 @@ export class PostsService {
       GROUP BY p.id
       ORDER BY comment_count DESC
       LIMIT $1
-    `, [limit]);
+    `,
+      [limit],
+    );
   }
   // </custom:methods>
 }
@@ -153,20 +156,23 @@ nest-generator generate shop.inventory
 export class InventoryService {
   async reserveStock(productId: string, quantity: number, orderId: string) {
     const inventory = await this.findByProduct(productId);
-    
+
     if (inventory.available_quantity < quantity) {
       throw new BadRequestException('Insufficient stock');
     }
 
     // Atomic update
-    await this.repository.query(`
+    await this.repository.query(
+      `
       UPDATE shop.inventory
       SET available_quantity = available_quantity - $1,
           reserved_quantity = reserved_quantity + $1,
           updated_at = NOW()
       WHERE product_id = $2 AND available_quantity >= $1
       RETURNING *
-    `, [quantity, productId]);
+    `,
+      [quantity, productId],
+    );
 
     // Log for audit
     await this.auditLog.log({
@@ -178,12 +184,15 @@ export class InventoryService {
   }
 
   async releaseStock(productId: string, quantity: number, orderId: string) {
-    await this.repository.query(`
+    await this.repository.query(
+      `
       UPDATE shop.inventory
       SET reserved_quantity = reserved_quantity - $1,
           available_quantity = available_quantity + $1
       WHERE product_id = $2
-    `, [quantity, productId]);
+    `,
+      [quantity, productId],
+    );
   }
 }
 ```
@@ -222,7 +231,7 @@ CREATE POLICY tenant_isolation ON saas.users
 export class TenantMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     const tenantId = req.headers['x-tenant-id'] as string;
-    
+
     if (!tenantId) {
       throw new BadRequestException('Tenant ID required');
     }
@@ -312,10 +321,10 @@ export class EncryptionService {
   encrypt(text: string): { encrypted: string; iv: string; tag: string } {
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipheriv(this.algorithm, this.key, iv);
-    
+
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    
+
     return {
       encrypted,
       iv: iv.toString('hex'),
@@ -324,16 +333,12 @@ export class EncryptionService {
   }
 
   decrypt(encrypted: string, iv: string, tag: string): string {
-    const decipher = crypto.createDecipheriv(
-      this.algorithm,
-      this.key,
-      Buffer.from(iv, 'hex')
-    );
+    const decipher = crypto.createDecipheriv(this.algorithm, this.key, Buffer.from(iv, 'hex'));
     decipher.setAuthTag(Buffer.from(tag, 'hex'));
-    
+
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
-    
+
     return decrypted;
   }
 }
@@ -385,7 +390,8 @@ export class FeedService {
     const offset = (page - 1) * limit;
 
     // Get posts from followed users + own posts
-    return this.pool.query(`
+    return this.pool.query(
+      `
       WITH following AS (
         SELECT following_id FROM social.follows WHERE follower_id = $1
       )
@@ -408,11 +414,14 @@ export class FeedService {
       GROUP BY p.id, u.id
       ORDER BY p.created_at DESC
       LIMIT $2 OFFSET $3
-    `, [userId, limit, offset]);
+    `,
+      [userId, limit, offset],
+    );
   }
 
   async getTrendingPosts(hours = 24, limit = 10) {
-    return this.pool.query(`
+    return this.pool.query(
+      `
       SELECT
         p.*,
         COUNT(l.id) as engagement_score
@@ -422,7 +431,9 @@ export class FeedService {
       GROUP BY p.id
       ORDER BY engagement_score DESC
       LIMIT $1
-    `, [limit]);
+    `,
+      [limit],
+    );
   }
 }
 ```

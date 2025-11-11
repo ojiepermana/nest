@@ -314,24 +314,14 @@ const stores = await this.searchService
 
 ```typescript
 // In search input handler
-const suggestions = await this.searchService.suggest(
-  'Product',
-  searchQuery,
-  'name',
-  10,
-);
+const suggestions = await this.searchService.suggest('Product', searchQuery, 'name', 10);
 ```
 
 ### Similar Products
 
 ```typescript
 // "You might also like" section
-const similar = await this.searchService.similar(
-  'Product',
-  currentProductId,
-  ['name', 'description', 'category'],
-  5,
-);
+const similar = await this.searchService.similar('Product', currentProductId, ['name', 'description', 'category'], 5);
 ```
 
 ### Bulk Import
@@ -383,6 +373,7 @@ SearchResult<T> (Typed Response)
 ## 🔜 Roadmap
 
 ### Phase 1 (Complete)
+
 - ✅ Core interfaces and types
 - ✅ Elasticsearch driver
 - ✅ SearchService with Laravel Scout API
@@ -390,6 +381,7 @@ SearchResult<T> (Typed Response)
 - ✅ Fluent query builder
 
 ### Phase 2 (Next)
+
 - ⏳ Algolia driver
 - ⏳ Meilisearch driver
 - ⏳ Database driver (fallback)
@@ -398,6 +390,7 @@ SearchResult<T> (Typed Response)
 - ⏳ Comprehensive tests
 
 ### Phase 3 (Future)
+
 - ⏳ CLI generator integration
 - ⏳ Query performance optimization
 - ⏳ Advanced faceting
@@ -431,6 +424,7 @@ VALUES ('profile', 'bio', true, false),
 ## 🐛 Troubleshooting
 
 ### Connection Issues
+
 ```typescript
 // Check health
 const isHealthy = await this.searchService.healthCheck();
@@ -440,6 +434,7 @@ if (!isHealthy) {
 ```
 
 ### Index Issues
+
 ```typescript
 // Verify index exists
 const exists = await this.searchService.indexExists('User');
@@ -449,6 +444,7 @@ if (!exists) {
 ```
 
 ### Performance
+
 ```typescript
 // Get index statistics
 const stats = await this.searchService.getIndexStats('User');

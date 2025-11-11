@@ -40,7 +40,7 @@ CREATE TABLE organization_users (
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
   deleted_at TIMESTAMP,
-  
+
   UNIQUE(organization_id, email)
 );
 
@@ -85,8 +85,8 @@ INSERT INTO meta.table_metadata (
 -- Add tenant context middleware requirement
 INSERT INTO meta.enterprise_features (
   table_metadata_id, enable_tenant_isolation, tenant_column_name
-) SELECT id, true, 'organization_id' 
-FROM meta.table_metadata 
+) SELECT id, true, 'organization_id'
+FROM meta.table_metadata
 WHERE table_name IN ('organization_users', 'projects');
 ```
 
@@ -209,31 +209,31 @@ INSERT INTO permissions (name, slug, resource, action) VALUES
 -- Audit log table
 CREATE TABLE audit_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-  
+
   -- Context
   table_name VARCHAR(100) NOT NULL,
   record_id UUID NOT NULL,
   operation VARCHAR(20) NOT NULL, -- INSERT, UPDATE, DELETE
-  
+
   -- Who & When
   user_id UUID,
   user_email VARCHAR(255),
   user_name VARCHAR(200),
   ip_address VARCHAR(45),
   user_agent TEXT,
-  
+
   -- What changed
   old_values JSONB,
   new_values JSONB,
   changed_fields TEXT[],
-  
+
   -- Why (optional)
   reason TEXT,
-  
+
   -- Tracing
   correlation_id UUID,
   request_id VARCHAR(100),
-  
+
   -- Metadata
   created_at TIMESTAMP DEFAULT NOW()
 );
@@ -356,30 +356,30 @@ CREATE TRIGGER audit_users
 -- Events table (append-only)
 CREATE TABLE events (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-  
+
   -- Event identity
   event_type VARCHAR(100) NOT NULL, -- user.created, order.placed, payment.processed
   aggregate_id UUID NOT NULL, -- entity ID
   aggregate_type VARCHAR(100) NOT NULL, -- User, Order, Payment
-  
+
   -- Event data
   event_data JSONB NOT NULL,
   event_metadata JSONB DEFAULT '{}',
-  
+
   -- Causality
   causation_id UUID, -- what caused this event
   correlation_id UUID, -- group related events
-  
+
   -- Versioning
   version INTEGER NOT NULL, -- aggregate version
-  
+
   -- Actor
   actor_id UUID,
   actor_type VARCHAR(50),
-  
+
   -- Timestamp (immutable)
   occurred_at TIMESTAMP DEFAULT NOW(),
-  
+
   UNIQUE(aggregate_id, version)
 );
 
@@ -396,7 +396,7 @@ CREATE TABLE aggregate_snapshots (
   version INTEGER NOT NULL,
   state JSONB NOT NULL,
   created_at TIMESTAMP DEFAULT NOW(),
-  
+
   UNIQUE(aggregate_id, version)
 );
 
@@ -440,16 +440,16 @@ CREATE TABLE metrics (
   time TIMESTAMPTZ NOT NULL,
   metric_name VARCHAR(100) NOT NULL,
   value DOUBLE PRECISION NOT NULL,
-  
+
   -- Dimensions
   user_id UUID,
   organization_id UUID,
   resource_type VARCHAR(50),
   resource_id UUID,
-  
+
   -- Tags (for filtering)
   tags JSONB,
-  
+
   -- Metadata
   unit VARCHAR(20), -- ms, bytes, count
   source VARCHAR(50)
@@ -467,7 +467,7 @@ CREATE INDEX idx_metrics_tags ON metrics USING GIN(tags);
 -- Continuous aggregates (pre-computed rollups)
 CREATE MATERIALIZED VIEW metrics_hourly
 WITH (timescaledb.continuous) AS
-SELECT 
+SELECT
   time_bucket('1 hour', time) AS hour,
   metric_name,
   organization_id,
@@ -506,43 +506,43 @@ SELECT add_compression_policy('metrics', INTERVAL '7 days');
 -- Files table
 CREATE TABLE files (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-  
+
   -- Storage
   storage_provider VARCHAR(50) NOT NULL, -- local, s3, gcs, azure
   storage_path VARCHAR(500) NOT NULL,
   storage_bucket VARCHAR(200),
-  
+
   -- File info
   original_name VARCHAR(255) NOT NULL,
   filename VARCHAR(255) NOT NULL UNIQUE,
   mime_type VARCHAR(100) NOT NULL,
   size_bytes BIGINT NOT NULL,
   checksum VARCHAR(64) NOT NULL, -- SHA-256
-  
+
   -- Organization
   folder_id UUID REFERENCES folders(id),
-  
+
   -- Access control
   owner_id UUID NOT NULL,
   organization_id UUID,
   visibility VARCHAR(20) DEFAULT 'private', -- public, private, shared
-  
+
   -- Metadata
   width INTEGER, -- for images
   height INTEGER,
   duration INTEGER, -- for videos/audio (seconds)
   metadata JSONB DEFAULT '{}',
-  
+
   -- Virus scanning
   scanned_at TIMESTAMP,
   is_safe BOOLEAN DEFAULT true,
   scan_result JSONB,
-  
+
   -- Lifecycle
   expires_at TIMESTAMP,
   downloaded_count INTEGER DEFAULT 0,
   last_downloaded_at TIMESTAMP,
-  
+
   -- Timestamps
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
@@ -577,22 +577,22 @@ CREATE TABLE file_shares (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
   file_id UUID REFERENCES files(id) ON DELETE CASCADE,
   share_token VARCHAR(100) UNIQUE NOT NULL,
-  
+
   -- Access control
   shared_by UUID NOT NULL,
   shared_with_user_id UUID,
   shared_with_email VARCHAR(255),
-  
+
   -- Permissions
   can_download BOOLEAN DEFAULT true,
   can_edit BOOLEAN DEFAULT false,
   can_delete BOOLEAN DEFAULT false,
-  
+
   -- Limits
   max_downloads INTEGER,
   download_count INTEGER DEFAULT 0,
   expires_at TIMESTAMP,
-  
+
   -- Tracking
   last_accessed_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT NOW()
@@ -613,7 +613,7 @@ CREATE TABLE file_versions (
   created_by UUID NOT NULL,
   comment TEXT,
   created_at TIMESTAMP DEFAULT NOW(),
-  
+
   UNIQUE(file_id, version_number)
 );
 
@@ -643,34 +643,34 @@ CREATE TABLE notification_templates (
 -- Notifications queue
 CREATE TABLE notifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-  
+
   -- Target
   user_id UUID NOT NULL,
   type VARCHAR(50) NOT NULL, -- email, sms, push, in-app
-  
+
   -- Content
   title VARCHAR(255),
   message TEXT NOT NULL,
   data JSONB DEFAULT '{}',
-  
+
   -- Status
   status VARCHAR(20) DEFAULT 'pending', -- pending, sent, failed, read
   sent_at TIMESTAMP,
   read_at TIMESTAMP,
   failed_reason TEXT,
   retry_count INTEGER DEFAULT 0,
-  
+
   -- Priority
   priority INTEGER DEFAULT 0, -- 0=normal, 1=high, 2=urgent
-  
+
   -- Grouping
   category VARCHAR(50),
   reference_type VARCHAR(50),
   reference_id UUID,
-  
+
   -- Expiry
   expires_at TIMESTAMP,
-  
+
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -686,19 +686,19 @@ CREATE TABLE notification_preferences (
   sms_enabled BOOLEAN DEFAULT false,
   push_enabled BOOLEAN DEFAULT true,
   in_app_enabled BOOLEAN DEFAULT true,
-  
+
   -- Category preferences
   preferences JSONB DEFAULT '{
     "marketing": {"email": false, "push": false},
     "updates": {"email": true, "push": true},
     "security": {"email": true, "sms": true, "push": true}
   }',
-  
+
   -- Quiet hours
   quiet_hours_start TIME,
   quiet_hours_end TIME,
   quiet_hours_timezone VARCHAR(50),
-  
+
   updated_at TIMESTAMP DEFAULT NOW()
 );
 

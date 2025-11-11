@@ -26,21 +26,25 @@ npm install @ojiepermana/nest-generator
 ### 2. Install driver dependencies
 
 **Elasticsearch:**
+
 ```bash
 npm install @elastic/elasticsearch
 ```
 
 **Algolia:**
+
 ```bash
 npm install algoliasearch
 ```
 
 **Meilisearch:**
+
 ```bash
 npm install meilisearch
 ```
 
 **Database (PostgreSQL):**
+
 ```bash
 npm install pg
 # No additional search engine dependencies needed!
@@ -53,6 +57,7 @@ npm install pg
 ### 1. Configure SearchModule
 
 **app.module.ts:**
+
 ```typescript
 import { Module } from '@nestjs/common';
 import { SearchModule } from '@ojiepermana/nest-generator/search';
@@ -78,6 +83,7 @@ export class AppModule {}
 ### 2. Mark Entity as Searchable
 
 **product.entity.ts:**
+
 ```typescript
 import { Searchable } from '@ojiepermana/nest-generator/search';
 
@@ -104,6 +110,7 @@ export class Product {
 ### 3. Register Model & Start Indexing
 
 **product.service.ts:**
+
 ```typescript
 import { Injectable } from '@nestjs/common';
 import { SearchService } from '@ojiepermana/nest-generator/search';
@@ -122,10 +129,10 @@ export class ProductService {
 
   async create(data: Partial<Product>): Promise<Product> {
     const product = await this.repository.save(data);
-    
+
     // Index in search engine
     await this.searchService.makeSearchable('Product', product, product.id);
-    
+
     return product;
   }
 }
@@ -176,6 +183,7 @@ SearchModule.register({
 ```
 
 **Environment Variables:**
+
 ```env
 ELASTICSEARCH_NODE=http://localhost:9200
 ELASTICSEARCH_USERNAME=elastic
@@ -195,6 +203,7 @@ SearchModule.register({
 ```
 
 **Environment Variables:**
+
 ```env
 ALGOLIA_APP_ID=your_app_id
 ALGOLIA_API_KEY=your_admin_api_key
@@ -213,6 +222,7 @@ SearchModule.register({
 ```
 
 **Environment Variables:**
+
 ```env
 MEILISEARCH_HOST=http://localhost:7700
 MEILISEARCH_API_KEY=your_master_key
@@ -236,6 +246,7 @@ SearchModule.register({
 ```
 
 **Environment Variables:**
+
 ```env
 DB_HOST=localhost
 DB_PORT=5432
@@ -253,6 +264,7 @@ DB_DATABASE=myapp
 Automatically sync CRUD operations to search engine:
 
 **product.controller.ts:**
+
 ```typescript
 import { Controller, Post, Put, Delete, Body, Param } from '@nestjs/common';
 import { AutoSync } from '@ojiepermana/nest-generator/search';
@@ -313,7 +325,7 @@ Index large datasets efficiently:
 ```typescript
 async bulkImport() {
   const products = await this.repository.find();
-  
+
   const documents = products.map(p => ({
     id: p.id,
     data: p,
@@ -489,16 +501,20 @@ const results = await builder.get();
 ### From Database to Elasticsearch
 
 **1. Install Elasticsearch:**
+
 ```bash
 npm install @elastic/elasticsearch
 ```
 
 **2. Update configuration:**
+
 ```typescript
 // Before
 SearchModule.register({
   driver: 'database',
-  database: { /* ... */ },
+  database: {
+    /* ... */
+  },
 });
 
 // After
@@ -511,6 +527,7 @@ SearchModule.register({
 ```
 
 **3. Reindex data:**
+
 ```typescript
 // Export from database driver
 const products = await oldDriver.search('products', '', { limit: 10000 });
@@ -524,6 +541,7 @@ await newDriver.bulk('products', 'index', products.hits);
 The API is intentionally similar:
 
 **Laravel Scout:**
+
 ```php
 $products = Product::search('laptop')
     ->where('price', '>', 500)
@@ -532,12 +550,9 @@ $products = Product::search('laptop')
 ```
 
 **NestJS Search:**
+
 ```typescript
-const products = await searchService
-  .queryBuilder('Product')
-  .where('price', 'gt', 500)
-  .limit(20)
-  .get();
+const products = await searchService.queryBuilder('Product').where('price', 'gt', 500).limit(20).get();
 ```
 
 ---
@@ -546,31 +561,35 @@ const products = await searchService
 
 ### Driver Comparison
 
-| Driver | Search Speed | Setup Complexity | Cost | Best For |
-|--------|-------------|------------------|------|----------|
-| **Elasticsearch** | ⭐⭐⭐⭐⭐ (< 50ms) | Medium | Self-hosted | Large datasets, complex queries |
-| **Algolia** | ⭐⭐⭐⭐⭐ (< 10ms) | Easy | Paid SaaS | Instant search, high traffic |
-| **Meilisearch** | ⭐⭐⭐⭐ (< 100ms) | Easy | Self-hosted | Medium datasets, self-hosted |
-| **Database** | ⭐⭐⭐ (< 500ms) | None | Free | Development, small datasets |
+| Driver            | Search Speed        | Setup Complexity | Cost        | Best For                        |
+| ----------------- | ------------------- | ---------------- | ----------- | ------------------------------- |
+| **Elasticsearch** | ⭐⭐⭐⭐⭐ (< 50ms) | Medium           | Self-hosted | Large datasets, complex queries |
+| **Algolia**       | ⭐⭐⭐⭐⭐ (< 10ms) | Easy             | Paid SaaS   | Instant search, high traffic    |
+| **Meilisearch**   | ⭐⭐⭐⭐ (< 100ms)  | Easy             | Self-hosted | Medium datasets, self-hosted    |
+| **Database**      | ⭐⭐⭐ (< 500ms)    | None             | Free        | Development, small datasets     |
 
 ### Optimization Tips
 
 **1. Use appropriate driver for dataset size:**
+
 - < 10k records: Database driver
 - 10k - 100k: Meilisearch
 - 100k+: Elasticsearch or Algolia
 
 **2. Enable async sync:**
+
 ```typescript
 @AutoSync({ modelName: 'Product', operation: 'create', async: true })
 ```
 
 **3. Batch imports:**
+
 ```typescript
 await searchService.importSearchable('Product', documents); // vs single makeSearchable()
 ```
 
 **4. Limit searchable fields:**
+
 ```typescript
 @Searchable({
   searchableFields: ['name', 'sku'], // Don't include large text fields unnecessarily
@@ -584,6 +603,7 @@ await searchService.importSearchable('Product', documents); // vs single makeSea
 ### Connection Errors
 
 **Elasticsearch "Connection refused":**
+
 ```bash
 # Check if Elasticsearch is running
 curl http://localhost:9200
@@ -593,10 +613,12 @@ docker run -p 9200:9200 -e "discovery.type=single-node" docker.elastic.co/elasti
 ```
 
 **Algolia "Invalid API Key":**
+
 - Verify `ALGOLIA_APP_ID` and `ALGOLIA_API_KEY`
 - Use **Admin API Key** for indexing (not Search-Only Key)
 
 **Meilisearch "Unauthorized":**
+
 ```bash
 # Check API key
 curl http://localhost:7700 -H "Authorization: Bearer YOUR_KEY"
@@ -608,6 +630,7 @@ meilisearch --master-key="YOUR_MASTER_KEY"
 ### Indexing Issues
 
 **Documents not searchable:**
+
 ```typescript
 // 1. Check if model is registered
 searchService.registerSearchableModel('Product', config);
@@ -621,6 +644,7 @@ console.log('Documents:', stats.documentCount);
 ```
 
 **Auto-sync not working:**
+
 ```typescript
 // Ensure SearchService is injected
 constructor(
@@ -631,12 +655,14 @@ constructor(
 ### Performance Issues
 
 **Slow searches (> 1s):**
+
 1. Add indexes to filterable fields
 2. Limit searchable fields
 3. Use pagination
 4. Consider upgrading to Elasticsearch/Algolia
 
 **High memory usage (Database driver):**
+
 - Database driver stores full documents in JSONB
 - For large datasets, use dedicated search engine
 

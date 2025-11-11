@@ -51,7 +51,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    
+
     // RBAC Module - Global by default
     RBACModule.register({
       adminRoles: ['admin', 'super_admin'],
@@ -63,7 +63,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         prefix: 'rbac',
       },
     }),
-    
+
     // Your feature modules
     UsersModule,
     ProductsModule,
@@ -87,7 +87,7 @@ RBACModule.registerAsync({
     },
   }),
   inject: [ConfigService],
-})
+});
 ```
 
 ---
@@ -361,10 +361,10 @@ export class AdminController {
     return { message: 'Management Reports' };
   }
 
-  @RequireRole(['admin', 'super_admin'], { 
+  @RequireRole(['admin', 'super_admin'], {
     logic: RoleLogic.AND,
     activeOnly: true,
-    checkExpiration: true 
+    checkExpiration: true,
   })
   @Delete('users/:id')
   async deleteUser(@Param('id') id: string) {
@@ -391,12 +391,7 @@ export class UsersService {
     const user = await this.userRepository.findOne(userId);
 
     // Filter fields based on user permissions
-    const allowedFields = await this.rbacService.filterFields(
-      currentUserId,
-      'users',
-      Object.keys(user),
-      user,
-    );
+    const allowedFields = await this.rbacService.filterFields(currentUserId, 'users', Object.keys(user), user);
 
     // Return only allowed fields
     const filteredUser = {};
@@ -441,11 +436,7 @@ export class PostsController {
   // Users can only update their own posts
   @RequireOwnership('posts.update', 'author_id')
   @Put(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() dto: UpdatePostDto,
-    @CurrentUser() user: any,
-  ) {
+  async update(@Param('id') id: string, @Body() dto: UpdatePostDto, @CurrentUser() user: any) {
     return this.service.update(id, dto);
   }
 
@@ -470,12 +461,7 @@ export class PostsService {
 
   async update(id: string, dto: UpdatePostDto, userId: string) {
     // Manual ownership check
-    const canUpdate = await this.rbacService.checkOwnership(
-      userId,
-      id,
-      'posts',
-      'author_id',
-    );
+    const canUpdate = await this.rbacService.checkOwnership(userId, id, 'posts', 'author_id');
 
     if (!canUpdate) {
       throw new ForbiddenException('You can only update your own posts');
@@ -522,11 +508,7 @@ export class ProductsController {
     errorMessage: 'Product updates are only allowed during business hours',
   })
   @Put(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() dto: UpdateProductDto,
-    @CurrentUser() user: any,
-  ) {
+  async update(@Param('id') id: string, @Body() dto: UpdateProductDto, @CurrentUser() user: any) {
     const currentHour = new Date().getHours();
     if (currentHour < 9 || currentHour > 17) {
       throw new ForbiddenException('Updates allowed only 9 AM - 5 PM');
@@ -596,14 +578,14 @@ import { OrdersModule } from './modules/orders/orders.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    
+
     RBACModule.register({
       adminRoles: ['admin', 'super_admin'],
       superAdminRole: 'super_admin',
       useGlobalGuards: true,
       cache: { enabled: true, ttl: 300 },
     }),
-    
+
     UsersModule,
     ProductsModule,
     OrdersModule,
@@ -810,9 +792,9 @@ describe('ProductsController with RBAC', () => {
 
   it('should allow product creation with permission', async () => {
     jest.spyOn(rbacService, 'hasPermission').mockResolvedValue({ granted: true });
-    
+
     const result = await controller.create({ name: 'Test Product' });
-    
+
     expect(result).toBeDefined();
   });
 });

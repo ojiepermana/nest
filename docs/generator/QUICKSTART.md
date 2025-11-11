@@ -24,6 +24,7 @@ nest-generator init
 ```
 
 Answer the prompts:
+
 - Architecture type: `standalone`
 - Database type: `postgresql`
 - Database host: `localhost`
@@ -33,6 +34,7 @@ Answer the prompts:
 - Database password: `your_password`
 
 This creates:
+
 - `generator.config.json` - Generator configuration
 - Metadata schema tables in your database
 
@@ -54,38 +56,38 @@ INSERT INTO meta.column_metadata (
   is_filterable,
   display_in_list
 )
-SELECT 
+SELECT
   id,
   'id',
   'uuid',
   true,
   false,
   true
-FROM meta.table_metadata 
+FROM meta.table_metadata
 WHERE schema_name = 'public' AND table_name = 'users'
 
 UNION ALL
 
-SELECT 
+SELECT
   id,
   'email',
   'varchar',
   true,
   true,
   true
-FROM meta.table_metadata 
+FROM meta.table_metadata
 WHERE schema_name = 'public' AND table_name = 'users'
 
 UNION ALL
 
-SELECT 
+SELECT
   id,
   'name',
   'varchar',
   true,
   true,
   true
-FROM meta.table_metadata 
+FROM meta.table_metadata
 WHERE schema_name = 'public' AND table_name = 'users';
 ```
 
@@ -96,11 +98,13 @@ nest-generator generate public.users
 ```
 
 Interactive prompts:
+
 - Enable caching? `Yes`
 - Enable audit trail? `Yes`
 - Enable Swagger? `Yes`
 
 Generated files:
+
 ```
 src/modules/users/
 ├── users.controller.ts    # REST API endpoints
@@ -135,11 +139,13 @@ npm run start:dev
 ```
 
 Visit Swagger UI:
+
 ```
 http://localhost:3000/api
 ```
 
 You now have:
+
 - ✅ Full CRUD API (GET, POST, PUT, DELETE)
 - ✅ Filtering & pagination
 - ✅ Swagger documentation
@@ -292,6 +298,7 @@ nest-generator generate public.users \
 ### Keyboard Shortcuts
 
 While in interactive mode:
+
 - `↑/↓` - Navigate options
 - `Space` - Select/deselect
 - `Enter` - Confirm

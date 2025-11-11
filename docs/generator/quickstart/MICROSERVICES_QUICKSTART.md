@@ -200,17 +200,14 @@ import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-    AppModule,
-    {
-      transport: Transport.TCP,
-      options: {
-        host: 'localhost',
-        port: 3001,
-      },
+  const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
+    transport: Transport.TCP,
+    options: {
+      host: 'localhost',
+      port: 3001,
     },
-  );
-  
+  });
+
   await app.listen();
   console.log('User Service listening on port 3001');
 }
@@ -323,9 +320,7 @@ import { ClientProxy } from '@nestjs/microservices';
 
 @Controller('users')
 export class UsersController {
-  constructor(
-    @Inject('USER_SERVICE') private readonly client: ClientProxy,
-  ) {}
+  constructor(@Inject('USER_SERVICE') private readonly client: ClientProxy) {}
 
   @Get()
   async findAll(@Query() filters: FilterUserDto) {
@@ -401,16 +396,14 @@ export class UsersController {
 // Service A: Emit event
 @Injectable()
 export class UsersService {
-  constructor(
-    @Inject('EVENT_BUS') private readonly eventBus: ClientProxy,
-  ) {}
+  constructor(@Inject('EVENT_BUS') private readonly eventBus: ClientProxy) {}
 
   async create(dto: CreateUserDto) {
     const user = await this.repository.create(dto);
-    
+
     // Emit event
     this.eventBus.emit('user.created', user);
-    
+
     return user;
   }
 }
@@ -444,14 +437,14 @@ async findOne(@Param('id') id: string) {
 @MessagePattern('users.findOne')
 async findOne(@Payload() id: string) {
   const user = await this.service.findOne(id);
-  
+
   if (!user) {
     throw new RpcException({
       statusCode: 404,
       message: 'User not found',
     });
   }
-  
+
   return user;
 }
 
@@ -478,7 +471,7 @@ import * as consul from 'consul';
 
 async function bootstrap() {
   const consulClient = new consul();
-  
+
   // Register service
   await consulClient.agent.service.register({
     name: 'user-service',
@@ -493,7 +486,7 @@ async function bootstrap() {
     transport: Transport.TCP,
     options: { port: 3001 },
   });
-  
+
   await app.listen();
 }
 ```
@@ -550,9 +543,7 @@ export class HealthController {
   @Get()
   @HealthCheck()
   check() {
-    return this.health.check([
-      () => this.db.pingCheck('database'),
-    ]);
+    return this.health.check([() => this.db.pingCheck('database')]);
   }
 }
 ```
@@ -573,7 +564,7 @@ export class HealthController {
 **Solution:** Increase timeout:
 
 ```typescript
-this.client.send('pattern', data).pipe(timeout(10000)) // 10 sec
+this.client.send('pattern', data).pipe(timeout(10000)); // 10 sec
 ```
 
 ### ❌ Message not received
@@ -622,6 +613,7 @@ throw new RpcException({ statusCode: 400, message: 'Error' })
 ```
 
 **Transport Options:**
+
 - TCP: Simple, fast, no external dependency
 - Redis: Pub/Sub, requires Redis server
 - RabbitMQ: Robust, message persistence, requires RabbitMQ

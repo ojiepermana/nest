@@ -13,19 +13,23 @@ Get file upload with cloud storage running in **7 minutes**.
 ## Step 1: Choose Storage Provider (30 sec)
 
 **Option A: Local Storage** (fastest setup)
+
 - No cloud account needed
 - Files stored on server filesystem
 - Good for: Development, small apps
 
 **Option B: AWS S3** (recommended for production)
+
 - Scalable, reliable, CDN integration
 - Good for: Production apps, media hosting
 
 **Option C: Google Cloud Storage**
+
 - Similar to S3, Google ecosystem
 - Good for: Apps using GCP
 
 **Option D: Azure Blob Storage**
+
 - Microsoft cloud storage
 - Good for: Enterprise, Azure apps
 
@@ -243,18 +247,19 @@ The generator creates these endpoints automatically:
 ```typescript
 @Controller('users/profile')
 export class UsersProfileController {
-  
   // Single file upload
   @Post('upload')
-  @UseInterceptors(FileInterceptor('profile_picture', {
-    limits: { fileSize: 5242880 }, // 5MB
-    fileFilter: (req, file, cb) => {
-      if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.mimetype)) {
-        return cb(new Error('Invalid file type'), false);
-      }
-      cb(null, true);
-    },
-  }))
+  @UseInterceptors(
+    FileInterceptor('profile_picture', {
+      limits: { fileSize: 5242880 }, // 5MB
+      fileFilter: (req, file, cb) => {
+        if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.mimetype)) {
+          return cb(new Error('Invalid file type'), false);
+        }
+        cb(null, true);
+      },
+    }),
+  )
   @ApiConsumes('multipart/form-data')
   async uploadProfilePicture(@UploadedFile() file: Express.Multer.File) {
     const url = await this.storageService.upload(file, 'avatars');
@@ -263,14 +268,14 @@ export class UsersProfileController {
 
   // Multiple files upload
   @Post('upload-multiple')
-  @UseInterceptors(FilesInterceptor('attachments', 5, {
-    limits: { fileSize: 10485760 }, // 10MB
-  }))
+  @UseInterceptors(
+    FilesInterceptor('attachments', 5, {
+      limits: { fileSize: 10485760 }, // 10MB
+    }),
+  )
   @ApiConsumes('multipart/form-data')
   async uploadAttachments(@UploadedFiles() files: Express.Multer.File[]) {
-    const uploads = await Promise.all(
-      files.map(file => this.storageService.upload(file, 'documents'))
-    );
+    const uploads = await Promise.all(files.map((file) => this.storageService.upload(file, 'documents')));
     return { files: uploads };
   }
 
@@ -340,10 +345,7 @@ import * as sharp from 'sharp';
 export class ImageService {
   async uploadWithResize(file: Express.Multer.File) {
     // Resize to 500x500, maintain aspect ratio
-    const resized = await sharp(file.buffer)
-      .resize(500, 500, { fit: 'cover' })
-      .jpeg({ quality: 80 })
-      .toBuffer();
+    const resized = await sharp(file.buffer).resize(500, 500, { fit: 'cover' }).jpeg({ quality: 80 }).toBuffer();
 
     // Upload resized image
     const modifiedFile = {
@@ -356,15 +358,9 @@ export class ImageService {
   }
 
   async createThumbnail(file: Express.Multer.File) {
-    const thumbnail = await sharp(file.buffer)
-      .resize(150, 150, { fit: 'cover' })
-      .jpeg({ quality: 60 })
-      .toBuffer();
+    const thumbnail = await sharp(file.buffer).resize(150, 150, { fit: 'cover' }).jpeg({ quality: 60 }).toBuffer();
 
-    return this.storageService.upload(
-      { ...file, buffer: thumbnail },
-      'thumbnails'
-    );
+    return this.storageService.upload({ ...file, buffer: thumbnail }, 'thumbnails');
   }
 }
 ```
@@ -379,7 +375,7 @@ export class ImageService {
     // Allowed extensions
     const allowedExt = ['.jpg', '.jpeg', '.png', '.gif', '.pdf'];
     const ext = path.extname(file.originalname).toLowerCase();
-    
+
     if (!allowedExt.includes(ext)) {
       return cb(new BadRequestException('Invalid file extension'), false);
     }
@@ -391,7 +387,7 @@ export class ImageService {
       'image/gif',
       'application/pdf',
     ];
-    
+
     if (!allowedMimes.includes(file.mimetype)) {
       return cb(new BadRequestException('Invalid file type'), false);
     }
@@ -440,7 +436,7 @@ export class VirusScanService {
 
     // Scan
     const isClean = await this.scanFile(tempPath);
-    
+
     if (!isClean) {
       await fs.unlink(tempPath);
       throw new BadRequestException('File contains malware');
@@ -449,7 +445,7 @@ export class VirusScanService {
     // Upload if clean
     const url = await this.storageService.upload(file, 'uploads');
     await fs.unlink(tempPath);
-    
+
     return url;
   }
 }
@@ -466,7 +462,7 @@ async getUploadUrl(@Query('filename') filename: string) {
     contentType: 'image/jpeg',
     maxSize: 5242880,
   });
-  
+
   return { uploadUrl: url, expiresIn: 300 };
 }
 
@@ -568,6 +564,7 @@ await storageService.getPresignedUploadUrl(filename, options)
 ```
 
 **Storage Providers:**
+
 - `local` - Filesystem storage
 - `s3` - AWS S3
 - `gcs` - Google Cloud Storage

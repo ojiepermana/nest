@@ -17,7 +17,7 @@ if (!fs.existsSync(envPath)) {
 
 const envContent = fs.readFileSync(envPath, 'utf-8');
 const envVars = {};
-envContent.split('\n').forEach(line => {
+envContent.split('\n').forEach((line) => {
   const match = line.match(/^([^=]+)=(.*)$/);
   if (match) {
     envVars[match[1]] = match[2];
@@ -42,8 +42,8 @@ const config = {
     username: envVars.DB_USERNAME || 'root',
     password: envVars.DB_PASSWORD || '',
     database: envVars.DB_DATABASE || 'best',
-    ssl: false
-  }
+    ssl: false,
+  },
 };
 
 const configPath = path.join(__dirname, '..', 'generator.config.json');

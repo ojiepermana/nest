@@ -19,7 +19,7 @@ Fast-track guides for specific features:
 - [📤 File Upload in 7 Minutes](./quickstart/UPLOAD_QUICKSTART.md) - Multi-cloud storage
 - [🌐 Microservices in 15 Minutes](./quickstart/MICROSERVICES_QUICKSTART.md) - Distributed architecture
 
-##  Most Used Guides
+## Most Used Guides
 
 Quick links to the most popular documentation:
 
@@ -88,6 +88,7 @@ Quick links to the most popular documentation:
 ## 🎯 Feature Overview
 
 ### Core Features (100% Complete)
+
 - ✅ **CRUD Operations** - Full Create, Read, Update, Delete
 - ✅ **Advanced Queries** - JOINs, CTEs, Aggregations, Recaps
 - ✅ **Validation** - class-validator integration
@@ -95,6 +96,7 @@ Quick links to the most popular documentation:
 - ✅ **Swagger** - Auto-generated API documentation
 
 ### Advanced Features (100% Complete)
+
 - ✅ **Audit Trail** - Change tracking with old/new values
 - ✅ **File Upload** - 4 storage providers (Local, S3, GCS, Azure)
 - ✅ **Caching** - Redis with smart invalidation
@@ -102,6 +104,7 @@ Quick links to the most popular documentation:
 - ✅ **RBAC** - Complete role and permission system
 
 ### Architecture Support
+
 - ✅ **Standalone** - Single application
 - ✅ **Monorepo** - Multiple apps with shared modules
 - ✅ **Microservices** - Event-driven distributed systems

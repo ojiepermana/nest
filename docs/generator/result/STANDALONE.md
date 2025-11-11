@@ -784,33 +784,765 @@ await this.auditLogService.log({
 
 ---
 
-## 📝 API Documentation
+## 📝 API Documentation with Swagger/OpenAPI
 
-### Swagger UI
+### Setup Swagger
+
+**1. Install Required Dependencies**
+
+```bash
+npm install @nestjs/swagger
+```
+
+**2. Configure in `main.ts`:**
+
+```typescript
+import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  // Enable validation globally
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  }));
+
+  // Swagger configuration
+  const config = new DocumentBuilder()
+    .setTitle('Entity Management API')
+    .setDescription('Auto-generated CRUD API for Entity module')
+    .setVersion('1.0')
+    .addTag('entity', 'Entity CRUD operations')
+    .addBearerAuth() // Optional: for JWT auth
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
+
+  await app.listen(3000);
+  console.log(`Application is running on: http://localhost:3000`);
+  console.log(`Swagger documentation: http://localhost:3000/api`);
+}
+bootstrap();
+```
+
+---
+
+### Accessing Swagger UI
 
 **URL:** `http://localhost:3000/api`
 
-**Auto-generated sections:**
+Once your application is running, navigate to the Swagger UI URL in your browser.
 
-- ✅ All endpoints with descriptions
-- ✅ Request/response schemas
-- ✅ HTTP status codes
-- ✅ Try-it-out functionality
+**What you'll see:**
 
-**Setup in `main.ts`:**
+- **Interactive API documentation** - All endpoints automatically documented
+- **Try it out** functionality - Test APIs directly from the browser
+- **Request/response schemas** - Complete DTO structures
+- **Example values** - Auto-generated from decorators
+
+---
+
+### Using Swagger UI - Step by Step
+
+#### 🔹 **1. Create a New Entity (POST /entity)**
+
+**Step 1:** Expand the `POST /entity` endpoint
+
+![POST Endpoint](https://via.placeholder.com/800x200/4CAF50/FFFFFF?text=POST+/entity)
+
+**Step 2:** Click **"Try it out"** button
+
+**Step 3:** Edit the request body JSON:
+
+```json
+{
+  "businessEntityId": "be-12345",
+  "code": "CUST-001",
+  "regionCode": "US-NY",
+  "name": "Acme Corporation",
+  "email": "contact@acme.com",
+  "localPhone": "+1-555-0100",
+  "address": "123 Main Street",
+  "postcode": "10001",
+  "brand": "Acme",
+  "type": "CUSTOMER",
+  "status": "ACTIVE"
+}
+```
+
+**Step 4:** Click **"Execute"** button
+
+**Step 5:** View the response:
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "businessEntityId": "be-12345",
+  "code": "CUST-001",
+  "regionCode": "US-NY",
+  "name": "Acme Corporation",
+  "email": "contact@acme.com",
+  "localPhone": "+1-555-0100",
+  "address": "123 Main Street",
+  "postcode": "10001",
+  "brand": "Acme",
+  "type": "CUSTOMER",
+  "status": "ACTIVE",
+  "createdAt": "2025-11-11T17:30:00.000Z",
+  "updatedAt": "2025-11-11T17:30:00.000Z",
+  "createdBy": null,
+  "deletedAt": null
+}
+```
+
+**Response Code:** `201 Created`
+
+---
+
+#### 🔹 **2. Get All Entities (GET /entity)**
+
+**Step 1:** Expand the `GET /entity` endpoint
+
+**Step 2:** Click **"Try it out"**
+
+**Step 3:** Click **"Execute"**
+
+**Response:**
+
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "businessEntityId": "be-12345",
+    "code": "CUST-001",
+    "name": "Acme Corporation",
+    "status": "ACTIVE"
+    // ... all fields
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "businessEntityId": "be-67890",
+    "code": "VEND-002",
+    "name": "XYZ Suppliers",
+    "status": "ACTIVE"
+    // ... all fields
+  }
+]
+```
+
+**Response Code:** `200 OK`
+
+**Note:** This returns ALL entities. For large datasets, use the filter endpoint with pagination.
+
+---
+
+#### 🔹 **3. Filter Entities with Pagination (GET /entity/filter)**
+
+**Step 1:** Expand the `GET /entity/filter` endpoint
+
+**Step 2:** Click **"Try it out"**
+
+**Step 3:** Set query parameters:
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| `status` | `ACTIVE` | Filter by status |
+| `type` | `CUSTOMER` | Filter by type |
+| `page` | `1` | Page number |
+| `limit` | `10` | Items per page |
+| `sort` | `name:ASC` | Sort by name ascending |
+
+**Step 4:** Click **"Execute"**
+
+**Request URL:**
+
+```
+GET /entity/filter?status=ACTIVE&type=CUSTOMER&page=1&limit=10&sort=name:ASC
+```
+
+**Response:**
+
+```json
+{
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "businessEntityId": "be-12345",
+      "code": "CUST-001",
+      "name": "Acme Corporation",
+      "email": "contact@acme.com",
+      "status": "ACTIVE",
+      "type": "CUSTOMER"
+      // ... other fields
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 10
+}
+```
+
+**Response Code:** `200 OK`
+
+**Advanced Sorting:**
+
+Multiple sort fields (comma-separated):
+
+```
+sort=name:ASC,createdAt:DESC
+```
+
+This will sort by name ascending, then by createdAt descending.
+
+---
+
+#### 🔹 **4. Get Single Entity by ID (GET /entity/:id)**
+
+**Step 1:** Expand the `GET /entity/{id}` endpoint
+
+**Step 2:** Click **"Try it out"**
+
+**Step 3:** Enter the entity ID:
+
+```
+id: 550e8400-e29b-41d4-a716-446655440000
+```
+
+**Step 4:** Click **"Execute"**
+
+**Response:**
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "businessEntityId": "be-12345",
+  "code": "CUST-001",
+  "name": "Acme Corporation",
+  "email": "contact@acme.com",
+  "status": "ACTIVE"
+  // ... all fields
+}
+```
+
+**Response Code:** `200 OK`
+
+**Error Case (Not Found):**
+
+```json
+{
+  "statusCode": 404,
+  "message": "Entity with ID 550e8400-e29b-41d4-a716-446655440099 not found",
+  "error": "Not Found"
+}
+```
+
+**Response Code:** `404 Not Found`
+
+---
+
+#### 🔹 **5. Update Entity (PUT /entity/:id)**
+
+**Step 1:** Expand the `PUT /entity/{id}` endpoint
+
+**Step 2:** Click **"Try it out"**
+
+**Step 3:** Enter the entity ID:
+
+```
+id: 550e8400-e29b-41d4-a716-446655440000
+```
+
+**Step 4:** Edit the request body (partial update):
+
+```json
+{
+  "name": "Acme Corporation Inc.",
+  "status": "INACTIVE",
+  "email": "info@acme.com"
+}
+```
+
+**Step 5:** Click **"Execute"**
+
+**Response:**
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "businessEntityId": "be-12345",
+  "code": "CUST-001",
+  "name": "Acme Corporation Inc.",
+  "email": "info@acme.com",
+  "status": "INACTIVE",
+  "updatedAt": "2025-11-11T18:00:00.000Z"
+  // ... other fields unchanged
+}
+```
+
+**Response Code:** `200 OK`
+
+**Note:** Only the fields you provide will be updated. Other fields remain unchanged.
+
+---
+
+#### 🔹 **6. Delete Entity (DELETE /entity/:id)**
+
+**Step 1:** Expand the `DELETE /entity/{id}` endpoint
+
+**Step 2:** Click **"Try it out"**
+
+**Step 3:** Enter the entity ID:
+
+```
+id: 550e8400-e29b-41d4-a716-446655440000
+```
+
+**Step 4:** Click **"Execute"**
+
+**Response:** (No body)
+
+**Response Code:** `204 No Content`
+
+**Note:** If soft delete is enabled, the record is marked as deleted (`deletedAt = NOW()`) but not removed from the database.
+
+---
+
+### Swagger Features Breakdown
+
+#### **1. Request Schema Visualization**
+
+Each endpoint shows the expected request structure:
+
+**CreateEntityDto Schema:**
+
+```json
+{
+  "businessEntityId": "string",  // Required
+  "code": "string",               // Required
+  "regionCode": "string",         // Required
+  "name": "string",               // Optional
+  "email": "string (email)",      // Optional, validated as email
+  "localPhone": "string",         // Optional
+  "address": "string",            // Optional
+  "postcode": "string",           // Optional
+  "brand": "string",              // Optional
+  "type": "string",               // Optional
+  "status": "string",             // Optional
+  "birthDate": "string (date)",   // Optional
+  "avatarDocId": "string"         // Optional (file reference)
+}
+```
+
+**Visual Indicators:**
+
+- 🔴 **Red asterisk (*)** - Required field
+- 🔵 **Blue text** - Optional field
+- 📋 **Format hints** - Email, date, etc.
+
+---
+
+#### **2. Response Schema Visualization**
+
+Each endpoint shows possible responses:
+
+**Success Response (200/201):**
+
+```json
+{
+  "id": "string (uuid)",
+  "businessEntityId": "string",
+  "code": "string",
+  // ... all entity fields
+  "createdAt": "string (date-time)",
+  "updatedAt": "string (date-time)"
+}
+```
+
+**Error Response (400):**
+
+```json
+{
+  "statusCode": 400,
+  "message": ["code should not be empty", "email must be an email"],
+  "error": "Bad Request"
+}
+```
+
+**Error Response (404):**
+
+```json
+{
+  "statusCode": 404,
+  "message": "Entity with ID {id} not found",
+  "error": "Not Found"
+}
+```
+
+---
+
+#### **3. HTTP Status Codes**
+
+Each endpoint documents all possible status codes:
+
+| Code | Description | When |
+|------|-------------|------|
+| `200` | OK | Successful GET, PUT requests |
+| `201` | Created | Successful POST request |
+| `204` | No Content | Successful DELETE request |
+| `400` | Bad Request | Validation failed |
+| `404` | Not Found | Entity doesn't exist |
+| `409` | Conflict | Unique constraint violation |
+| `500` | Internal Server Error | Unexpected server error |
+
+---
+
+#### **4. Auto-Generated Examples**
+
+Swagger auto-generates example values from your DTOs:
+
+**Example Request (from decorators):**
+
+```json
+{
+  "businessEntityId": "string",
+  "code": "string",
+  "regionCode": "string",
+  "name": "string",
+  "email": "user@example.com",
+  "localPhone": "string",
+  "address": "string",
+  "postcode": "string"
+}
+```
+
+You can customize examples using `@ApiProperty()`:
 
 ```typescript
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+@ApiProperty({ 
+  description: 'Unique code',
+  example: 'CUST-001',
+  type: 'string'
+})
+@IsNotEmpty()
+@IsString()
+code: string;
+```
 
+---
+
+### Validation Error Examples
+
+#### **Missing Required Field**
+
+**Request:**
+
+```json
+{
+  "name": "Test Company"
+}
+```
+
+**Response (400 Bad Request):**
+
+```json
+{
+  "statusCode": 400,
+  "message": [
+    "businessEntityId should not be empty",
+    "businessEntityId must be a string",
+    "code should not be empty",
+    "code must be a string",
+    "regionCode should not be empty",
+    "regionCode must be a string"
+  ],
+  "error": "Bad Request"
+}
+```
+
+---
+
+#### **Invalid Email Format**
+
+**Request:**
+
+```json
+{
+  "businessEntityId": "be-123",
+  "code": "CUST-001",
+  "regionCode": "US",
+  "email": "invalid-email"
+}
+```
+
+**Response (400 Bad Request):**
+
+```json
+{
+  "statusCode": 400,
+  "message": [
+    "email must be an email"
+  ],
+  "error": "Bad Request"
+}
+```
+
+---
+
+#### **Unique Constraint Violation**
+
+**Request:** (trying to create with existing code)
+
+```json
+{
+  "businessEntityId": "be-123",
+  "code": "CUST-001",  // Already exists
+  "regionCode": "US"
+}
+```
+
+**Response (409 Conflict):**
+
+```json
+{
+  "statusCode": 409,
+  "message": "Entity with code 'CUST-001' already exists",
+  "error": "Conflict"
+}
+```
+
+---
+
+### Exporting API Documentation
+
+#### **1. Download OpenAPI JSON**
+
+```bash
+# Available at
+http://localhost:3000/api-json
+```
+
+**Use cases:**
+
+- Import into Postman
+- Generate client SDKs
+- API versioning
+- External documentation
+
+---
+
+#### **2. Generate Postman Collection**
+
+Install swagger-to-postman:
+
+```bash
+npm install -g swagger-to-postman
+```
+
+Convert OpenAPI to Postman:
+
+```bash
+curl http://localhost:3000/api-json -o api.json
+swagger2postman -s api.json -o postman-collection.json
+```
+
+Import `postman-collection.json` into Postman.
+
+---
+
+#### **3. Generate Client SDKs**
+
+Using OpenAPI Generator:
+
+```bash
+# Install
+npm install -g @openapitools/openapi-generator-cli
+
+# Generate TypeScript client
+openapi-generator-cli generate \
+  -i http://localhost:3000/api-json \
+  -g typescript-axios \
+  -o ./client-sdk
+```
+
+**Supported Languages:**
+
+- TypeScript/JavaScript
+- Python
+- Java
+- C#
+- Go
+- PHP
+- Ruby
+- And 50+ more...
+
+---
+
+### Swagger UI Customization
+
+#### **Custom Styling**
+
+```typescript
+SwaggerModule.setup('api', app, document, {
+  customSiteTitle: 'Entity API Documentation',
+  customCss: '.swagger-ui .topbar { display: none }',
+  customfavIcon: '/favicon.ico',
+});
+```
+
+---
+
+#### **Add Authentication**
+
+**In `main.ts`:**
+
+```typescript
 const config = new DocumentBuilder()
   .setTitle('Entity API')
-  .setDescription('Auto-generated CRUD API')
+  .setDescription('CRUD API with authentication')
   .setVersion('1.0')
+  .addBearerAuth({
+    type: 'http',
+    scheme: 'bearer',
+    bearerFormat: 'JWT',
+    description: 'Enter JWT token',
+  })
   .build();
-
-const document = SwaggerModule.createDocument(app, config);
-SwaggerModule.setup('api', app, document);
 ```
+
+**In Controller:**
+
+```typescript
+import { ApiBearerAuth } from '@nestjs/swagger';
+
+@ApiBearerAuth()
+@Controller('entity')
+export class EntityController {
+  // ...
+}
+```
+
+**In Swagger UI:**
+
+1. Click **"Authorize"** button (🔓)
+2. Enter JWT token: `Bearer <your-token>`
+3. Click **"Authorize"**
+4. All requests will include the token
+
+---
+
+### Testing with cURL
+
+Swagger UI generates cURL commands for each request:
+
+**Example:**
+
+```bash
+curl -X 'POST' \
+  'http://localhost:3000/entity' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "businessEntityId": "be-123",
+  "code": "CUST-001",
+  "regionCode": "US",
+  "name": "Acme Corp"
+}'
+```
+
+**Copy & paste** directly into terminal for testing.
+
+---
+
+### Swagger UI Pro Tips
+
+#### **1. Server Selection**
+
+Add multiple servers:
+
+```typescript
+const config = new DocumentBuilder()
+  .addServer('http://localhost:3000', 'Local')
+  .addServer('https://staging-api.example.com', 'Staging')
+  .addServer('https://api.example.com', 'Production')
+  .build();
+```
+
+Switch servers in the Swagger UI dropdown.
+
+---
+
+#### **2. Group Endpoints by Tags**
+
+Already configured with `@ApiTags('entity')`:
+
+```typescript
+@ApiTags('entity')
+@Controller('entity')
+export class EntityController { }
+```
+
+For multiple tags:
+
+```typescript
+@ApiTags('entity', 'public')
+```
+
+---
+
+#### **3. Deprecate Endpoints**
+
+```typescript
+@ApiOperation({ 
+  summary: 'Get entity (deprecated)',
+  deprecated: true 
+})
+@Get('old')
+async oldMethod() { }
+```
+
+Shows **strikethrough** in Swagger UI.
+
+---
+
+#### **4. Add Examples**
+
+```typescript
+@ApiResponse({
+  status: 200,
+  description: 'Success',
+  schema: {
+    example: {
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      code: 'CUST-001',
+      name: 'Acme Corporation',
+      status: 'ACTIVE'
+    }
+  }
+})
+```
+
+---
+
+### Summary
+
+**Swagger UI provides:**
+
+✅ **Interactive documentation** - No manual docs needed  
+✅ **API testing** - Test directly in browser  
+✅ **Request/response examples** - Auto-generated  
+✅ **Validation feedback** - See errors immediately  
+✅ **Export capabilities** - JSON, Postman, SDKs  
+✅ **Authentication support** - JWT, OAuth, API Keys  
+✅ **Zero configuration** - Works out of the box
+
+**Access URL:** `http://localhost:3000/api`  
+**OpenAPI JSON:** `http://localhost:3000/api-json`
 
 ---
 

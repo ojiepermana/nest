@@ -48,6 +48,7 @@ export interface GenerateCommandOptions {
     rbac?: boolean;
   };
   skipPrompts?: boolean;
+  all?: boolean; // Enable all features
   // CLI flags
   enableAudit?: boolean;
   storageProvider?: 'local' | 's3' | 'gcs' | 'azure';
@@ -75,11 +76,14 @@ export class GenerateCommand {
     // Step 4: Fetch metadata
     const { tableMetadata, columns } = await this.fetchMetadata(tableName);
 
+    // If --all flag is used, automatically skip prompts
+    const skipPrompts = options.skipPrompts || options.all;
+
     // Step 5: Prompt for features or use provided
-    const features = await this.promptFeatures(options.features, options.skipPrompts);
+    const features = await this.promptFeatures(options.features, skipPrompts, options.all);
 
     // Step 6: Prompt for output path or use provided
-    const outputPath = await this.promptOutputPath(options.outputPath, options.skipPrompts);
+    const outputPath = await this.promptOutputPath(options.outputPath, skipPrompts);
 
     // Step 7: Generate all files
     this.generateFiles(tableMetadata, columns, features, outputPath);
@@ -226,7 +230,22 @@ export class GenerateCommand {
   private async promptFeatures(
     providedFeatures?: GenerateCommandOptions['features'],
     skipPrompts?: boolean,
+    enableAll?: boolean,
   ): Promise<Required<NonNullable<GenerateCommandOptions['features']>>> {
+    // If --all flag is provided, enable all features
+    if (enableAll) {
+      return {
+        swagger: true,
+        caching: true,
+        validation: true,
+        pagination: true,
+        auditLog: true,
+        softDelete: true,
+        fileUpload: true,
+        rbac: true,
+      };
+    }
+
     if (skipPrompts && providedFeatures) {
       return {
         swagger: providedFeatures.swagger ?? true,

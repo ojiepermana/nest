@@ -40,6 +40,10 @@ program
   .description('Generate CRUD module from metadata (format: schema.table)')
   .option('--output <path>', 'Output directory path')
   .option('--skip-prompts', 'Skip interactive prompts')
+  .option(
+    '--all',
+    'Enable all features (swagger, caching, audit, validation, pagination, softDelete, fileUpload, rbac)',
+  )
   .option('--features.swagger', 'Enable Swagger documentation')
   .option('--features.caching', 'Enable caching')
   .option('--features.audit', 'Enable audit logging')
@@ -53,6 +57,7 @@ program
         tableName: table,
         outputPath: options.output,
         skipPrompts: options.skipPrompts,
+        all: options.all,
         features: {
           swagger: options['features.swagger'],
           caching: options['features.caching'],

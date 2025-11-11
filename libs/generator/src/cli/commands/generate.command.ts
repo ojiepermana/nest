@@ -330,8 +330,15 @@ export class GenerateCommand {
     outputPath: string,
   ): void {
     const tableName = tableMetadata.table_name;
+    const schema = tableMetadata.schema_name;
     const entityName = toPascalCase(tableName);
     const moduleName = this.toKebabCase(tableName);
+
+    // Determine basePath for controller based on architecture
+    // For standalone: use schema/table (e.g., /entity/location)
+    // For monorepo/microservices: use just table name
+    const basePath =
+      schema && schema !== 'public' ? `${this.toKebabCase(schema)}/${moduleName}` : moduleName;
 
     Logger.info('\n🔨 Generating files...');
 
@@ -414,6 +421,7 @@ export class GenerateCommand {
     const controllerGenerator = new ControllerGenerator(tableMetadata, columns, {
       tableName,
       entityName,
+      basePath, // Use schema/table format for standalone apps
       enableSwagger: features.swagger,
       enableValidation: features.validation,
       enablePagination: features.pagination,

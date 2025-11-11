@@ -568,7 +568,26 @@ export * from './controllers/${moduleName}.controller';
 
       // Check if Swagger already configured
       if (mainContent.includes('SwaggerModule')) {
-        Logger.info('   ℹ Swagger already configured in main.ts');
+        // Add tag if not already present
+        const tagPattern = new RegExp(`\\.addTag\\(['"]${moduleName}['"]`);
+        if (!tagPattern.test(mainContent)) {
+          // Find the last .addTag() line and add new tag after it
+          const lastTagMatch = mainContent.match(/\.addTag\([^)]+\)/g);
+          if (lastTagMatch) {
+            const lastTag = lastTagMatch[lastTagMatch.length - 1];
+            const lastTagIndex = mainContent.lastIndexOf(lastTag);
+            const insertPos = lastTagIndex + lastTag.length;
+            const newTag = `\n    .addTag('${moduleName}', '${this.toPascalCase(moduleName)} CRUD operations')`;
+            mainContent = mainContent.slice(0, insertPos) + newTag + mainContent.slice(insertPos);
+
+            writeFileSync(mainTsPath, mainContent, 'utf-8');
+            Logger.success('   ✓ Swagger tag added to main.ts');
+          } else {
+            Logger.info('   ℹ Swagger configured in main.ts');
+          }
+        } else {
+          Logger.info('   ℹ Swagger tag already exists in main.ts');
+        }
         return;
       }
 

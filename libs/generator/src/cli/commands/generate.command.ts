@@ -98,7 +98,12 @@ export class GenerateCommand {
       this.configureSwagger(outputPath, tableName, moduleName);
     }
 
-    // Step 10: Summary
+    // Step 10: Auto-register RbacModule if RBAC is enabled
+    if (features.rbac) {
+      this.registerRbacModule(outputPath);
+    }
+
+    // Step 11: Summary
     Logger.success('\n✅ Generation complete!');
     Logger.info(`\n📁 Files created in: ${outputPath}`);
     Logger.info('\n📝 Next steps:');
@@ -671,6 +676,71 @@ export * from './controllers/${moduleName}.controller';
     } catch (error) {
       Logger.error(`   ✗ Failed to configure Swagger: ${(error as Error).message}`);
       Logger.warn('   ℹ Please manually add Swagger configuration to main.ts');
+    }
+  }
+
+  /**
+   * Register RbacModule to app.module.ts if not already registered
+   */
+  private registerRbacModule(outputPath: string): void {
+    try {
+      const appModulePath = join(outputPath, 'app.module.ts');
+
+      if (!existsSync(appModulePath)) {
+        Logger.warn('⚠ app.module.ts not found, skipping RBAC registration');
+        return;
+      }
+
+      let appModuleContent = readFileSync(appModulePath, 'utf-8');
+
+      // Check if RbacModule already imported
+      if (appModuleContent.includes('RBACModule') || appModuleContent.includes('RbacModule')) {
+        Logger.info('   ℹ RbacModule already registered in app.module.ts');
+        return;
+      }
+
+      // Add import statement after last import
+      const lastImportMatch = appModuleContent.match(/import.*from.*['"];?\n(?!import)/);
+      if (lastImportMatch && lastImportMatch.index !== undefined) {
+        const insertPos = lastImportMatch.index + lastImportMatch[0].length;
+        const importStatement = `import { RBACModule } from '@ojiepermana/nest-generator/rbac';\n`;
+        appModuleContent =
+          appModuleContent.slice(0, insertPos) +
+          importStatement +
+          appModuleContent.slice(insertPos);
+      }
+
+      // Add to imports array
+      const importsMatch = appModuleContent.match(/imports:\s*\[([^\]]*)\]/s);
+      if (importsMatch) {
+        const importsContent = importsMatch[1];
+
+        // Extract indentation from existing imports
+        const indentMatch = importsContent.match(/\n(\s+)/);
+        const indent = indentMatch ? indentMatch[1] : '    ';
+
+        // Clean up trailing whitespace and commas
+        let cleanedImports = importsContent.trimEnd();
+        if (cleanedImports.endsWith(',')) {
+          cleanedImports = cleanedImports.slice(0, -1).trimEnd();
+        }
+
+        // Add RBACModule with proper formatting
+        const newImports = cleanedImports
+          ? `${cleanedImports},\n${indent}RBACModule,\n  `
+          : `\n${indent}RBACModule,\n  `;
+
+        appModuleContent = appModuleContent.replace(
+          /imports:\s*\[([^\]]*)\]/s,
+          `imports: [${newImports}]`,
+        );
+      }
+
+      writeFileSync(appModulePath, appModuleContent, 'utf-8');
+      Logger.success('   ✓ RbacModule registered to app.module.ts');
+    } catch (error) {
+      Logger.error(`   ✗ Failed to register RbacModule: ${(error as Error).message}`);
+      Logger.warn('   ℹ Please manually add RbacModule to app.module.ts imports');
     }
   }
 

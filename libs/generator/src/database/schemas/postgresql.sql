@@ -105,8 +105,6 @@ CREATE TABLE IF NOT EXISTS meta.table_metadata (
   is_active BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  created_by UUID,
-  updated_by UUID,
   
   -- Constraints
   CONSTRAINT table_metadata_schema_table_uk UNIQUE (schema_name, table_name),
@@ -218,8 +216,6 @@ CREATE TABLE IF NOT EXISTS meta.column_metadata (
   is_active BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  created_by UUID,
-  updated_by UUID,
   
   -- Constraints
   CONSTRAINT column_metadata_table_column_uk UNIQUE (table_id, column_name),

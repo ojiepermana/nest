@@ -57,8 +57,8 @@ export class MetadataRepository {
     const query = `
       SELECT *
       FROM ${this.dialect.quoteIdentifier('meta.column_metadata')}
-      WHERE table_metadata_id = ${this.dialect.getParameterPlaceholder(1)}
-      ORDER BY column_order, column_name
+      WHERE table_id = ${this.dialect.getParameterPlaceholder(1)}
+      ORDER BY column_name
     `;
 
     const result = await this.connection.query<ColumnMetadata>(query, [tableMetadataId]);
@@ -95,7 +95,7 @@ export class MetadataRepository {
     const query = `
       SELECT *
       FROM ${this.dialect.quoteIdentifier('meta.generated_files')}
-      WHERE table_metadata_id = ${this.dialect.getParameterPlaceholder(1)}
+      WHERE table_id = ${this.dialect.getParameterPlaceholder(1)}
       ORDER BY file_type, file_path
     `;
 
@@ -113,7 +113,7 @@ export class MetadataRepository {
     const now = new Date();
     const query = `
       INSERT INTO ${this.dialect.quoteIdentifier('meta.generated_files')}
-        (id, table_metadata_id, file_type, file_path, file_name, checksum, last_generated_at, created_at, updated_at)
+        (id, table_id, file_type, file_path, file_name, checksum, last_generated_at, created_at, updated_at)
       VALUES (
         ${this.dialect.generateUUID()},
         ${this.dialect.getParameterPlaceholder(1)},
@@ -129,7 +129,7 @@ export class MetadataRepository {
     `;
 
     const result = await this.connection.query<GeneratedFile>(query, [
-      file.table_metadata_id,
+      file.table_id,
       file.file_type,
       file.file_path,
       file.file_name,

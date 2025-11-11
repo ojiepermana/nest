@@ -159,7 +159,7 @@ export interface ColumnMetadata {
  */
 export interface GeneratedFile {
   id: string;
-  table_metadata_id: string;
+  table_id: string;
   file_path: string;
   file_name: string;
   file_type: GeneratedFileType;

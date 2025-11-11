@@ -179,7 +179,7 @@ export class MetadataService {
     file: Omit<GeneratedFile, 'id' | 'created_at' | 'updated_at'>,
   ): Promise<GeneratedFile> {
     const result = await this.repository.saveGeneratedFile(file);
-    this.invalidateCache(`files:${file.table_metadata_id}`);
+    this.invalidateCache(`files:${file.table_id}`);
     return result;
   }
 

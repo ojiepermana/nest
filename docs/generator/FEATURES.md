@@ -1,12 +1,91 @@
-# Implementation Complete - 100% Coverage Report
+# Generator Features - Complete Implementation
 
-## ✅ **COMPLETE FEATURE IMPLEMENTATION**
+**Last Updated**: November 12, 2025  
+**Version**: 1.1.2
 
-This document confirms that all features from `prompt.md` have been implemented to achieve 100% coverage.
+This document confirms feature implementation status for `@ojiepermana/nest-generator`.
+
+> 📖 **See**: `FEATURES_SUMMARY.md` for comprehensive feature inventory (26 categories, 500+ lines)
 
 ---
 
-## 🎯 **NEW IMPLEMENTATIONS**
+## ✅ **LATEST IMPLEMENTATIONS** (Nov 2025)
+
+### ✨ **Pagination Enhancement**
+
+**Status**: ✅ **COMPLETE**
+
+**What Changed**:
+- ✅ Both `GET /` and `GET /filter` now support pagination
+- ✅ FilterDTO includes `page`, `limit`, `sort` fields
+- ✅ @Type(() => Number) for query param transformation
+- ✅ Validation: @IsInt(), @Min(1), @Max(100)
+- ✅ Pagination fields excluded from WHERE clause filter building
+- ✅ Database-level LIMIT/OFFSET (not in-memory)
+- ✅ Accurate COUNT query for total records
+
+**Affected Files**:
+- `libs/generator/src/generators/controller/controller.generator.ts`
+- `libs/generator/src/generators/dto/filter-dto.generator.ts`
+- `libs/generator/src/generators/repository/repository.generator.ts`
+- `libs/generator/src/generators/service/service.generator.ts`
+
+**Usage**:
+```bash
+# Both endpoints now support pagination
+GET /entity/entity?page=1&limit=20&sort=created_at:DESC
+GET /entity/entity/filter?page=2&limit=10&sort=name:ASC
+
+# Response format
+{
+  "data": [...],
+  "total": 100,
+  "page": 1,
+  "limit": 20
+}
+```
+
+### ✨ **RBAC Auto-Registration**
+
+**Status**: ✅ **COMPLETE**
+
+**What Changed**:
+- ✅ RBACModule automatically registered to app.module.ts
+- ✅ @RequirePermission decorators on all CRUD endpoints
+- ✅ Resource-based permissions: `resource.create`, `resource.read`, etc.
+
+**Usage**:
+```bash
+nest-generator generate users.users --features.rbac=true
+# Automatically adds RBACModule to app.module.ts
+# Decorates all endpoints with @RequirePermission
+```
+
+### ✨ **Swagger Auto-Configuration**
+
+**Status**: ✅ **COMPLETE**
+
+**What Changed**:
+- ✅ SwaggerModule.setup() added to main.ts automatically
+- ✅ ValidationPipe configured with whitelist/transform
+- ✅ Incremental tag addition (detects existing tags)
+
+**Generated**:
+```typescript
+// main.ts - auto-configured
+const config = new DocumentBuilder()
+  .setTitle('API Documentation')
+  .setVersion('1.0')
+  .addTag('entity/entity')
+  .addTag('entity/location')
+  .build();
+
+SwaggerModule.setup('api', app, document);
+```
+
+---
+
+## 🎯 **CORE IMPLEMENTATIONS**
 
 ### 1. ✅ **Recap Endpoint Generator** (Priority 1)
 

@@ -1,742 +1,1482 @@
-# NestJS Generator - Complete Features Guide# NestJS Generator - Complete Features Guide# NestJS Generator - Complete Features Guide
+# NestJS Generator - Complete Features Guide# NestJS Generator - Complete Features Guide# NestJS Generator - Complete Features Guide# NestJS Generator - Complete Features Guide
 
 
 
-**Version**: 1.1.2  **Version**: 1.1.2 **Version**: 1.1.2
+**Version**: 1.1.2  
 
 **Last Updated**: November 12, 2025  
 
-**Test Coverage**: 579/585 (99%)  **Last Updated**: November 12, 2025 **Last Updated**: November 12, 2025
+**Test Coverage**: 579/585 (99%)  **Version**: 1.1.2  **Version**: 1.1.2 **Version**: 1.1.2
 
 **Score**: 119/100 ⭐
 
-**Test Coverage**: 579/585 (99%) **Test Coverage**: 579/585 (99%)
+**Last Updated**: November 12, 2025  
 
 Metadata-driven CRUD generator untuk NestJS dengan enterprise capabilities.
 
-**Score**: 119/100 ⭐**Overall Score**: 119/100 ⭐
+**Test Coverage**: 579/585 (99%)  **Last Updated**: November 12, 2025 **Last Updated**: November 12, 2025
 
 ---
 
-Metadata-driven CRUD generator untuk NestJS dengan enterprise capabilities.Complete feature reference for `@ojiepermana/nest-generator` - metadata-driven CRUD generator for NestJS with enterprise capabilities.
+**Score**: 119/100 ⭐
+
+## 📑 Table of Contents
+
+**Test Coverage**: 579/585 (99%) **Test Coverage**: 579/585 (99%)
+
+1. [Latest Updates](#latest-updates)
+
+2. [Core Features](#core-features)Metadata-driven CRUD generator untuk NestJS dengan enterprise capabilities.
+
+3. [CRUD Operations](#crud-operations)
+
+4. [Advanced Queries](#advanced-queries)**Score**: 119/100 ⭐**Overall Score**: 119/100 ⭐
+
+5. [Enterprise Features](#enterprise-features)
+
+6. [Architecture Support](#architecture-support)---
+
+7. [Security & Validation](#security--validation)
+
+8. [Documentation & Tools](#documentation--tools)Metadata-driven CRUD generator untuk NestJS dengan enterprise capabilities.Complete feature reference for `@ojiepermana/nest-generator` - metadata-driven CRUD generator for NestJS with enterprise capabilities.
+
+9. [Quick Reference](#quick-reference)
 
 ## 📑 Table of Contents
 
 ---
 
-1. [Latest Updates](#latest-updates)
-
-2. [Core Features](#core-features)## 📑 Quick Navigation## 📑 Table of Contents
-
-3. [CRUD Operations](#crud-operations)
-
-4. [Advanced Queries](#advanced-queries)- [Latest Updates](#-latest-updates-nov-2025) - Perubahan terbaru1. [Latest Updates](#latest-updates)
-
-5. [Enterprise Features](#enterprise-features)
-
-6. [Architecture Support](#architecture-support)- [Core Features](#-core-features) - 7 generators utama2. [Core Features](#core-features)
-
-7. [Security & Validation](#security--validation)
-
-8. [Documentation & Tools](#documentation--tools)- [CRUD Operations](#-crud-operations) - 6 endpoints dengan pagination3. [CRUD Operations](#crud-operations)
-
-9. [Quick Reference](#quick-reference)
-
-- [Advanced Queries](#-advanced-queries) - Filtering, JOIN, Recap4. [Advanced Queries](#advanced-queries)
-
 ---
-
-- [Enterprise Features](#-enterprise-features) - Audit, RBAC, Caching, Upload5. [Enterprise Features](#enterprise-features)
 
 ## ✨ Latest Updates (Nov 2025)
 
-- [Architecture](#-architecture-support) - Standalone, Monorepo, Microservices6. [Architecture Support](#architecture-support)
+1. [Latest Updates](#latest-updates)
 
 ### Pagination Enhancement
 
-- [Quick Reference](#-quick-reference) - Common usage patterns7. [Security & Validation](#security--validation)
+2. [Core Features](#core-features)## 📑 Quick Navigation## 📑 Table of Contents
 
 **Status**: ✅ COMPLETE
 
+3. [CRUD Operations](#crud-operations)
+
+**What Changed**:
+
+4. [Advanced Queries](#advanced-queries)- [Latest Updates](#-latest-updates-nov-2025) - Perubahan terbaru1. [Latest Updates](#latest-updates)
+
+- ✅ Both `GET /` and `GET /filter` now support pagination
+
+- ✅ FilterDTO includes `page`, `limit`, `sort` fields5. [Enterprise Features](#enterprise-features)
+
+- ✅ @Type(() => Number) for query param transformation
+
+- ✅ Validation: @IsInt(), @Min(1), @Max(100)6. [Architecture Support](#architecture-support)- [Core Features](#-core-features) - 7 generators utama2. [Core Features](#core-features)
+
+- ✅ Pagination fields excluded from WHERE clause filter building
+
+- ✅ Database-level LIMIT/OFFSET (not in-memory)7. [Security & Validation](#security--validation)
+
+- ✅ Accurate COUNT query for total records
+
+8. [Documentation & Tools](#documentation--tools)- [CRUD Operations](#-crud-operations) - 6 endpoints dengan pagination3. [CRUD Operations](#crud-operations)
+
+**Usage**:
+
+9. [Quick Reference](#quick-reference)
+
+```bash
+
+GET /entity/entity?page=1&limit=20&sort=created_at:DESC- [Advanced Queries](#-advanced-queries) - Filtering, JOIN, Recap4. [Advanced Queries](#advanced-queries)
+
+GET /entity/entity/filter?page=2&limit=10&name_like=John
+
+```---
+
+
+
+**Response**:- [Enterprise Features](#-enterprise-features) - Audit, RBAC, Caching, Upload5. [Enterprise Features](#enterprise-features)
+
+
+
+```json## ✨ Latest Updates (Nov 2025)
+
+{
+
+  "data": [...],- [Architecture](#-architecture-support) - Standalone, Monorepo, Microservices6. [Architecture Support](#architecture-support)
+
+  "total": 100,
+
+  "page": 1,### Pagination Enhancement
+
+  "limit": 20
+
+}- [Quick Reference](#-quick-reference) - Common usage patterns7. [Security & Validation](#security--validation)
+
+```
+
+**Status**: ✅ COMPLETE
+
+### RBAC Auto-Registration
+
 8. [Documentation & Tools](#documentation--tools)
+
+**Status**: ✅ COMPLETE
+
+**What Changed**:
 
 **What Changed**:
 
 - ✅ Both `GET /` and `GET /filter` now support pagination---9. [Quick Reference](#quick-reference)
 
-- ✅ FilterDTO includes `page`, `limit`, `sort` fields
+- ✅ RBACModule automatically registered to `app.module.ts`
+
+- ✅ `@RequirePermission('resource.action')` on all CRUD endpoints- ✅ FilterDTO includes `page`, `limit`, `sort` fields
+
+- ✅ Resource-based permissions: `resource.create`, `resource.read`, `resource.update`, `resource.delete`
 
 - ✅ @Type(() => Number) for query param transformation## ✨ Latest Updates (Nov 2025)---
 
+### Swagger Auto-Configuration
+
 - ✅ Validation: @IsInt(), @Min(1), @Max(100)
+
+**Status**: ✅ COMPLETE
 
 - ✅ Pagination fields excluded from WHERE clause filter building### 1. Pagination Enhancement ✅## ✨ Latest Updates (Nov 2025) {#latest-updates}
 
+**What Changed**:
+
 - ✅ Database-level LIMIT/OFFSET (not in-memory)
 
-- ✅ Accurate COUNT query for total records**Status**: COMPLETE### ✨ **Pagination Enhancement**
+- ✅ `SwaggerModule.setup()` added to `main.ts` automatically
 
+- ✅ `ValidationPipe` configured with whitelist/transform- ✅ Accurate COUNT query for total records**Status**: COMPLETE### ✨ **Pagination Enhancement**
 
-
-**Usage**:**What's New**:**Status**: ✅ **COMPLETE**
-
-```bash
-
-GET /entity/entity?page=1&limit=20&sort=created_at:DESC- Both `GET /` dan `GET /filter` support pagination
-
-GET /entity/entity/filter?page=2&limit=10&name_like=John
-
-```- FilterDTO auto-include `page`, `limit`, `sort` fields**What Changed**:
-
-
-
-**Response**:- Query param transformation dengan `@Type(() => Number)`- ✅ Both `GET /` and `GET /filter` now support pagination
-
-```json
-
-{- Validation: `@IsInt()`, `@Min(1)`, `@Max(100)`- ✅ FilterDTO includes `page`, `limit`, `sort` fields
-
-  "data": [...],
-
-  "total": 100,- Pagination fields di-skip dari WHERE clause- ✅ @Type(() => Number) for query param transformation
-
-  "page": 1,
-
-  "limit": 20- Database-level LIMIT/OFFSET (bukan in-memory)- ✅ Validation: @IsInt(), @Min(1), @Max(100)
-
-}
-
-```- Accurate COUNT query untuk total- ✅ Pagination fields excluded from WHERE clause filter building
-
-
-
-### RBAC Auto-Registration- ✅ Database-level LIMIT/OFFSET (not in-memory)
-
-
-
-**Status**: ✅ COMPLETE**Usage**:- ✅ Accurate COUNT query for total records
-
-
-
-- RBACModule automatically registered to `app.module.ts`````bash
-
-- `@RequirePermission('resource.action')` on all CRUD endpoints
-
-- Resource-based permissions: `resource.create`, `resource.read`, `resource.update`, `resource.delete`GET /entity/entity?page=1&limit=20&sort=created_at:DESC**Affected Files**:
-
-
-
-### Swagger Auto-ConfigurationGET /entity/entity/filter?page=2&limit=10&name_like=John- `libs/generator/src/generators/controller/controller.generator.ts`
-
-
-
-**Status**: ✅ COMPLETE```- `libs/generator/src/generators/dto/filter-dto.generator.ts`
-
-
-
-- `SwaggerModule.setup()` added to `main.ts` automatically- `libs/generator/src/generators/repository/repository.generator.ts`
-
-- `ValidationPipe` configured with whitelist/transform
-
-- Incremental tag addition (detects existing tags)**Response**:- `libs/generator/src/generators/service/service.generator.ts`
-
-
-
----```json
-
-
-
-## 🎯 Core Features{**Usage**:
-
-
-
-### 1. Code Generation (7 Generators)  "data": [...],```bash
-
-
-
-| Generator | Output | Features |  "total": 100,# Both endpoints now support pagination
-
-|-----------|--------|----------|
-
-| **Entity** | TypeScript class | Decorators, types from metadata |  "page": 1,GET /entity/entity?page=1&limit=20&sort=created_at:DESC
-
-| **DTOs** | Create/Update/Filter | Validation, operators, pagination fields |
-
-| **Repository** | Data access layer | Raw SQL (pg/mysql2), parameterized queries |  "limit": 20GET /entity/entity/filter?page=2&limit=10&sort=name:ASC
-
-| **Service** | Business logic | Caching, transactions, audit integration |
-
-| **Controller** | REST endpoints | Swagger docs, RBAC, validation |}
-
-| **Module** | NestJS module | Dependency injection, imports |
-
-| **Tests** | Unit tests | Mocks, 99% coverage |```# Response format
-
-
-
-**Commands**:{
-
-```bash
-
-nest-generator generate [schema].[table]### 2. RBAC Auto-Registration ✅  "data": [...],
-
-nest-generator generate users.users --all
-
-```  "total": 100,
-
-
-
----- RBACModule otomatis register ke `app.module.ts`  "page": 1,
-
-
-
-## 🔧 CRUD Operations- `@RequirePermission('resource.action')` pada semua endpoints  "limit": 20
-
-
-
-### 2. REST Endpoints (6 Total)- Permissions: `resource.create`, `resource.read`, `resource.update`, `resource.delete`}
-
-
-
-| Endpoint | Method | Pagination | Description |````
-
-|----------|--------|-----------|-------------|
-
-| `/` | POST | - | Create record |### 3. Swagger Auto-Configuration ✅
-
-| `/` | GET | ✅ | Get all with pagination |
-
-| `/filter` | GET | ✅ | Filtered with pagination |### ✨ **RBAC Auto-Registration**
-
-| `/:id` | GET | - | Get by ID |
-
-| `/:id` | PUT | - | Update by ID |- `SwaggerModule.setup()` otomatis ditambahkan ke `main.ts`
-
-| `/:id` | DELETE | - | Soft/hard delete |
-
-- `ValidationPipe` dengan whitelist/transform**Status**: ✅ **COMPLETE**
-
-**Pagination**: `?page=1&limit=20&sort=field:ASC`  
-
-**Defaults**: page=1, limit=20, max=100- Incremental tag addition (detect existing tags)
-
-
-
----**What Changed**:
-
-
-
-## 📊 Advanced Queries---- ✅ RBACModule automatically registered to app.module.ts
-
-
-
-### 3. Filtering System (8 Operators)- ✅ @RequirePermission decorators on all CRUD endpoints
-
-
-
-| Operator | Usage | SQL |## 🎯 Core Features- ✅ Resource-based permissions: `resource.create`, `resource.read`, etc.
-
-|----------|-------|-----|
-
-| `_eq` | `field_eq=value` | `field = $1` |### 1. Code Generation (7 Generators)**Usage**:
-
-| `_ne` | `field_ne=value` | `field != $1` |
-
-| `_gt` / `_gte` | `field_gt=10` | `field > $1` / `>=` |````bash
-
-| `_lt` / `_lte` | `field_lt=100` | `field < $1` / `<=` |
-
-| `_like` | `field_like=John%` | `field LIKE $1` || Generator | Output | Features |nest-generator generate users.users --features.rbac=true
-
-| `_in` | `field_in=1,2,3` | `field IN ($1,$2,$3)` |
-
-| `_between` | `field_between=1,10` | `field BETWEEN $1 AND $2` ||-----------|--------|----------|# Automatically adds RBACModule to app.module.ts
-
-| `_null` | `field_null=true` | `field IS NULL` |
-
-| **Entity** | TypeScript class | Decorators, types dari metadata |# Decorates all endpoints with @RequirePermission
-
-**Note**: `page`, `limit`, `sort` auto-excluded from WHERE clause
-
-| **DTOs** | Create/Update/Filter | Validation, operators, pagination fields |```
-
-### 4. Pagination (Database-Level)
-
-| **Repository** | Data access layer | Raw SQL (pg/mysql2), parameterized queries |
-
-| Feature | Implementation |
-
-|---------|----------------|| **Service** | Business logic | Caching, transactions, audit integration |### ✨ **Swagger Auto-Configuration**
-
-| **Query** | `SELECT * FROM table LIMIT $1 OFFSET $2` |
-
-| **Count** | `SELECT COUNT(*) FROM table WHERE ...` || **Controller** | REST endpoints | Swagger docs, RBAC, validation |
-
-| **Validation** | `@Type(() => Number)`, `@IsInt()`, `@Min(1)`, `@Max(100)` |
-
-| **Sorting** | Single: `?sort=name:ASC`<br>Multi: `?sort=created_at:DESC,name:ASC` || **Module** | NestJS module | Dependency injection, imports |**Status**: ✅ **COMPLETE**
-
-
-
-**Efficient** - Not in-memory, works with large datasets| **Tests** | Unit tests | Mocks, 99% coverage |
-
-
-
-### 5. JOIN Queries (Auto-detection)**What Changed**:
-
-
-
-**Detection**: From foreign key metadata (`ref_schema`, `ref_table`, `ref_column`)**Command**:- ✅ SwaggerModule.setup() added to main.ts automatically
-
-
-
-| Feature | Description |```bash- ✅ ValidationPipe configured with whitelist/transform
-
-|---------|-------------|
-
-| **INNER JOIN** | Required fields (`is_nullable=false`) |nest-generator generate [schema].[table]- ✅ Incremental tag addition (detects existing tags)
-
-| **LEFT JOIN** | Optional fields (`is_nullable=true`) |
-
-| **Multi-table** | Unique aliases for multiple JOINs |nest-generator generate users.users --all
-
-| **Soft Delete** | `AND ref_table.deleted_at IS NULL` |
-
-```**Generated**:
-
-**Example**:
-
-```sql```typescript
-
-INNER JOIN "master"."departments" AS "dept"
-
-  ON "t"."department_id" = "dept"."id"---// main.ts - auto-configured
-
-  AND "dept"."deleted_at" IS NULL
-
-```const config = new DocumentBuilder()
-
-
-
-### 6. Recap/Analytics## 🔧 CRUD Operations  .setTitle('API Documentation')
-
-
-
-| Feature | Description |  .setVersion('1.0')
-
-|---------|-------------|
-
-| **Monthly Breakdown** | jan, feb, ..., dec columns |### 2. Endpoints (6 Total)  .addTag('entity/entity')
-
-| **Grouping** | Single: `?group_by=dept`<br>Dual: `?group_by=dept,role` |
-
-| **Year Range** | 2000-2100 validation |  .addTag('entity/location')
-
-| **Filtering** | Combined with filter operators |
-
-| Endpoint | Method | Pagination | Description |  .build();
-
-**Endpoint**: `GET /recap?year=2024&group_by=department`
-
-|----------|--------|-----------|-------------|
-
-**Example Response**:
-
-```json| `/` | POST | - | Create record |SwaggerModule.setup('api', app, document);
-
-{
-
-  "data": [| `/` | GET | ✅ | Get all dengan pagination |```
-
-    {
-
-      "department": "Engineering",| `/filter` | GET | ✅ | Filtered dengan pagination |
-
-      "jan": 5, "feb": 8, "mar": 12,
-
-      "total": 150| `/:id` | GET | - | Get by ID |---
-
-    }
-
-  ]| `/:id` | PUT | - | Update by ID |
-
-}
-
-```| `/:id` | DELETE | - | Soft/hard delete |## 🎯 **CORE IMPLEMENTATIONS**
+- ✅ Incremental tag addition (detects existing tags)
 
 
 
 ---
 
+**Usage**:**What's New**:**Status**: ✅ **COMPLETE**
+
+## 🎯 Core Features
+
+```bash
+
+### 1. Code Generation (7 Generators)
+
+GET /entity/entity?page=1&limit=20&sort=created_at:DESC- Both `GET /` dan `GET /filter` support pagination
+
+| Generator | Output | Features |
+
+|-----------|--------|----------|GET /entity/entity/filter?page=2&limit=10&name_like=John
+
+| **Entity** | TypeScript class | Decorators, types from metadata |
+
+| **DTOs** | Create/Update/Filter | Validation, operators, pagination fields |```- FilterDTO auto-include `page`, `limit`, `sort` fields**What Changed**:
+
+| **Repository** | Data access layer | Raw SQL (pg/mysql2), parameterized queries |
+
+| **Service** | Business logic | Caching, transactions, audit integration |
+
+| **Controller** | REST endpoints | Swagger docs, RBAC, validation |
+
+| **Module** | NestJS module | Dependency injection, imports |**Response**:- Query param transformation dengan `@Type(() => Number)`- ✅ Both `GET /` and `GET /filter` now support pagination
+
+| **Tests** | Unit tests | Mocks, 99% coverage |
+
+```json
+
+**Commands**:
+
+{- Validation: `@IsInt()`, `@Min(1)`, `@Max(100)`- ✅ FilterDTO includes `page`, `limit`, `sort` fields
+
+```bash
+
+nest-generator generate [schema].[table]  "data": [...],
+
+nest-generator generate users.users --all
+
+```  "total": 100,- Pagination fields di-skip dari WHERE clause- ✅ @Type(() => Number) for query param transformation
 
 
-## 🚀 Enterprise Features**Pagination Params**: `?page=1&limit=20&sort=field:ASC`### 1. ✅ **Recap Endpoint Generator** (Priority 1)
+
+---  "page": 1,
+
+
+
+## 🔧 CRUD Operations  "limit": 20- Database-level LIMIT/OFFSET (bukan in-memory)- ✅ Validation: @IsInt(), @Min(1), @Max(100)
+
+
+
+### 2. REST Endpoints (6 Total)}
+
+
+
+| Endpoint | Method | Pagination | Description |```- Accurate COUNT query untuk total- ✅ Pagination fields excluded from WHERE clause filter building
+
+|----------|--------|-----------|-------------|
+
+| `/` | POST | - | Create record |
+
+| `/` | GET | ✅ | Get all with pagination |
+
+| `/filter` | GET | ✅ | Filtered with pagination |### RBAC Auto-Registration- ✅ Database-level LIMIT/OFFSET (not in-memory)
+
+| `/:id` | GET | - | Get by ID |
+
+| `/:id` | PUT | - | Update by ID |
+
+| `/:id` | DELETE | - | Soft/hard delete |
+
+**Status**: ✅ COMPLETE**Usage**:- ✅ Accurate COUNT query for total records
+
+**Pagination Params**: `?page=1&limit=20&sort=field:ASC`
+
+
+
+**Defaults**: page=1, limit=20, max=100
+
+- RBACModule automatically registered to `app.module.ts`````bash
+
+---
+
+- `@RequirePermission('resource.action')` on all CRUD endpoints
+
+## 📊 Advanced Queries
+
+- Resource-based permissions: `resource.create`, `resource.read`, `resource.update`, `resource.delete`GET /entity/entity?page=1&limit=20&sort=created_at:DESC**Affected Files**:
+
+### 3. Filtering System (8 Operators)
+
+
+
+| Operator | Usage | SQL |
+
+|----------|-------|-----|### Swagger Auto-ConfigurationGET /entity/entity/filter?page=2&limit=10&name_like=John- `libs/generator/src/generators/controller/controller.generator.ts`
+
+| `_eq` | `field_eq=value` | `field = $1` |
+
+| `_ne` | `field_ne=value` | `field != $1` |
+
+| `_gt` / `_gte` | `field_gt=10` | `field > $1` / `>=` |
+
+| `_lt` / `_lte` | `field_lt=100` | `field < $1` / `<=` |**Status**: ✅ COMPLETE```- `libs/generator/src/generators/dto/filter-dto.generator.ts`
+
+| `_like` | `field_like=John%` | `field LIKE $1` |
+
+| `_in` | `field_in=1,2,3` | `field IN ($1,$2,$3)` |
+
+| `_between` | `field_between=1,10` | `field BETWEEN $1 AND $2` |
+
+| `_null` | `field_null=true` | `field IS NULL` |- `SwaggerModule.setup()` added to `main.ts` automatically- `libs/generator/src/generators/repository/repository.generator.ts`
+
+
+
+**Note**: `page`, `limit`, `sort` auto-excluded from WHERE clause- `ValidationPipe` configured with whitelist/transform
+
+
+
+### 4. Pagination (Database-Level)- Incremental tag addition (detects existing tags)**Response**:- `libs/generator/src/generators/service/service.generator.ts`
+
+
+
+| Feature | Implementation |
+
+|---------|----------------|
+
+| **Query** | `SELECT * FROM table LIMIT $1 OFFSET $2` |---```json
+
+| **Count** | `SELECT COUNT(*) FROM table WHERE ...` |
+
+| **Validation** | `@Type(() => Number)`, `@IsInt()`, `@Min(1)`, `@Max(100)` |
+
+| **Sorting** | Single: `?sort=name:ASC`<br>Multi: `?sort=created_at:DESC,name:ASC` |
+
+## 🎯 Core Features{**Usage**:
+
+**Efficient** - Not in-memory, works with large datasets
+
+
+
+### 5. JOIN Queries (Auto-detection)
+
+### 1. Code Generation (7 Generators)  "data": [...],```bash
+
+**Detection**: From foreign key metadata (`ref_schema`, `ref_table`, `ref_column`)
+
+
+
+| Feature | Description |
+
+|---------|-------------|| Generator | Output | Features |  "total": 100,# Both endpoints now support pagination
+
+| **INNER JOIN** | Required fields (`is_nullable=false`) |
+
+| **LEFT JOIN** | Optional fields (`is_nullable=true`) ||-----------|--------|----------|
+
+| **Multi-table** | Unique aliases for multiple JOINs |
+
+| **Soft Delete** | `AND ref_table.deleted_at IS NULL` || **Entity** | TypeScript class | Decorators, types from metadata |  "page": 1,GET /entity/entity?page=1&limit=20&sort=created_at:DESC
+
+
+
+**Example**:| **DTOs** | Create/Update/Filter | Validation, operators, pagination fields |
+
+
+
+```sql| **Repository** | Data access layer | Raw SQL (pg/mysql2), parameterized queries |  "limit": 20GET /entity/entity/filter?page=2&limit=10&sort=name:ASC
+
+INNER JOIN "master"."departments" AS "dept"
+
+  ON "t"."department_id" = "dept"."id"| **Service** | Business logic | Caching, transactions, audit integration |
+
+  AND "dept"."deleted_at" IS NULL
+
+```| **Controller** | REST endpoints | Swagger docs, RBAC, validation |}
+
+
+
+### 6. Recap/Analytics| **Module** | NestJS module | Dependency injection, imports |
+
+
+
+| Feature | Description || **Tests** | Unit tests | Mocks, 99% coverage |```# Response format
+
+|---------|-------------|
+
+| **Monthly Breakdown** | jan, feb, ..., dec columns |
+
+| **Grouping** | Single: `?group_by=dept`<br>Dual: `?group_by=dept,role` |
+
+| **Year Range** | 2000-2100 validation |**Commands**:{
+
+| **Filtering** | Combined with filter operators |
+
+```bash
+
+**Endpoint**: `GET /recap?year=2024&group_by=department`
+
+nest-generator generate [schema].[table]### 2. RBAC Auto-Registration ✅  "data": [...],
+
+**Example Response**:
+
+nest-generator generate users.users --all
+
+```json
+
+{```  "total": 100,
+
+  "data": [
+
+    {
+
+      "department": "Engineering",
+
+      "jan": 5, "feb": 8, "mar": 12,---- RBACModule otomatis register ke `app.module.ts`  "page": 1,
+
+      "total": 150
+
+    }
+
+  ]
+
+}## 🔧 CRUD Operations- `@RequirePermission('resource.action')` pada semua endpoints  "limit": 20
+
+```
+
+
+
+---
+
+### 2. REST Endpoints (6 Total)- Permissions: `resource.create`, `resource.read`, `resource.update`, `resource.delete`}
+
+## 🚀 Enterprise Features
 
 
 
 ### 7. Audit Trail
 
+| Endpoint | Method | Pagination | Description |````
 
+**Auto-logging** for CREATE, UPDATE, DELETE operations
 
-**Auto-logging** for CREATE, UPDATE, DELETE operations**Default**: page=1, limit=20, max=100**Files Created:**
-
-
+|----------|--------|-----------|-------------|
 
 | Feature | Description |
 
-|---------|-------------|
+|---------|-------------|| `/` | POST | - | Create record |### 3. Swagger Auto-Configuration ✅
 
-| **Change Tracking** | `old_values` → `new_values` with diff |---- `libs/generator/src/generators/dto/recap-dto.generator.ts`
+| **Change Tracking** | `old_values` → `new_values` with diff |
 
-| **User Context** | User ID from JWT/context |
+| **User Context** | User ID from JWT/context || `/` | GET | ✅ | Get all with pagination |
 
-| **Rollback** | Restore from audit log |- `libs/generator/src/generators/query/recap-query.generator.ts`
+| **Rollback** | Restore from audit log |
 
-| **Query** | By entity, user, action, date range |
+| **Query** | By entity, user, action, date range || `/filter` | GET | ✅ | Filtered with pagination |### ✨ **RBAC Auto-Registration**
 
-| **Export** | JSON/CSV format |## 📊 Advanced Queries
+| **Export** | JSON/CSV format |
 
-| **Retention** | 90 days default, archiving |
+| **Retention** | 90 days default, archiving || `/:id` | GET | - | Get by ID |
 
-**Features:**
 
-**Files**: 
 
-- `audit-log.service.ts` (460 lines)### 3. Filtering System (8 Operators)
+**Files**:| `/:id` | PUT | - | Update by ID |- `SwaggerModule.setup()` otomatis ditambahkan ke `main.ts`
+
+
+
+- `audit-log.service.ts` (460 lines)| `/:id` | DELETE | - | Soft/hard delete |
 
 - `audit-query.service.ts` (280 lines)
 
-- ✅ RecapDto with year, group_by validation
+- `ValidationPipe` dengan whitelist/transform**Status**: ✅ **COMPLETE**
 
 **Decorator**:
 
-```typescript| Operator | Usage | SQL |- ✅ Support for single & dual field grouping
+**Pagination**: `?page=1&limit=20&sort=field:ASC`  
 
-@AuditLog({ 
+```typescript
 
-  action: 'UPDATE', |----------|-------|-----|- ✅ Monthly breakdown (jan-dec)
+@AuditLog({ **Defaults**: page=1, limit=20, max=100- Incremental tag addition (detect existing tags)
+
+  action: 'UPDATE', 
 
   entityType: 'users',
 
-  entityIdParam: 'id' | `_eq` | `field_eq=value` | `field = $1` |- ✅ Dynamic SQL query generation with GROUP BY
+  entityIdParam: 'id' 
 
-})
-
-```| `_ne` | `field_ne=value` | `field != $1` |- ✅ Filter integration
-
-
-
-### 8. RBAC (Role-Based Access Control)| `_gt` / `_gte` | `field_gt=10` | `field > $1` / `field >= $1` |- ✅ Security validation for field names
-
-
-
-| Feature | Description || `_lt` / `_lte` | `field_lt=100` | `field < $1` / `field <= $1` |- ✅ Swagger documentation
-
-|---------|-------------|
-
-| **Decorators** | `@RequirePermission('users.read')` || `_like` | `field_like=John%` | `field LIKE $1` |
-
-| **Guards** | `RbacGuard` for protection |
-
-| **Permissions** | `resource.create`, `resource.read`, `resource.update`, `resource.delete` || `_in` | `field_in=1,2,3` | `field IN ($1,$2,$3)` |**Generated Code Example:**
-
-| **Auto-register** | RBACModule to `app.module.ts` |
-
-| **Schema** | SQL schema for rbac tables || `_between` | `field_between=1,10` | `field BETWEEN $1 AND $2` |
-
-| **Seed** | Permission seeds from metadata |
-
-| `_null` | `field_null=true` | `field IS NULL` |```typescript
-
-**Usage**:
-
-```typescript// RecapDto
-
-@RequirePermission('users.update')
-
-@Put(':id')**Auto-skip**: `page`, `limit`, `sort` tidak masuk WHERE clause@IsInt()
-
-async update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
-
-  return this.service.update(id, dto);@Min(2000)
-
-}
-
-```### 4. Pagination (Database-Level)@Max(2100)
-
-
-
-### 9. Cachingyear: number;
-
-
-
-| Feature | Description || Feature | Implementation |
-
-|---------|-------------|
-
-| **Provider** | Redis / in-memory ||---------|----------------|@IsOptional()
-
-| **Auto-cache** | `findAll()`, `findOne()` |
-
-| **Invalidation** | On create/update/delete || **Query** | `SELECT * FROM table LIMIT $1 OFFSET $2` |@Matches(/^[a-zA-Z_][a-zA-Z0-9_]*(,[a-zA-Z_][a-zA-Z0-9_]*)?$/)
-
-| **Keys** | `entity:all`, `entity:id:123`, `entity:filter:{params}` |
-
-| **TTL** | 5 minutes (300s) default || **Count** | `SELECT COUNT(*) as total FROM table WHERE ...` |group_by?: string;
-
-
-
-**Library**: `cache-manager` v7.2.4| **Validation** | `@Type(() => Number)`, `@IsInt()`, `@Min(1)`, `@Max(100)` |
-
-
-
-### 10. File Upload| **Sorting** | Single: `?sort=name:ASC`<br>Multi: `?sort=created_at:DESC,name:ASC` |// Query with monthly aggregation
-
-
-
-| Feature | Description |SELECT
-
-|---------|-------------|
-
-| **Storage** | Local, S3, GCS, Azure Blob |**Not in-memory** - Efficient untuk large datasets  field_1, field_2,
-
-| **Detection** | Auto from `_doc_id`, `_file_url` columns |
-
-| **Validation** | File type, size limits |  COUNT(CASE WHEN EXTRACT(MONTH FROM created_at) = 1 THEN 1 END) as jan,
-
-| **Integration** | Multer with `@nestjs/platform-express` |
-
-### 5. JOIN Queries (Auto-detection)  COUNT(CASE WHEN EXTRACT(MONTH FROM created_at) = 2 THEN 1 END) as feb,
-
-**Endpoints**:
-
-- `POST /upload/:field` - Single file  ...
-
-- `POST /upload/:field/multiple` - Multiple files
-
-- `DELETE /upload/:field/:fileId` - Delete file| Feature | Description |  COUNT(*) as total
-
-
-
----|---------|-------------|FROM schema.table
-
-
-
-## 🏗️ Architecture Support| **Detection** | From FK metadata: `ref_schema`, `ref_table`, `ref_column` |WHERE EXTRACT(YEAR FROM created_at) = $1
-
-
-
-### 11. Standalone Applications| **INNER JOIN** | Required fields (`is_nullable=false`) |GROUP BY field_1, field_2
-
-
-
-- Single monolithic REST API| **LEFT JOIN** | Optional fields (`is_nullable=true`) |ORDER BY field_1, field_2
-
-- Auto-config: Swagger, ValidationPipe, modules
-
-- Endpoint prefix: `/schema/table`| **Multi-table** | Unique aliases untuk multiple JOINs |```
-
-
-
-### 12. Monorepo| **Soft Delete** | `AND ref_table.deleted_at IS NULL` |
-
-
-
-- Shared modules, services, DTOs---
-
-- Multi-app: Backend, Admin, Mobile
-
-- nx or Nest CLI workspace**Example**:
-
-
-
-### 13. Microservices```sql### 2. ✅ **JOIN Query Auto-Generation** (Priority 1)
-
-
-
-| Component | Description |INNER JOIN "master"."departments" AS "dept"
-
-|-----------|-------------|
-
-| **Gateway** | API Gateway with HTTP endpoints |  ON "t"."department_id" = "dept"."id"**Files Created:**
-
-| **Services** | Business services with message patterns |
-
-| **@MessagePattern** | Request-response communication |  AND "dept"."deleted_at" IS NULL
-
-| **@EventPattern** | Event-driven architecture |
-
-| **Transport** | TCP, Redis, NATS, RabbitMQ, Kafka |```- `libs/generator/src/generators/query/join-query.generator.ts`
-
-
-
-**Generators**: 
-
-- `gateway-controller.generator.ts`
-
-- `service-controller.generator.ts`### 6. Recap/Analytics**Features:**
-
-
-
-**Gateway Example**:
-
-```typescript
-
-@Controller('users')| Feature | Description |- ✅ Automatic detection from foreign key metadata (`ref_schema`, `ref_table`, `ref_column`)
-
-export class UsersController {
-
-  constructor(@Inject('USER_SERVICE') private client: ClientProxy) {}|---------|-------------|- ✅ INNER JOIN for required fields (`is_nullable = false`)
-
-  
-
-  @Get()| **Monthly Breakdown** | jan, feb, ..., dec columns |- ✅ LEFT JOIN for optional fields (`is_nullable = true`)
-
-  async findAll(@Query() filters: UserFilterDto) {
-
-    return firstValueFrom(this.client.send('users.findAll', filters));| **Grouping** | Single: `?group_by=dept`<br>Dual: `?group_by=dept,role` |- ✅ Multiple JOINs to same table with unique aliases
-
-  }
-
-}| **Year Range** | 2000-2100 validation |- ✅ Soft delete filtering in JOINs
+})---**What Changed**:
 
 ```
 
-| **Filtering** | Combined dengan filter operators |- ✅ SELECT column generation from referenced tables
-
-**Service Example**:
-
-```typescript- ✅ Display column configuration
-
-@Controller()
-
-export class UsersController {**Endpoint**: `GET /recap?year=2024&group_by=department`
-
-  @MessagePattern('users.findAll')
-
-  async findAll(@Payload() filters: UserFilterDto) {**Generated Code Example:**
-
-    return this.service.findAll(filters);
-
-  }---
-
-}
-
-``````typescript
 
 
+### 8. RBAC (Role-Based Access Control)
 
----## 🚀 Enterprise Features// Automatic JOIN detection
-
-
-
-## 🔐 Security & Validationconst { joins, selectColumns } = joinGenerator.generateJoins(columns, 't');
-
-
-
-### 14. Input Validation### 7. Audit Trail
-
-
-
-| Feature | Description |// Generated JOIN
-
-|---------|-------------|
-
-| **class-validator** | All DTOs with decorators || Feature | Description |INNER JOIN "master"."departments" AS "departments_alias"
-
-| **class-transformer** | `@Type()` for query params |
-
-| **Whitelist** | Strip unknown properties ||---------|-------------|  ON "t"."department_id" = "departments_alias"."id"
-
-| **Custom** | `@IsSafeString()`, `@IsStrongPassword()` |
-
-| **Auto-logging** | CREATE, UPDATE, DELETE operations |  AND "departments_alias"."deleted_at" IS NULL
-
-**Example**:
-
-```typescript| **Change Tracking** | `old_values` → `new_values` dengan diff |
-
-export class CreateUserDto {
-
-  @IsSafeString()| **User Context** | User ID dari JWT/context |LEFT JOIN "master"."roles" AS "roles_alias"
-
-  @MaxLength(50)
-
-  username: string;| **Rollback** | Restore dari audit log |  ON "t"."role_id" = "roles_alias"."id"
-
-  
-
-  @IsStrongPassword()| **Query** | By entity, user, action, date range |  AND "roles_alias"."deleted_at" IS NULL
-
-  password: string;
-
-}| **Export** | JSON/CSV format |
-
-```
-
-| **Retention** | 90 days default, archiving |// Selected columns
-
-### 15. SQL Injection Prevention
-
-"departments_alias"."name" AS "departments_name",
+## 📊 Advanced Queries---- ✅ RBACModule automatically registered to app.module.ts
 
 | Feature | Description |
 
-|---------|-------------|**Files**: `audit-log.service.ts` (460 lines), `audit-query.service.ts` (280 lines)"departments_alias"."code" AS "departments_code",
+|---------|-------------|
 
-| **Parameterized** | All queries use `$1`, `$2`, `$3` |
+| **Decorators** | `@RequirePermission('users.read')` |
 
-| **Validation** | `SecurityValidator` for identifiers |"roles_alias"."name" AS "roles_name"
+| **Guards** | `RbacGuard` for protection |### 3. Filtering System (8 Operators)- ✅ @RequirePermission decorators on all CRUD endpoints
 
-| **Whitelist** | Only known columns in filter/sort |
+| **Permissions** | `resource.create`, `resource.read`, `resource.update`, `resource.delete` |
 
-| **No Concat** | Never build SQL with string concat |**Decorator**:```
+| **Auto-register** | RBACModule to `app.module.ts` |
+
+| **Schema** | SQL schema for rbac tables |
+
+| **Seed** | Permission seeds from metadata || Operator | Usage | SQL |## 🎯 Core Features- ✅ Resource-based permissions: `resource.create`, `resource.read`, etc.
 
 
 
-**SecurityValidator**:```typescript
+**Usage**:|----------|-------|-----|
+
+
+
+```typescript| `_eq` | `field_eq=value` | `field = $1` |### 1. Code Generation (7 Generators)**Usage**:
+
+@RequirePermission('users.update')
+
+@Put(':id')| `_ne` | `field_ne=value` | `field != $1` |
+
+async update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+
+  return this.service.update(id, dto);| `_gt` / `_gte` | `field_gt=10` | `field > $1` / `>=` |````bash
+
+}
+
+```| `_lt` / `_lte` | `field_lt=100` | `field < $1` / `<=` |
+
+
+
+### 9. Caching| `_like` | `field_like=John%` | `field LIKE $1` || Generator | Output | Features |nest-generator generate users.users --features.rbac=true
+
+
+
+| Feature | Description || `_in` | `field_in=1,2,3` | `field IN ($1,$2,$3)` |
+
+|---------|-------------|
+
+| **Provider** | Redis / in-memory || `_between` | `field_between=1,10` | `field BETWEEN $1 AND $2` ||-----------|--------|----------|# Automatically adds RBACModule to app.module.ts
+
+| **Auto-cache** | `findAll()`, `findOne()` |
+
+| **Invalidation** | On create/update/delete || `_null` | `field_null=true` | `field IS NULL` |
+
+| **Keys** | `entity:all`, `entity:id:123`, `entity:filter:{params}` |
+
+| **TTL** | 5 minutes (300s) default || **Entity** | TypeScript class | Decorators, types dari metadata |# Decorates all endpoints with @RequirePermission
+
+
+
+**Library**: `cache-manager` v7.2.4**Note**: `page`, `limit`, `sort` auto-excluded from WHERE clause
+
+
+
+### 10. File Upload| **DTOs** | Create/Update/Filter | Validation, operators, pagination fields |```
+
+
+
+| Feature | Description |### 4. Pagination (Database-Level)
+
+|---------|-------------|
+
+| **Storage** | Local, S3, GCS, Azure Blob || **Repository** | Data access layer | Raw SQL (pg/mysql2), parameterized queries |
+
+| **Detection** | Auto from `_doc_id`, `_file_url` columns |
+
+| **Validation** | File type, size limits || Feature | Implementation |
+
+| **Integration** | Multer with `@nestjs/platform-express` |
+
+|---------|----------------|| **Service** | Business logic | Caching, transactions, audit integration |### ✨ **Swagger Auto-Configuration**
+
+**Endpoints**:
+
+| **Query** | `SELECT * FROM table LIMIT $1 OFFSET $2` |
+
+- `POST /upload/:field` - Single file
+
+- `POST /upload/:field/multiple` - Multiple files| **Count** | `SELECT COUNT(*) FROM table WHERE ...` || **Controller** | REST endpoints | Swagger docs, RBAC, validation |
+
+- `DELETE /upload/:field/:fileId` - Delete file
+
+| **Validation** | `@Type(() => Number)`, `@IsInt()`, `@Min(1)`, `@Max(100)` |
+
+---
+
+| **Sorting** | Single: `?sort=name:ASC`<br>Multi: `?sort=created_at:DESC,name:ASC` || **Module** | NestJS module | Dependency injection, imports |**Status**: ✅ **COMPLETE**
+
+## 🏗️ Architecture Support
+
+
+
+### 11. Standalone Applications
+
+**Efficient** - Not in-memory, works with large datasets| **Tests** | Unit tests | Mocks, 99% coverage |
+
+- Single monolithic REST API
+
+- Auto-config: Swagger, ValidationPipe, modules
+
+- Endpoint prefix: `/schema/table`
+
+### 5. JOIN Queries (Auto-detection)**What Changed**:
+
+### 12. Monorepo
+
+
+
+- Shared modules, services, DTOs
+
+- Multi-app: Backend, Admin, Mobile**Detection**: From foreign key metadata (`ref_schema`, `ref_table`, `ref_column`)**Command**:- ✅ SwaggerModule.setup() added to main.ts automatically
+
+- nx or Nest CLI workspace
+
+
+
+### 13. Microservices
+
+| Feature | Description |```bash- ✅ ValidationPipe configured with whitelist/transform
+
+| Component | Description |
+
+|-----------|-------------||---------|-------------|
+
+| **Gateway** | API Gateway with HTTP endpoints |
+
+| **Services** | Business services with message patterns || **INNER JOIN** | Required fields (`is_nullable=false`) |nest-generator generate [schema].[table]- ✅ Incremental tag addition (detects existing tags)
+
+| **@MessagePattern** | Request-response communication |
+
+| **@EventPattern** | Event-driven architecture || **LEFT JOIN** | Optional fields (`is_nullable=true`) |
+
+| **Transport** | TCP, Redis, NATS, RabbitMQ, Kafka |
+
+| **Multi-table** | Unique aliases for multiple JOINs |nest-generator generate users.users --all
+
+**Generators**:
+
+| **Soft Delete** | `AND ref_table.deleted_at IS NULL` |
+
+- `gateway-controller.generator.ts`
+
+- `service-controller.generator.ts````**Generated**:
+
+
+
+**Gateway Example**:**Example**:
+
+
+
+```typescript```sql```typescript
+
+@Controller('users')
+
+export class UsersController {INNER JOIN "master"."departments" AS "dept"
+
+  constructor(@Inject('USER_SERVICE') private client: ClientProxy) {}
+
+    ON "t"."department_id" = "dept"."id"---// main.ts - auto-configured
+
+  @Get()
+
+  async findAll(@Query() filters: UserFilterDto) {  AND "dept"."deleted_at" IS NULL
+
+    return firstValueFrom(this.client.send('users.findAll', filters));
+
+  }```const config = new DocumentBuilder()
+
+}
+
+```
+
+
+
+**Service Example**:### 6. Recap/Analytics## 🔧 CRUD Operations  .setTitle('API Documentation')
+
+
 
 ```typescript
 
-import { SecurityValidator } from '@ojiepermana/nest-generator';@AuditLog({ ---
+@Controller()
+
+export class UsersController {| Feature | Description |  .setVersion('1.0')
+
+  @MessagePattern('users.findAll')
+
+  async findAll(@Payload() filters: UserFilterDto) {|---------|-------------|
+
+    return this.service.findAll(filters);
+
+  }| **Monthly Breakdown** | jan, feb, ..., dec columns |### 2. Endpoints (6 Total)  .addTag('entity/entity')
+
+}
+
+```| **Grouping** | Single: `?group_by=dept`<br>Dual: `?group_by=dept,role` |
 
 
 
-// Validate identifier with whitelist  action: 'UPDATE',
+---| **Year Range** | 2000-2100 validation |  .addTag('entity/location')
+
+
+
+## 🔐 Security & Validation| **Filtering** | Combined with filter operators |
+
+
+
+### 14. Input Validation| Endpoint | Method | Pagination | Description |  .build();
+
+
+
+| Feature | Description |**Endpoint**: `GET /recap?year=2024&group_by=department`
+
+|---------|-------------|
+
+| **class-validator** | All DTOs with decorators ||----------|--------|-----------|-------------|
+
+| **class-transformer** | `@Type()` for query params |
+
+| **Whitelist** | Strip unknown properties |**Example Response**:
+
+| **Custom** | `@IsSafeString()`, `@IsStrongPassword()` |
+
+```json| `/` | POST | - | Create record |SwaggerModule.setup('api', app, document);
+
+**Example**:
+
+{
+
+```typescript
+
+export class CreateUserDto {  "data": [| `/` | GET | ✅ | Get all dengan pagination |```
+
+  @IsSafeString()
+
+  @MaxLength(50)    {
+
+  username: string;
+
+        "department": "Engineering",| `/filter` | GET | ✅ | Filtered dengan pagination |
+
+  @IsStrongPassword()
+
+  password: string;      "jan": 5, "feb": 8, "mar": 12,
+
+}
+
+```      "total": 150| `/:id` | GET | - | Get by ID |---
+
+
+
+### 15. SQL Injection Prevention    }
+
+
+
+| Feature | Description |  ]| `/:id` | PUT | - | Update by ID |
+
+|---------|-------------|
+
+| **Parameterized** | All queries use `$1`, `$2`, `$3` |}
+
+| **Validation** | `SecurityValidator` for identifiers |
+
+| **Whitelist** | Only known columns in filter/sort |```| `/:id` | DELETE | - | Soft/hard delete |## 🎯 **CORE IMPLEMENTATIONS**
+
+| **No Concat** | Never build SQL with string concat |
+
+
+
+**SecurityValidator**:
+
+---
+
+```typescript
+
+import { SecurityValidator } from '@ojiepermana/nest-generator';
+
+
+
+// Validate identifier with whitelist## 🚀 Enterprise Features**Pagination Params**: `?page=1&limit=20&sort=field:ASC`### 1. ✅ **Recap Endpoint Generator** (Priority 1)
 
 const field = SecurityValidator.validateIdentifier(
 
-  userInput,   entityType: 'users',### 3. ✅ **Microservices Differentiation** (Priority 1)
+  userInput, 
 
   ['username', 'email', 'age'], 
 
-  'sort field'  entityIdParam: 'id'
+  'sort field'### 7. Audit Trail
 
 );
 
-})**Files Created:**
+
 
 // Validate pagination
 
-const { page, limit } = SecurityValidator.validatePagination(````
+const { page, limit } = SecurityValidator.validatePagination(**Auto-logging** for CREATE, UPDATE, DELETE operations**Default**: page=1, limit=20, max=100**Files Created:**
 
   req.query.page, 
 
-  req.query.limit- `libs/generator/src/generators/controller/gateway-controller.generator.ts`
+  req.query.limit
 
 );
 
-```### 8. RBAC (Role-Based Access Control)- `libs/generator/src/generators/controller/service-controller.generator.ts`
+```| Feature | Description |
 
 
 
----| Feature | Description |**Gateway Controller Features:**
+---|---------|-------------|
 
 
+
+## 📚 Documentation & Tools| **Change Tracking** | `old_values` → `new_values` with diff |---- `libs/generator/src/generators/dto/recap-dto.generator.ts`
+
+
+
+### 16. Export Features| **User Context** | User ID from JWT/context |
+
+
+
+| Format | Endpoint | Features || **Rollback** | Restore from audit log |- `libs/generator/src/generators/query/recap-query.generator.ts`
+
+|--------|----------|----------|
+
+| **CSV** | `GET /export/csv` | Column selection, filters || **Query** | By entity, user, action, date range |
+
+| **Excel** | `GET /export/excel` | XLSX with styling |
+
+| **PDF** | `GET /export/pdf` | Reports || **Export** | JSON/CSV format |## 📊 Advanced Queries
+
+| **JSON** | `GET /export/json` | Raw data |
+
+| **Retention** | 90 days default, archiving |
+
+**Usage**:
+
+**Features:**
+
+```bash
+
+GET /export/csv?columns=name,email&dept_eq=IT**Files**: 
+
+GET /export/excel?year=2024
+
+GET /export/pdf?is_active_eq=true- `audit-log.service.ts` (460 lines)### 3. Filtering System (8 Operators)
+
+```
+
+- `audit-query.service.ts` (280 lines)
+
+### 17. Swagger/OpenAPI
+
+- ✅ RecapDto with year, group_by validation
+
+| Feature | Description |
+
+|---------|-------------|**Decorator**:
+
+| **Auto-generation** | `@ApiTags`, `@ApiOperation`, `@ApiResponse` |
+
+| **DTOs** | `@ApiProperty` with descriptions, examples |```typescript| Operator | Usage | SQL |- ✅ Support for single & dual field grouping
+
+| **Pagination** | `@ApiQuery` for page, limit, sort |
+
+| **Auto-configure** | `SwaggerModule.setup('api')` in `main.ts` |@AuditLog({ 
+
+
+
+**URL**: `http://localhost:3000/api`  action: 'UPDATE', |----------|-------|-----|- ✅ Monthly breakdown (jan-dec)
+
+
+
+**Example**:  entityType: 'users',
+
+
+
+```typescript  entityIdParam: 'id' | `_eq` | `field_eq=value` | `field = $1` |- ✅ Dynamic SQL query generation with GROUP BY
+
+@ApiOperation({ summary: 'Get all users' })
+
+@ApiQuery({ name: 'page', required: false, type: Number, example: 1 })})
+
+@ApiResponse({
+
+  status: 200,```| `_ne` | `field_ne=value` | `field != $1` |- ✅ Filter integration
+
+  description: 'List of users',
+
+  schema: {
+
+    type: 'object',
+
+    properties: {### 8. RBAC (Role-Based Access Control)| `_gt` / `_gte` | `field_gt=10` | `field > $1` / `field >= $1` |- ✅ Security validation for field names
+
+      data: { type: 'array', items: { $ref: '#/components/schemas/User' } },
+
+      total: { type: 'number' },
+
+      page: { type: 'number' },
+
+      limit: { type: 'number' }| Feature | Description || `_lt` / `_lte` | `field_lt=100` | `field < $1` / `field <= $1` |- ✅ Swagger documentation
+
+    }
+
+  }|---------|-------------|
+
+})
+
+@Get()| **Decorators** | `@RequirePermission('users.read')` || `_like` | `field_like=John%` | `field LIKE $1` |
+
+async findAll(@Query() filters: UserFilterDto) { ... }
+
+```| **Guards** | `RbacGuard` for protection |
+
+
+
+### 18. CLI Commands| **Permissions** | `resource.create`, `resource.read`, `resource.update`, `resource.delete` || `_in` | `field_in=1,2,3` | `field IN ($1,$2,$3)` |**Generated Code Example:**
+
+
+
+```bash| **Auto-register** | RBACModule to `app.module.ts` |
+
+# Initialize
+
+nest-generator init| **Schema** | SQL schema for rbac tables || `_between` | `field_between=1,10` | `field BETWEEN $1 AND $2` |
+
+
+
+# Generate module| **Seed** | Permission seeds from metadata |
+
+nest-generator generate users.users
+
+| `_null` | `field_null=true` | `field IS NULL` |```typescript
+
+# All features
+
+nest-generator generate users.users --all**Usage**:
+
+
+
+# Specific features```typescript// RecapDto
+
+nest-generator generate products.products \
+
+  --features.swagger=true \@RequirePermission('users.update')
+
+  --features.caching=true \
+
+  --features.audit=true \@Put(':id')**Auto-skip**: `page`, `limit`, `sort` tidak masuk WHERE clause@IsInt()
+
+  --features.rbac=true
+
+```async update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+
+
+
+**Available Features**:  return this.service.update(id, dto);@Min(2000)
+
+
+
+- swagger}
+
+- caching
+
+- validation```### 4. Pagination (Database-Level)@Max(2100)
+
+- pagination
+
+- auditLog
+
+- softDelete
+
+- fileUpload### 9. Cachingyear: number;
+
+- rbac
+
+
+
+---
+
+| Feature | Description || Feature | Implementation |
+
+## 🗄️ Database Support
+
+|---------|-------------|
+
+### 19. Database Engines
+
+| **Provider** | Redis / in-memory ||---------|----------------|@IsOptional()
+
+| Database | Driver | Status |
+
+|----------|--------|--------|| **Auto-cache** | `findAll()`, `findOne()` |
+
+| **PostgreSQL** | `pg` v8.13.1 | ✅ |
+
+| **MySQL** | `mysql2` | ✅ || **Invalidation** | On create/update/delete || **Query** | `SELECT * FROM table LIMIT $1 OFFSET $2` |@Matches(/^[a-zA-Z_][a-zA-Z0-9_]*(,[a-zA-Z_][a-zA-Z0-9_]*)?$/)
+
+| **No ORM** | Raw SQL | ✅ |
+
+| **Keys** | `entity:all`, `entity:id:123`, `entity:filter:{params}` |
+
+### 20. Metadata-Driven
+
+| **TTL** | 5 minutes (300s) default || **Count** | `SELECT COUNT(*) as total FROM table WHERE ...` |group_by?: string;
+
+| Source | Description |
+
+|--------|-------------|
+
+| **Tables** | `meta.table_metadata` |
+
+| **Columns** | `meta.column_metadata` |**Library**: `cache-manager` v7.2.4| **Validation** | `@Type(() => Number)`, `@IsInt()`, `@Min(1)`, `@Max(100)` |
+
+| **Foreign Keys** | `ref_schema`, `ref_table`, `ref_column` |
+
+| **Constraints** | Unique, primary key, nullable |
+
+| **Types** | Auto-map to TypeScript types |
+
+| **Enums** | Generate TypeScript enums |### 10. File Upload| **Sorting** | Single: `?sort=name:ASC`<br>Multi: `?sort=created_at:DESC,name:ASC` |// Query with monthly aggregation
+
+
+
+**Schema**: See `RECOMMENDED_SCHEMAS.md`
+
+
+
+---| Feature | Description |SELECT
+
+
+
+## 🎨 Code Quality|---------|-------------|
+
+
+
+### 21. Generated Code Quality| **Storage** | Local, S3, GCS, Azure Blob |**Not in-memory** - Efficient untuk large datasets  field_1, field_2,
+
+
+
+- **TypeScript**: Fully typed, no `any`| **Detection** | Auto from `_doc_id`, `_file_url` columns |
+
+- **ESLint**: Passes all rules
+
+- **Prettier**: Consistent formatting| **Validation** | File type, size limits |  COUNT(CASE WHEN EXTRACT(MONTH FROM created_at) = 1 THEN 1 END) as jan,
+
+- **Comments**: JSDoc on all methods
+
+- **Imports**: Organized, no circular deps| **Integration** | Multer with `@nestjs/platform-express` |
+
+
+
+### 22. Testing### 5. JOIN Queries (Auto-detection)  COUNT(CASE WHEN EXTRACT(MONTH FROM created_at) = 2 THEN 1 END) as feb,
+
+
+
+- **Unit Tests**: 579/585 passing (99%)**Endpoints**:
+
+- **Auto-generate**: Test files for all layers
+
+- **Mocks**: Repository, service mocks- `POST /upload/:field` - Single file  ...
+
+- **Framework**: Jest
+
+- `POST /upload/:field/multiple` - Multiple files
+
+---
+
+- `DELETE /upload/:field/:fileId` - Delete file| Feature | Description |  COUNT(*) as total
+
+## 🔄 Maintenance & Performance
+
+
+
+### 23. Safe Regeneration
+
+---|---------|-------------|FROM schema.table
+
+- Won't overwrite custom code
+
+- Custom blocks: `// START CUSTOM` ... `// END CUSTOM`
+
+- Incremental updates
+
+- Metadata diff detection## 🏗️ Architecture Support| **Detection** | From FK metadata: `ref_schema`, `ref_table`, `ref_column` |WHERE EXTRACT(YEAR FROM created_at) = $1
+
+
+
+### 24. Soft Delete
+
+
+
+- `deleted_at` timestamp column### 11. Standalone Applications| **INNER JOIN** | Required fields (`is_nullable=false`) |GROUP BY field_1, field_2
+
+- Auto-filter deleted records
+
+- Restore capability
+
+- Optional hard delete
+
+- Single monolithic REST API| **LEFT JOIN** | Optional fields (`is_nullable=true`) |ORDER BY field_1, field_2
+
+### 25. Performance
+
+- Auto-config: Swagger, ValidationPipe, modules
+
+- Database-level pagination (LIMIT/OFFSET)
+
+- Query optimization with indexes- Endpoint prefix: `/schema/table`| **Multi-table** | Unique aliases untuk multiple JOINs |```
+
+- Caching to reduce DB hits
+
+- Connection pooling
+
+
+
+### 26. Production Ready### 12. Monorepo| **Soft Delete** | `AND ref_table.deleted_at IS NULL` |
+
+
+
+- Environment variables (.env)
+
+- Error handling (try-catch)
+
+- NestJS Logger integration- Shared modules, services, DTOs---
+
+- Health checks
+
+- Multi-app: Backend, Admin, Mobile
+
+---
+
+- nx or Nest CLI workspace**Example**:
+
+## 📊 Feature Matrix
+
+
+
+| Category | Features | Status |
+
+|----------|----------|--------|### 13. Microservices```sql### 2. ✅ **JOIN Query Auto-Generation** (Priority 1)
+
+| **Core Generation** | 7 generators | ✅ 100% |
+
+| **CRUD Operations** | 6 endpoints | ✅ 100% |
+
+| **Query Features** | Filtering, Pagination, JOIN, Recap | ✅ 100% |
+
+| **Enterprise** | Audit, RBAC, Caching, Upload | ✅ 100% || Component | Description |INNER JOIN "master"."departments" AS "dept"
+
+| **Architecture** | Standalone, Monorepo, Microservices | ✅ 100% |
+
+| **Security** | Validation, SQL Injection Prevention | ✅ 100% ||-----------|-------------|
+
+| **Export** | CSV, Excel, PDF, JSON | ✅ 100% |
+
+| **Database** | PostgreSQL, MySQL | ✅ 100% || **Gateway** | API Gateway with HTTP endpoints |  ON "t"."department_id" = "dept"."id"**Files Created:**
+
+| **Quality** | TypeScript, Tests (99%) | ✅ 100% |
+
+| **Services** | Business services with message patterns |
+
+---
+
+| **@MessagePattern** | Request-response communication |  AND "dept"."deleted_at" IS NULL
+
+## 🎯 Quick Reference
+
+| **@EventPattern** | Event-driven architecture |
+
+### Common Commands
+
+| **Transport** | TCP, Redis, NATS, RabbitMQ, Kafka |```- `libs/generator/src/generators/query/join-query.generator.ts`
+
+```bash
+
+# Full-featured module
+
+nest-generator generate users.users --all
+
+**Generators**: 
+
+# Specific schema/table
+
+nest-generator generate public.products- `gateway-controller.generator.ts`
+
+nest-generator generate master.categories
+
+nest-generator generate transaction.orders- `service-controller.generator.ts`### 6. Recap/Analytics**Features:**
+
+```
+
+
+
+### Response Format
+
+**Gateway Example**:
+
+```json
+
+{```typescript
+
+  "data": [
+
+    { "id": "123", "name": "John", "email": "john@example.com" }@Controller('users')| Feature | Description |- ✅ Automatic detection from foreign key metadata (`ref_schema`, `ref_table`, `ref_column`)
+
+  ],
+
+  "total": 100,export class UsersController {
+
+  "page": 1,
+
+  "limit": 20  constructor(@Inject('USER_SERVICE') private client: ClientProxy) {}|---------|-------------|- ✅ INNER JOIN for required fields (`is_nullable = false`)
+
+}
+
+```  
+
+
+
+### Filter Examples  @Get()| **Monthly Breakdown** | jan, feb, ..., dec columns |- ✅ LEFT JOIN for optional fields (`is_nullable = true`)
+
+
+
+```bash  async findAll(@Query() filters: UserFilterDto) {
+
+# Pagination
+
+GET /users?page=1&limit=20&sort=created_at:DESC    return firstValueFrom(this.client.send('users.findAll', filters));| **Grouping** | Single: `?group_by=dept`<br>Dual: `?group_by=dept,role` |- ✅ Multiple JOINs to same table with unique aliases
+
+
+
+# Filters  }
+
+GET /users/filter?department_eq=Engineering
+
+GET /users/filter?is_active_eq=true&role_in=admin,manager}| **Year Range** | 2000-2100 validation |- ✅ Soft delete filtering in JOINs
+
+GET /users/filter?created_at_gte=2024-01-01&created_at_lte=2024-12-31
+
+GET /users/filter?name_like=John%&page=2&limit=50```
+
+
+
+# Recap| **Filtering** | Combined dengan filter operators |- ✅ SELECT column generation from referenced tables
+
+GET /users/recap?year=2024&group_by=department
+
+GET /users/recap?year=2024&group_by=department,role&is_active_eq=true**Service Example**:
+
+```
+
+```typescript- ✅ Display column configuration
+
+### Example Generated Code
+
+@Controller()
+
+**Controller**:
+
+export class UsersController {**Endpoint**: `GET /recap?year=2024&group_by=department`
+
+```typescript
+
+@ApiTags('users')  @MessagePattern('users.findAll')
+
+@Controller('users')
+
+export class UsersController {  async findAll(@Payload() filters: UserFilterDto) {**Generated Code Example:**
+
+  @ApiOperation({ summary: 'Get all users with pagination' })
+
+  @RequirePermission('users.read')    return this.service.findAll(filters);
+
+  @Get()
+
+  async findAll(  }---
+
+    @Query('page') page?: number,
+
+    @Query('limit') limit?: number,}
+
+    @Query('sort') sort?: string,
+
+  ): Promise<{ data: User[]; total: number; page: number; limit: number }> {``````typescript
+
+    const sortOptions = sort ? sort.split(',').map(s => {
+
+      const [field, order] = s.split(':');
+
+      return { field, order: order?.toUpperCase() as 'ASC' | 'DESC' || 'ASC' };
+
+    }) : undefined;---## 🚀 Enterprise Features// Automatic JOIN detection
+
+    
+
+    return this.service.findWithFilters({}, {
+
+      page: page ? Number(page) : undefined,
+
+      limit: limit ? Number(limit) : undefined,## 🔐 Security & Validationconst { joins, selectColumns } = joinGenerator.generateJoins(columns, 't');
+
+      sort: sortOptions,
+
+    });
+
+  }
+
+}### 14. Input Validation### 7. Audit Trail
+
+```
+
+
+
+**Repository**:
+
+| Feature | Description |// Generated JOIN
+
+```typescript
+
+async findWithFilters(|---------|-------------|
+
+  filter: UserFilterDto,
+
+  options?: { | **class-validator** | All DTOs with decorators || Feature | Description |INNER JOIN "master"."departments" AS "departments_alias"
+
+    page?: number; 
+
+    limit?: number; | **class-transformer** | `@Type()` for query params |
+
+    sort?: Array<{field: string; order: 'ASC'|'DESC'}> 
+
+  }| **Whitelist** | Strip unknown properties ||---------|-------------|  ON "t"."department_id" = "departments_alias"."id"
+
+): Promise<{ data: User[]; total: number }> {
+
+  // Skip pagination fields from filter| **Custom** | `@IsSafeString()`, `@IsStrongPassword()` |
+
+  const paginationFields = ['page', 'limit', 'sort'];
+
+  const conditions: string[] = [];| **Auto-logging** | CREATE, UPDATE, DELETE operations |  AND "departments_alias"."deleted_at" IS NULL
+
+  const values: any[] = [];
+
+  let paramIndex = 1;**Example**:
+
+
+
+  Object.entries(filter).forEach(([key, value]) => {```typescript| **Change Tracking** | `old_values` → `new_values` dengan diff |
+
+    if (value !== undefined && value !== null && !paginationFields.includes(key)) {
+
+      conditions.push(`${key} = $${paramIndex}`);export class CreateUserDto {
+
+      values.push(value);
+
+      paramIndex++;  @IsSafeString()| **User Context** | User ID dari JWT/context |LEFT JOIN "master"."roles" AS "roles_alias"
+
+    }
+
+  });  @MaxLength(50)
+
+
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';  username: string;| **Rollback** | Restore dari audit log |  ON "t"."role_id" = "roles_alias"."id"
+
+
+
+  // COUNT query  
+
+  const countQuery = `SELECT COUNT(*) as total FROM users ${whereClause}`;
+
+  const countResult = await this.pool.query(countQuery, values);  @IsStrongPassword()| **Query** | By entity, user, action, date range |  AND "roles_alias"."deleted_at" IS NULL
+
+  const total = parseInt(countResult.rows[0].total, 10);
+
+  password: string;
+
+  // Paginated query with LIMIT/OFFSET
+
+  const page = options?.page || 1;}| **Export** | JSON/CSV format |
+
+  const limit = Math.min(options?.limit || 20, 100);
+
+  const offset = (page - 1) * limit;```
+
+
+
+  const orderBy = options?.sort| **Retention** | 90 days default, archiving |// Selected columns
+
+    ?.map(s => `${s.field} ${s.order}`)
+
+    .join(', ') || 'created_at DESC';### 15. SQL Injection Prevention
+
+
+
+  const dataQuery = `"departments_alias"."name" AS "departments_name",
+
+    SELECT * FROM users 
+
+    ${whereClause}| Feature | Description |
+
+    ORDER BY ${orderBy}
+
+    LIMIT $${paramIndex} OFFSET $${paramIndex + 1}|---------|-------------|**Files**: `audit-log.service.ts` (460 lines), `audit-query.service.ts` (280 lines)"departments_alias"."code" AS "departments_code",
+
+  `;
+
+  | **Parameterized** | All queries use `$1`, `$2`, `$3` |
+
+  const dataResult = await this.pool.query(dataQuery, [...values, limit, offset]);
+
+  | **Validation** | `SecurityValidator` for identifiers |"roles_alias"."name" AS "roles_name"
+
+  return { data: dataResult.rows, total };
+
+}| **Whitelist** | Only known columns in filter/sort |
+
+```
+
+| **No Concat** | Never build SQL with string concat |**Decorator**:```
+
+---
+
+
+
+## 📖 Documentation Links
+
+**SecurityValidator**:```typescript
+
+- **Quickstart**: `QUICKSTART.md` - 5-minute tutorial
+
+- **Best Practices**: `BEST_PRACTICES.md` - Recommended patterns```typescript
+
+- **Enterprise Quality**: `ENTERPRISE_QUALITY.md` - Production guidelines
+
+- **Audit Trail**: `audit/AUDIT_GUIDE.md` - Audit implementationimport { SecurityValidator } from '@ojiepermana/nest-generator';@AuditLog({ ---
+
+- **RBAC**: `rbac/RBAC_GUIDE.md` - RBAC setup
+
+- **Database**: `RECOMMENDED_SCHEMAS.md` - Metadata schemas
+
+
+
+---// Validate identifier with whitelist  action: 'UPDATE',
+
+
+
+## 🔄 Migration & Updatesconst field = SecurityValidator.validateIdentifier(
+
+
+
+### From v1.0.x to v1.1.x  userInput,   entityType: 'users',### 3. ✅ **Microservices Differentiation** (Priority 1)
+
+
+
+**Breaking Changes**: None  ['username', 'email', 'age'], 
+
+
+
+**New Features**:  'sort field'  entityIdParam: 'id'
+
+
+
+- ✅ Pagination in all list endpoints);
+
+- ✅ FilterDTO auto-include pagination fields
+
+- ✅ RBAC auto-registration})**Files Created:**
+
+- ✅ Swagger auto-configuration
+
+// Validate pagination
+
+**Migration Steps**:
+
+const { page, limit } = SecurityValidator.validatePagination(````
+
+1. Update package: `npm install @ojiepermana/nest-generator@latest`
+
+2. Rebuild generator: `npm run build:generator`  req.query.page, 
+
+3. Regenerate modules: `nest-generator generate [schema].[table] --all`
+
+4. Test endpoints with pagination parameters  req.query.limit- `libs/generator/src/generators/controller/gateway-controller.generator.ts`
+
+
+
+---);
+
+
+
+## 📞 Support & Resources```### 8. RBAC (Role-Based Access Control)- `libs/generator/src/generators/controller/service-controller.generator.ts`
+
+
+
+- **GitHub**: [ojiepermana/nest](https://github.com/ojiepermana/nest)
+
+- **NPM**: [@ojiepermana/nest-generator](https://www.npmjs.com/package/@ojiepermana/nest-generator)
+
+- **Issues**: [GitHub Issues](https://github.com/ojiepermana/nest/issues)---| Feature | Description |**Gateway Controller Features:**
+
+- **License**: MIT
+
+
+
+---
 
 ## 📚 Documentation & Tools|---------|-------------|
 
+**Generated by**: @ojiepermana/nest-generator v1.1.2  
 
+**Maintained**: Active development  
+
+**Contributors**: Welcome! 🚀
 
 ### 16. Export Features| **Decorators** | `@RequirePermission('users.read')` |- ✅ REST API endpoints
 

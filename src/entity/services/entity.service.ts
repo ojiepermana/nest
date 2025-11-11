@@ -1,18 +1,22 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { EntityRepository } from '../repositories/entity.repository';
 import { Entity } from '../entities/entity.entity';
 import { CreateEntityDto } from '../dto/create-entity.dto';
 import { UpdateEntityDto } from '../dto/update-entity.dto';
 import { EntityFilterDto } from '../dto/entity-filter.dto';
-import { AuditLogService } from '@ojiepermana/nest-generator/audit';
+// import { AuditLogService } from '@ojiepermana/nest-generator/audit';
 
 @Injectable()
 export class EntityService {
   constructor(
     private readonly repository: EntityRepository,
-    private readonly auditLogService: AuditLogService,
+    // private readonly auditLogService: AuditLogService,
   ) {}
-
 
   /**
    * Create a new entity
@@ -22,15 +26,15 @@ export class EntityService {
     await this.validateUniqueConstraints(createDto);
 
     const entity = await this.repository.create(createDto);
-    
+
     // Log audit
-    await this.auditLogService.log({
-      entity: 'Entity',
-      entityId: entity.id,
-      action: 'CREATE',
-      data: createDto,
-    });
-    
+    // await this.auditLogService.log({
+    //   entity: 'Entity',
+    //   entityId: entity.id,
+    //   action: 'CREATE',
+    //   data: createDto,
+    // });
+
     return entity;
   }
 
@@ -46,7 +50,7 @@ export class EntityService {
    */
   async findOne(id: string): Promise<Entity> {
     const entity = await this.repository.findOne(id);
-    
+
     return entity;
   }
 
@@ -56,20 +60,20 @@ export class EntityService {
   async update(id: string, updateDto: UpdateEntityDto): Promise<Entity> {
     // Validate exists
     await this.findOne(id);
-    
+
     // Validate unique constraints
     await this.validateUniqueConstraints(updateDto, id);
 
     const entity = await this.repository.update(id, updateDto);
-    
+
     // Log audit
-    await this.auditLogService.log({
-      entity: 'Entity',
-      entityId: id,
-      action: 'UPDATE',
-      data: updateDto,
-    });
-    
+    // await this.auditLogService.log({
+    //   entity: 'Entity',
+    //   entityId: id,
+    //   action: 'UPDATE',
+    //   data: updateDto,
+    // });
+
     return entity;
   }
 
@@ -81,36 +85,38 @@ export class EntityService {
     await this.findOne(id);
 
     await this.repository.delete(id);
-    
-    // Log audit
-    await this.auditLogService.log({
-      entity: 'Entity',
-      entityId: id,
-      action: 'DELETE',
-    });
-  }
 
+    // Log audit
+    // await this.auditLogService.log({
+    //   entity: 'Entity',
+    //   entityId: id,
+    //   action: 'DELETE',
+    // });
+  }
 
   /**
    * Find entitys with filters
    */
   async findWithFilters(
     filterDto: EntityFilterDto,
-    options?: { page?: number; limit?: number; sort?: Array<{ field: string; order: 'ASC' | 'DESC' }> },
+    options?: {
+      page?: number;
+      limit?: number;
+      sort?: Array<{ field: string; order: 'ASC' | 'DESC' }>;
+    },
   ): Promise<{ data: Entity[]; total: number; page: number; limit: number }> {
     const data = await this.repository.findWithFilters(filterDto);
     const total = data.length;
-    
+
     const result = {
       data,
       total,
       page: options?.page || 1,
       limit: options?.limit || 10,
     };
-    
+
     return result;
   }
-
 
   /**
    * Count entitys
@@ -134,13 +140,12 @@ export class EntityService {
     excludeId?: string,
   ): Promise<void> {
     // Add custom validation logic here based on unique columns
-    // Example: Check if email already exists
-        if ('id' in data && data.id) {
-      const existing = await this.repository.findOneBy({ id: data.id } as any);
+    // Example: Check if entity already exists by id
+    if ('id' in data && data.id) {
+      const existing = await this.repository.findOne(data.id as string);
       if (existing && (!excludeId || existing.id !== excludeId)) {
         throw new ConflictException('id already exists');
       }
     }
   }
-
 }

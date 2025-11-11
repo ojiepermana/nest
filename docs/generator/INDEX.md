@@ -1,215 +1,68 @@
 # @ojiepermana/nest-generator Documentation
 
-Complete documentation for the NestJS metadata-driven CRUD generator library.
+NestJS metadata-driven CRUD generator with audit, caching, RBAC, and file upload support. Use this index as the navigation hub for every guide inside `docs/generator/`.
 
-## 🚀 Quick Start
+## Start Here
 
-**New to the generator?** Start here:
+- [Quick Start Guide](./QUICKSTART.md) – Generate the first module in five minutes
+- [Requirements](./REQUIREMENTS.md) – Node, npm, database, and tooling checklist
+- [Installation](../../libs/generator/README.md#installation) – Add the generator to a project
 
-- [📖 Quick Start Guide](./QUICKSTART.md) - Get your first module running in 5 minutes
-- [⚡ Installation](../../libs/generator/README.md#installation) - npm install instructions
-- [✅ Requirements](./REQUIREMENTS.md) - System requirements checklist
+## Feature Guides
 
-## 🎯 Quickstart Guides (NEW!)
+- [Features Overview](./FEATURES.md) – Generator capabilities and status matrix
+- [Audit Trail](./audit/AUDIT_GUIDE.md) – Metadata, tables, and query hooks
+- [RBAC Guide](./rbac/RBAC_GUIDE.md) – Role, permission, and decorator usage
+- [File Upload Guide](./FILE_UPLOAD.md) – Storage providers, validation, and generated helpers
+- [Caching Guide](./CACHING.md) – Redis integration and cache invalidation flows
 
-Fast-track guides for specific features:
+## Quick Paths by Goal
 
-- [🔐 RBAC in 10 Minutes](./quickstart/RBAC_QUICKSTART.md) - Role-based access control
-- [� Audit in 5 Minutes](./quickstart/AUDIT_QUICKSTART.md) - Audit trail setup
-- [📤 File Upload in 7 Minutes](./quickstart/UPLOAD_QUICKSTART.md) - Multi-cloud storage
-- [🌐 Microservices in 15 Minutes](./quickstart/MICROSERVICES_QUICKSTART.md) - Distributed architecture
+- Ship CRUD fast → [Quick Start](./QUICKSTART.md)
+- Secure endpoints → [RBAC Guide](./rbac/RBAC_GUIDE.md)
+- Track changes → [Audit Guide](./audit/AUDIT_GUIDE.md)
+- Handle files → [File Upload](./FILE_UPLOAD.md)
+- Improve performance → [Caching](./CACHING.md)
+- Plan architecture → [Features · Architecture Support](./FEATURES.md#architecture-support)
 
-## Most Used Guides
+## Architecture & Data
 
-Quick links to the most popular documentation:
+- [Database Guide](./DATABASE.md) – PostgreSQL and MySQL configuration
+- [Metadata Schemas](./database/SCHEMAS.md) – `meta.*` schema layout
+- [Recommended Schemas](./RECOMMENDED_SCHEMAS.md) – Table patterns that work best
+- [Migration Guide](./MIGRATION.md) – Upgrade steps between releases
 
-- [🔐 RBAC Setup](./rbac/RBAC_GUIDE.md) - Add role-based access control
-- [🔍 Audit Trail](./audit/AUDIT_GUIDE.md) - Track all changes
-- [📤 File Upload](./FILE_UPLOAD.md) - Handle file uploads (S3, GCS, Azure, Local)
-- [💾 Caching](./CACHING.md) - Add Redis caching
-- [🗄️ Database Setup](./DATABASE.md) - PostgreSQL & MySQL configuration
+## Quality, Operations, and Examples
 
-## 🛠️ Essential Guides (NEW!)
+- [Feature Scoring](./FEATURE_SCORING.md) – Compliance scoring vs. prompt specification
+- [Enterprise Quality](./ENTERPRISE_QUALITY.md) – Hardening checklist
+- [Best Practices](./BEST_PRACTICES.md) – Production considerations
+- [Examples](./EXAMPLES.md) – Real-world module scenarios
+- [Troubleshooting](./TROUBLESHOOTING.md) – Common errors and fixes
 
-- [🐛 Troubleshooting](./TROUBLESHOOTING.md) - Common issues and solutions
-- [📦 Migration Guide](./MIGRATION.md) - Upgrade between versions
-- [✨ Best Practices](./BEST_PRACTICES.md) - Production-ready patterns
-- [💡 Real-World Examples](./EXAMPLES.md) - Blog, E-commerce, SaaS, Healthcare, Social Media
+## Quickstart Series
 
-## 📖 By Use Case
+- [RBAC Quickstart](./quickstart/RBAC_QUICKSTART.md)
+- [Audit Quickstart](./quickstart/AUDIT_QUICKSTART.md)
+- [Upload Quickstart](./quickstart/UPLOAD_QUICKSTART.md)
+- [Microservices Quickstart](./quickstart/MICROSERVICES_QUICKSTART.md)
 
-**I want to...**
+## Reference & History
 
-- **Add authentication & authorization** → [RBAC Guide](./rbac/RBAC_GUIDE.md)
-- **Track who changed what and when** → [Audit Trail](./audit/AUDIT_GUIDE.md)
-- **Upload files to cloud storage** → [File Upload Guide](./FILE_UPLOAD.md)
-- **Improve API performance** → [Caching Guide](./CACHING.md)
-- **Build microservices** → [Feature Guide](./FEATURES.md#architecture-support)
-- **Generate my first module** → [Quick Start](./QUICKSTART.md)
-- **Understand all features** → [Feature Scoring](./FEATURE_SCORING.md)
+- Project CLI contract → `libs/generator/src/cli`
+- Generator sources → `libs/generator/src/generators`
+- Archived notes → `docs/generator/archive/`
+- Original specification → [archive/specs/prompt.md](./archive/specs/prompt.md)
 
-## 📚 Feature Documentation
+## Contributing to the Docs
 
-- [**QUICKSTART.md**](QUICKSTART.md) - 5-minute tutorial
-- [**FEATURES.md**](FEATURES.md) - All features status
-- [**FEATURE_SCORING.md**](FEATURE_SCORING.md) - Detailed analysis
-- [**ENTERPRISE_QUALITY.md**](ENTERPRISE_QUALITY.md) - ⭐ Enterprise-level best practices
-- [**RECOMMENDED_SCHEMAS.md**](RECOMMENDED_SCHEMAS.md) - ⭐ Pre-designed database schemas
-- [**API.md**](API.md) - API reference
-- [**TROUBLESHOOTING.md**](TROUBLESHOOTING.md) - Common issues
+1. Place new `.md` files inside the appropriate subdirectory (`docs/generator/...`).
+2. Add a link in this index and cross-link related guides.
+3. Keep instructions aligned with current generator behavior (check `libs/generator/src`).
+4. Document new features and update the feature matrix after shipping changes.
 
-### Feature Guides
+## Support & Links
 
-#### Core Features
-
-- [CRUD Operations](./FEATURES.md#core-crud) - Create, Read, Update, Delete
-- [Advanced Queries](./FEATURES.md#advanced-queries) - JOINs, CTEs, Aggregations
-- [Validation](./FEATURES.md#validation--security) - Input validation with class-validator
-- [Swagger/OpenAPI](./FEATURES.md#swagger-documentation) - Auto-generated API docs
-
-#### Advanced Features
-
-- [**RBAC System**](./rbac/RBAC_GUIDE.md) - Complete role-based access control (1432 lines)
-- [**Audit Trail**](./audit/AUDIT_GUIDE.md) - Change tracking with rollback
-- [**File Upload**](./FILE_UPLOAD.md) - Multi-provider file storage
-  - Local Filesystem
-  - AWS S3
-  - Google Cloud Storage
-  - Azure Blob Storage
-- [**Caching**](./CACHING.md) - Redis integration with smart invalidation
-- [**Export**](./FEATURES.md#export) - CSV/Excel data export
-
-### Database & Architecture
-
-- [Database Compatibility](./DATABASE.md) - PostgreSQL 18+ and MySQL 8+ support
-- [Database Schemas](./database/SCHEMAS.md) - Metadata schema structure
-- [Architecture Patterns](./FEATURES.md#architecture-support) - Standalone, Monorepo, Microservices
-
-## 🎯 Feature Overview
-
-### Core Features (100% Complete)
-
-- ✅ **CRUD Operations** - Full Create, Read, Update, Delete
-- ✅ **Advanced Queries** - JOINs, CTEs, Aggregations, Recaps
-- ✅ **Validation** - class-validator integration
-- ✅ **Security** - SQL injection prevention, input sanitization
-- ✅ **Swagger** - Auto-generated API documentation
-
-### Advanced Features (100% Complete)
-
-- ✅ **Audit Trail** - Change tracking with old/new values
-- ✅ **File Upload** - 4 storage providers (Local, S3, GCS, Azure)
-- ✅ **Caching** - Redis with smart invalidation
-- ✅ **Export** - CSV/Excel streaming
-- ✅ **RBAC** - Complete role and permission system
-
-### Architecture Support
-
-- ✅ **Standalone** - Single application
-- ✅ **Monorepo** - Multiple apps with shared modules
-- ✅ **Microservices** - Event-driven distributed systems
-
-## 📖 Quick Navigation
-
-### By Task
-
-**Setting Up:**
-
-1. [System Requirements](./REQUIREMENTS.md)
-2. [Database Setup](./database/SCHEMAS.md)
-3. [Main README - Installation](../../libs/generator/README.md#installation)
-
-**Implementing Features:**
-
-1. [Audit Trail](./audit/AUDIT_GUIDE.md)
-2. [RBAC System](./rbac/RBAC_GUIDE.md)
-3. [File Upload](./FILE_UPLOAD.md)
-4. [Caching](./CACHING.md)
-
-**Understanding Architecture:**
-
-1. [Original Spec](./archive/specs/prompt.md)
-2. [Database Compatibility](./DATABASE.md)
-3. [Features](./FEATURES.md)
-
-## 🔧 Development & Reference
-
-### Documentation Structure
-
-```
-docs/generator/
-├── INDEX.md                       (this file - navigation hub)
-├── QUICKSTART.md                  (5-minute getting started)
-├── REQUIREMENTS.md                (system requirements)
-├── DATABASE.md                    (database setup guide)
-├── FEATURES.md                    (complete feature status)
-├── FEATURE_SCORING.md             (detailed feature analysis 119/100)
-├── CACHING.md                     (Redis caching guide)
-├── FILE_UPLOAD.md                 (file upload multi-cloud)
-├── TROUBLESHOOTING.md             (common issues & fixes)
-├── MIGRATION.md                   (version upgrade guide)
-├── BEST_PRACTICES.md              (production tips)
-├── EXAMPLES.md                    (real-world use cases)
-├── REORGANIZATION_PLAN.md         (documentation cleanup plan)
-│
-├── quickstart/                    (Fast-track guides)
-│   ├── RBAC_QUICKSTART.md         (10 minutes)
-│   ├── AUDIT_QUICKSTART.md        (5 minutes)
-│   ├── UPLOAD_QUICKSTART.md       (7 minutes)
-│   └── MICROSERVICES_QUICKSTART.md (15 minutes)
-│
-├── audit/
-│   └── AUDIT_GUIDE.md             (comprehensive guide)
-│
-├── database/
-│   └── SCHEMAS.md                 (metadata structure)
-│
-├── rbac/
-│   ├── RBAC_GUIDE.md              (comprehensive RBAC)
-│   ├── RBAC_EXAMPLES.md           (real-world examples)
-│   └── IMPLEMENTATION_STATUS.md   (technical status)
-│
-└── archive/                       (historical docs)
-    ├── AUDIT_CLI.md               (archived - merged into AUDIT_GUIDE.md)
-    ├── AUDIT_IMPLEMENTATION_SUMMARY.md (archived)
-    ├── DOCUMENTATION_ANALYSIS.md  (archived)
-    ├── DEEP_ANALYSIS_SCORE_OLD.md
-    ├── PROGRESS_HISTORY.md
-    ├── AUDIT_CLI_INTEGRATION_COMPLETE.md
-    └── specs/
-        └── prompt.md              (original specification)
-```
-
-### Contributing to Documentation
-
-When adding new documentation:
-
-1. Follow the established structure
-2. Add entry to this INDEX.md
-3. Include code examples
-4. Add cross-references to related docs
-5. Update FEATURE_STATUS.md if applicable
-
-### Finding What You Need
-
-- **Just getting started?** → [Quick Start](./QUICKSTART.md)
-- **Need a specific feature?** → Check [By Use Case](#-by-use-case) above
-- **Want to see all features?** → [Features](./FEATURES.md)
-- **Looking for API reference?** → [Main README](../../libs/generator/README.md)
-
-## 📊 Statistics
-
-- **Total Documentation Files**: 13 main docs (3 moved to archive)
-- **Total Lines of Documentation**: ~33,500+ (reduced redundancy)
-- **Feature Coverage**: 119/100 (exceeds target by 19%!)
-- **Test Coverage**: 99% (579/585 tests passing)
-
-## 🆘 Support
-
-- **Issues**: [GitHub Issues](https://github.com/ojiepermana/nest/issues)
-- **Repository**: [GitHub](https://github.com/ojiepermana/nest)
-- **Package**: [npm](https://www.npmjs.com/package/@ojiepermana/nest-generator)
-
-## 📄 License
-
-MIT © Ojie Permana
+- [Open issues](https://github.com/ojiepermana/nest/issues)
+- [Package](https://www.npmjs.com/package/@ojiepermana/nest-generator)
+- License: MIT © Ojie Permana

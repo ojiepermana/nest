@@ -11,16 +11,16 @@ Get up and running with `@ojiepermana/nest-generator` in minutes.
 
 ## Install the Generator
 
-Install globally (recommended for CLI usage):
-
-```bash
-npm install -g @ojiepermana/nest-generator
-```
-
-Alternatively, add it as a dev dependency and run with `npx`:
+**⚠️ Install as dev dependency:**
 
 ```bash
 npm install --save-dev @ojiepermana/nest-generator
+```
+
+Or install globally for CLI usage:
+
+```bash
+npm install -g @ojiepermana/nest-generator
 ```
 
 ## Step-by-Step

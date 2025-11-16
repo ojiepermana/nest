@@ -42,10 +42,10 @@ NestJS metadata-driven CRUD generator with audit, caching, RBAC, and file upload
 
 ## Quickstart Series
 
-- [RBAC Quickstart](./quickstart/RBAC_QUICKSTART.md)
-- [Audit Quickstart](./quickstart/AUDIT_QUICKSTART.md)
-- [Upload Quickstart](./quickstart/UPLOAD_QUICKSTART.md)
-- [Microservices Quickstart](./quickstart/MICROSERVICES_QUICKSTART.md)
+- [RBAC Quickstart](./quickstart/RBAC_QUICKSTART.md) – Role-based access control in 10 minutes
+- [Audit Quickstart](./quickstart/AUDIT_QUICKSTART.md) – Track all changes automatically
+- [Upload Quickstart](./quickstart/UPLOAD_QUICKSTART.md) – File uploads with S3/GCS/Azure
+- [Microservices Quickstart](./quickstart/MICROSERVICES_QUICKSTART.md) – Gateway + Services architecture ✨ NEW!
 
 ## Reference & History
 

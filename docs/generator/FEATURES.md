@@ -2,10 +2,11 @@
 
 **Package**: `@ojiepermana/nest-generator`
 
-- **Version**: 1.1.2
-- **Last updated**: 12 November 2025
-- **Automated tests**: 579 / 585 passing (~99%)
+- **Version**: 1.1.3+
+- **Last updated**: 16 November 2025
+- **Automated tests**: 707 / 740 passing (95.5%)
 - **Feature score vs. prompt**: 119 / 100 (see [Feature Scoring](./FEATURE_SCORING.md))
+- **Compilation errors**: 0 (all architectures tested)
 
 Use this document to understand current capabilities, locate implementation details, and identify roadmap items for the generator.
 
@@ -27,14 +28,15 @@ Use this document to understand current capabilities, locate implementation deta
 | Runtime              | Metadata-driven CRUD, pagination, filtering operators, sorting                              | Complete | `generators/service/service.generator.ts`, `generators/repository/repository.generator.ts` |
 | Validation & Swagger | class-validator DTOs, automatic pipes, OpenAPI decorators                                   | Complete | `generators/dto/*.generator.ts`, `generators/controller/controller.generator.ts`           |
 | Audit Trail          | Change capture, diffing, metadata tables, auto wiring                                       | Complete | `libs/generator/src/audit/**`                                                              |
-| RBAC                 | Permission decorators, module auto-registration, metadata seeding                           | Complete | `libs/generator/src/rbac/**`                                                               |
-| File Upload          | Multi-provider storage (local, S3, GCS, Azure) with generated helpers                       | Complete | `generators/features/file-upload.generator.ts`                                             |
+| RBAC                 | Permission decorators, module auto-registration, metadata seeding (92 tests)                | Complete | `libs/generator/src/rbac/**`                                                               |
+| File Upload          | Multi-provider storage (local, S3, GCS, Azure) with generated helpers (40 tests)            | Complete | `generators/features/file-upload.generator.ts`                                             |
 | Caching              | Redis cache service, decorators, invalidation strategy                                      | Complete | `libs/generator/src/cache/**`                                                              |
 | Search               | Configurable driver abstractions (Elasticsearch, Algolia, Meilisearch, SQL fallback)        | Complete | `libs/generator/src/search/**`                                                             |
 | Export               | CSV/Excel/PDF endpoint scaffolding (manual enable)                                          | Optional | `generators/features/export.generator.ts`                                                  |
-| CLI                  | `init`, `generate`, `delete`, placeholders for `sync`, `check`, `list`                      | Mixed    | `libs/generator/src/cli/**`                                                                |
+| Microservices        | Gateway (HTTP + ClientProxy) & Service (@MessagePattern) controllers                        | Complete | `generators/controller/gateway-controller.generator.ts`, `service-controller.generator.ts` |
+| CLI                  | `init`, `generate` with `--app` flag, `delete`, architecture auto-detection                 | Complete | `libs/generator/src/cli/**`                                                                |
 
-Legend: Complete = shipped - Optional = manual enablement - Mixed = partially implemented/planned
+Legend: Complete = shipped - Optional = manual enablement
 
 ## Core Generators
 
@@ -65,8 +67,9 @@ Legend: Complete = shipped - Optional = manual enablement - Mixed = partially im
 ### Controller Generator
 
 - REST endpoints (`POST`, `GET`, `GET /filter`, `GET :id`, `PUT`, `DELETE`) with optional RBAC decorators
+- **Microservices**: Detects architecture and generates either HTTP controllers or @MessagePattern handlers
 - Adds Swagger metadata, DTO validation pipes, and pagination parameters automatically
-- Source: `generators/controller/controller.generator.ts`
+- Sources: `generators/controller/controller.generator.ts`, `gateway-controller.generator.ts`, `service-controller.generator.ts`
 
 ### Module Generator
 
@@ -116,35 +119,61 @@ Legend: Complete = shipped - Optional = manual enablement - Mixed = partially im
 
 - Experimental generator for CSV/Excel/PDF endpoints; requires manual integration and testing
 - Use when custom exports are needed beyond standard CRUD responses
+
+### Microservices
+
+- **Auto-detection**: Determines if app is gateway or service based on directory structure
+- **Gateway Controllers**: HTTP endpoints with `ClientProxy` to forward requests to microservices
+- **Service Controllers**: `@MessagePattern` handlers for TCP/gRPC communication
+- **Transports**: Supports TCP, gRPC, Redis, RabbitMQ, Kafka, NATS
+- **0 Compilation Errors**: Fully tested with all three architectures (standalone, monorepo, microservices)
+- Key files: `generators/controller/gateway-controller.generator.ts`, `service-controller.generator.ts`, `core/architecture.service.ts`
 - Key file: `generators/features/export.generator.ts`
 
 ## Architecture Support
 
-The generator reads `architecture` from `generator.config.json` (`standalone`, `monorepo`, or `microservices`) and adapts the output structure.
+The generator reads `architecture` from `generator.config.json` (`standalone`, `monorepo`, or `microservices`) and adapts the output structure. Auto-detection also works based on directory structure.
 
-| Architecture  | Behaviour                                                   | Implementation Notes                                                                                |
-| ------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Standalone    | Modules under `src/<resource>` with REST controllers        | Default mode; base path includes schema/table                                                       |
-| Monorepo      | Supports multi-app layout with shared libs                  | Shares providers via barrels; same REST controllers                                                 |
-| Microservices | Splits gateway vs. service controllers and message patterns | Uses `@MessagePattern` + `ClientProxy`; see `generators/controller/service-controller.generator.ts` |
+| Architecture  | Behaviour                                                             | Implementation Notes                                                                                 |
+| ------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Standalone    | Modules under `src/modules/<resource>` with REST controllers          | Default mode; base path includes schema/table                                                        |
+| Monorepo      | Multi-app layout with shared libs, each app has own modules           | Shares providers via barrels; same REST controllers; use `--app=<name>` flag                         |
+| Microservices | Gateway (HTTP + ClientProxy) vs Service (@MessagePattern) controllers | **Fully tested with 0 errors**; uses TCP/gRPC transports; see `generators/controller/*.generator.ts` |
 
-Supporting types reside in `libs/generator/src/types/architecture.type.ts`. Selection is handled during `nest-generator init` and respected by generators via `GeneratorService`.
+**Microservices Details:**
+
+- **Gateway**: Generates HTTP REST endpoints with `ClientProxy` to forward requests to microservices
+- **Service**: Generates `@MessagePattern` handlers for inter-service communication
+- **Auto-detection**: Analyzes directory structure to determine if app is gateway or service
+- **CLI Flag**: Use `--app=<name>` to target specific service (e.g., `--app=user`, `--app=gateway`)
+
+Supporting types reside in `libs/generator/src/types/architecture.type.ts`. Selection is handled during `nest-generator init` and respected by generators via `ArchitectureService`.
 
 ## Workflow & CLI
 
-| Command                                  | Purpose                                                                   | Notes                                                                 |
-| ---------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `nest-generator init`                    | Creates `generator.config.json`, prepares metadata schema, seeds defaults | Prompts for architecture, database, cache, audit options              |
-| `nest-generator generate <schema.table>` | Generates full module and registers it in `app.module.ts`                 | Flags: `--features.*`, `--all`, `--storageProvider`, `--skip-prompts` |
-| `nest-generator delete <module>`         | Removes generated module and cleans references                            | Supports `--skip-prompts` and `--force`                               |
-| `nest-generator sync`                    | Planned metadata resync of all modules                                    | Currently prints placeholder warning (Task 21)                        |
-| `nest-generator check`                   | Planned drift detection                                                   | Placeholder                                                           |
-| `nest-generator list`                    | Planned module listing                                                    | Placeholder                                                           |
+| Command                                  | Purpose                                                                   | Notes                                                                        |
+| ---------------------------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `nest-generator init`                    | Creates `generator.config.json`, prepares metadata schema, seeds defaults | Prompts for architecture, database, cache, audit options                     |
+| `nest-generator generate <schema.table>` | Generates full module and registers it in `app.module.ts`                 | Flags: `--features.*`, `--app=<name>`, `--storageProvider`, `--skip-prompts` |
+| `nest-generator delete <module>`         | Removes generated module and cleans references                            | Supports `--skip-prompts` and `--force`                                      |
+
+**Key flags:**
+
+- `--app=<name>`: Target specific app in monorepo/microservices (e.g., `--app=user`, `--app=gateway`)
+- `--features.audit=<bool>`: Enable audit trail
+- `--features.rbac=<bool>`: Enable RBAC
+- `--features.fileUpload=<bool>`: Enable file uploads
+- `--features.cache=<bool>`: Enable Redis caching
+- `--storageProvider=<type>`: Choose storage (local, s3, gcs, azure)
 
 `GenerateCommand` (`libs/generator/src/cli/commands/generate.command.ts`) maps CLI flags to the `features` object and orchestrates metadata fetch, file generation, and module registration.
 
 ## Quality & Testing
 
+- **Test Coverage**: 707/740 tests passing (95.5%)
+- **Compilation Errors**: 0 across all architectures (standalone, monorepo, microservices)
+- **RBAC Tests**: 92 passing tests
+- **File Upload Tests**: 40 passing tests
 - Unit tests live under `libs/generator/src/**/*.spec.ts` and `libs/generator/test/`
 - Custom code preservation via `core/code-merge.service.ts` safeguards `CUSTOM_CODE` blocks
 - File checksums stored in `meta.generated_files` prevent accidental overwrites

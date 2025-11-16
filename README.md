@@ -129,6 +129,235 @@ export class UsersController {
 }
 ```
 
+## 🏗️ Architecture-Specific Usage
+
+The generator supports three architecture patterns. Each has different setup and usage patterns:
+
+### 1️⃣ Standalone Architecture
+
+**Best for:** Single application, simple projects, MVPs
+
+**Setup:**
+
+```bash
+# Navigate to standalone app
+cd apps/standalone
+
+# Initialize generator (creates generator.config.json)
+npx @ojiepermana/nest-generator init --architecture=standalone
+
+# Generate module
+npx @ojiepermana/nest-generator generate users.profile
+```
+
+**Directory structure:**
+
+```
+apps/standalone/
+├── src/
+│   ├── modules/
+│   │   └── users-profile/        # Generated module
+│   │       ├── users-profile.dto.ts
+│   │       ├── users-profile.repository.ts
+│   │       ├── users-profile.service.ts
+│   │       ├── users-profile.controller.ts
+│   │       └── users-profile.module.ts
+│   ├── database/                 # Shared database module
+│   ├── rbac/                     # RBAC system (if enabled)
+│   └── app.module.ts
+└── generator.config.json
+```
+
+**Import generated module:**
+
+```typescript
+// apps/standalone/src/app.module.ts
+import { Module } from '@nestjs/common';
+import { UsersProfileModule } from './modules/users-profile/users-profile.module';
+
+@Module({
+  imports: [UsersProfileModule],
+})
+export class AppModule {}
+```
+
+### 2️⃣ Monorepo Architecture
+
+**Best for:** Multiple apps sharing common modules, team collaboration
+
+**Setup:**
+
+```bash
+# Navigate to monorepo app (e.g., user service)
+cd apps/monorepo/user
+
+# Initialize generator
+npx @ojiepermana/nest-generator init --architecture=monorepo
+
+# Generate module
+npx @ojiepermana/nest-generator generate users.profile
+```
+
+**Directory structure:**
+
+```
+apps/monorepo/
+├── user/
+│   ├── src/
+│   │   ├── modules/
+│   │   │   └── users-profile/    # Generated module
+│   │   └── user.module.ts
+│   └── generator.config.json
+├── order/
+│   ├── src/
+│   │   ├── modules/
+│   │   │   └── orders/           # Generated module
+│   │   └── order.module.ts
+│   └── generator.config.json
+└── libs/                         # Shared libraries (optional)
+    ├── database/
+    └── rbac/
+```
+
+**Shared modules setup:**
+
+```bash
+# Create shared database module (run once)
+cd apps/monorepo/user
+nest generate module database
+nest generate service database
+
+# Both apps can now import from libs or duplicate minimal config
+```
+
+**Import in each app:**
+
+```typescript
+// apps/monorepo/user/src/user.module.ts
+import { Module } from '@nestjs/common';
+import { UsersProfileModule } from './modules/users-profile/users-profile.module';
+
+@Module({
+  imports: [UsersProfileModule],
+})
+export class UserModule {}
+```
+
+### 3️⃣ Microservices Architecture
+
+**Best for:** Distributed systems, scalability, independent deployments
+
+**Setup:**
+
+```bash
+# Navigate to specific microservice
+cd apps/microservices/user
+
+# Initialize generator
+npx @ojiepermana/nest-generator init --architecture=microservices
+
+# Generate module
+npx @ojiepermana/nest-generator generate users.profile
+```
+
+**Directory structure:**
+
+```
+apps/microservices/
+├── gateway/                      # API Gateway
+│   ├── src/
+│   │   ├── controllers/
+│   │   │   └── users-profile.controller.ts  # HTTP endpoints
+│   │   └── gateway.module.ts
+│   └── generator.config.json
+├── user/                         # User Microservice
+│   ├── src/
+│   │   ├── modules/
+│   │   │   └── users-profile/    # Generated module
+│   │   └── main.ts
+│   └── generator.config.json
+└── order/                        # Order Microservice
+    ├── src/
+    │   ├── modules/
+    │   │   └── orders/
+    │   └── main.ts
+    └── generator.config.json
+```
+
+**Gateway setup (HTTP → gRPC/TCP):**
+
+```typescript
+// apps/microservices/gateway/src/gateway.module.ts
+import { Module } from '@nestjs/common';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+
+@Module({
+  imports: [
+    ClientsModule.register([
+      {
+        name: 'USER_SERVICE',
+        transport: Transport.TCP,
+        options: { host: 'localhost', port: 3001 },
+      },
+    ]),
+  ],
+})
+export class GatewayModule {}
+```
+
+**Microservice setup:**
+
+```typescript
+// apps/microservices/user/src/main.ts
+import { NestFactory } from '@nestjs/core';
+import { Transport, MicroserviceOptions } from '@nestjs/microservices';
+import { UserServiceModule } from './user-service.module';
+
+async function bootstrap() {
+  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
+    UserServiceModule,
+    {
+      transport: Transport.TCP,
+      options: { host: 'localhost', port: 3001 },
+    },
+  );
+  await app.listen();
+}
+bootstrap();
+```
+
+**Generated controller with message patterns:**
+
+```typescript
+// apps/microservices/user/src/modules/users-profile/users-profile.controller.ts
+import { Controller } from '@nestjs/common';
+import { MessagePattern } from '@nestjs/microservices';
+
+@Controller()
+export class UsersProfileController {
+  @MessagePattern({ cmd: 'users.create' })
+  async create(data: CreateUserDto) {
+    return this.service.create(data);
+  }
+
+  @MessagePattern({ cmd: 'users.findAll' })
+  async findAll(filter: UserFilterDto) {
+    return this.service.findAll(filter);
+  }
+}
+```
+
+### Architecture Comparison
+
+| Feature                | Standalone    | Monorepo      | Microservices |
+| ---------------------- | ------------- | ------------- | ------------- |
+| **Setup Complexity**   | ⭐ Simple     | ⭐⭐ Moderate | ⭐⭐⭐ Complex |
+| **Code Sharing**       | ❌ None       | ✅ Shared     | ⚠️ Duplicated |
+| **Scalability**        | ⚠️ Limited    | ⭐⭐ Good     | ⭐⭐⭐ Best   |
+| **Deployment**         | ⭐⭐⭐ Simple | ⭐⭐ Moderate | ⭐ Complex    |
+| **Team Collaboration** | ⚠️ Limited    | ✅ Good       | ✅ Excellent  |
+| **Best For**           | MVPs, Startups | Medium teams  | Enterprise    |
+
 📖 **Documentation:**
 
 - [Complete Documentation Index](./docs/generator/INDEX.md)

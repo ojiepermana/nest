@@ -24,10 +24,12 @@ program
 program
   .command('init')
   .description('Initialize generator configuration and setup database schema')
-  .action(async () => {
+  .option('--architecture <type>', 'Architecture type (standalone, monorepo, microservices)')
+  .option('--skip-prompts', 'Skip interactive prompts (use with --architecture)')
+  .action(async (options: any) => {
     try {
       const initCommand = new InitCommand();
-      await initCommand.execute();
+      await initCommand.execute(options);
     } catch (error) {
       Logger.error('Init command failed', error as Error);
       process.exit(1);

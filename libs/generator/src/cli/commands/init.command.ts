@@ -26,11 +26,11 @@ import type {
 export class InitCommand {
   private config: Partial<GeneratorConfig> = {};
 
-  async execute(): Promise<void> {
+  async execute(options?: { architecture?: string; skipPrompts?: boolean }): Promise<void> {
     Logger.section('🚀 NestJS Generator Initialization');
 
     // Step 1: Architecture Selection
-    await this.promptArchitecture();
+    await this.promptArchitecture(options);
 
     // Step 2: Database Configuration
     await this.promptDatabase();
@@ -56,7 +56,23 @@ export class InitCommand {
     this.showSummary();
   }
 
-  private async promptArchitecture(): Promise<void> {
+  private async promptArchitecture(options?: { architecture?: string; skipPrompts?: boolean }): Promise<void> {
+    // If architecture is provided via CLI flag, use it
+    if (options?.architecture) {
+      const validArchitectures = ['standalone', 'monorepo', 'microservices'];
+      if (!validArchitectures.includes(options.architecture)) {
+        Logger.error(
+          `Invalid architecture type: ${options.architecture}`,
+          new Error(`Must be one of: ${validArchitectures.join(', ')}`),
+        );
+        process.exit(1);
+      }
+      this.config.architecture = options.architecture as ArchitectureType;
+      Logger.success(`Architecture: ${options.architecture} (from CLI flag)`);
+      return;
+    }
+
+    // Otherwise, prompt interactively
     const { architecture } = await inquirer.prompt([
       {
         type: 'list',

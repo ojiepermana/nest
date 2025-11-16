@@ -61,7 +61,7 @@ ${endpoints}
     ];
 
     if (this.options.enableSwagger) {
-      imports.push("import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';");
+      imports.push("import { ApiTags, ApiOperation } from '@nestjs/swagger';");
     }
 
     if (this.options.enableRateLimit) {

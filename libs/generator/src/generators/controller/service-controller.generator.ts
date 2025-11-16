@@ -51,7 +51,7 @@ ${eventPatterns}
   private generateImports(entityName: string, serviceName: string): string {
     const imports = [
       "import { Controller } from '@nestjs/common';",
-      "import { MessagePattern, Payload, EventPattern, Ctx, RmqContext } from '@nestjs/microservices';",
+      "import { MessagePattern, Payload } from '@nestjs/microservices';",
       `import { ${serviceName} } from '../services/${this.toKebabCase(entityName)}.service';`,
       `import { Create${entityName}Dto } from '../dto/${this.toKebabCase(entityName)}/create-${this.toKebabCase(entityName)}.dto';`,
       `import { Update${entityName}Dto } from '../dto/${this.toKebabCase(entityName)}/update-${this.toKebabCase(entityName)}.dto';`,

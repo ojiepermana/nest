@@ -1282,13 +1282,29 @@ export * from './controllers/${moduleName}.controller';
         return;
       }
 
-      // Add Swagger imports
-      const lastImportMatch = mainContent.match(/import.*from.*['"];?\n(?!import)/);
-      if (lastImportMatch && lastImportMatch.index !== undefined) {
-        const insertPos = lastImportMatch.index + lastImportMatch[0].length;
-        const swaggerImports = `import { ValidationPipe } from '@nestjs/common';\nimport { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';\n`;
-        mainContent =
-          mainContent.slice(0, insertPos) + swaggerImports + mainContent.slice(insertPos);
+      // Add Swagger imports (check if not already present)
+      if (!mainContent.includes("from '@nestjs/swagger'")) {
+        const lastImportMatch = mainContent.match(/import.*from.*['"];?\n(?!import)/);
+        if (lastImportMatch && lastImportMatch.index !== undefined) {
+          const insertPos = lastImportMatch.index + lastImportMatch[0].length;
+          const swaggerImports = `import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';\n`;
+          mainContent =
+            mainContent.slice(0, insertPos) + swaggerImports + mainContent.slice(insertPos);
+        }
+      }
+
+      // Add ValidationPipe import if not present
+      if (
+        !mainContent.includes('ValidationPipe') &&
+        !mainContent.includes("from '@nestjs/common'")
+      ) {
+        const lastImportMatch = mainContent.match(/import.*from.*['"];?\n(?!import)/);
+        if (lastImportMatch && lastImportMatch.index !== undefined) {
+          const insertPos = lastImportMatch.index + lastImportMatch[0].length;
+          const validationImport = `import { ValidationPipe } from '@nestjs/common';\n`;
+          mainContent =
+            mainContent.slice(0, insertPos) + validationImport + mainContent.slice(insertPos);
+        }
       }
 
       // Add Swagger configuration before app.listen()

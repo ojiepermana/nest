@@ -1,6 +1,6 @@
 {
   "name": "@ojiepermana/nest-generator",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "NestJS Code Generator Library - Generate CRUD modules from database metadata",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

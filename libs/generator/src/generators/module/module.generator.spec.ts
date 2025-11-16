@@ -326,8 +326,10 @@ describe('ModuleGenerator', () => {
         const result = generator.generate();
 
         // Check ClientsModule import
-        expect(result).toContain("import { ClientsModule, Transport } from '@nestjs/microservices';");
-        
+        expect(result).toContain(
+          "import { ClientsModule, Transport } from '@nestjs/microservices';",
+        );
+
         // Check ClientsModule registration
         expect(result).toContain('ClientsModule.register([');
         expect(result).toContain("name: 'USERS_SERVICE'");
@@ -345,9 +347,9 @@ describe('ModuleGenerator', () => {
         const result = generator.generate();
 
         // Gateway should not import or register service/repository
-        expect(result).not.toContain("import { UsersService } from");
-        expect(result).not.toContain("import { UsersRepository } from");
-        
+        expect(result).not.toContain('import { UsersService } from');
+        expect(result).not.toContain('import { UsersRepository } from');
+
         // Should still have controller
         expect(result).toContain('UsersController');
       });
@@ -397,8 +399,8 @@ describe('ModuleGenerator', () => {
         const result = generator.generate();
 
         // Service apps should have normal module structure
-        expect(result).toContain("import { UsersService } from");
-        expect(result).toContain("import { UsersRepository } from");
+        expect(result).toContain('import { UsersService } from');
+        expect(result).toContain('import { UsersRepository } from');
         expect(result).toContain('UsersController');
       });
 

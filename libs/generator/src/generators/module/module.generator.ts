@@ -92,14 +92,20 @@ ${classDeclaration}
     }
 
     // Service import (not needed for gateway in microservices)
-    if (this.options.includeService !== false && !(this.options.architecture === 'microservices' && this.options.isGateway)) {
+    if (
+      this.options.includeService !== false &&
+      !(this.options.architecture === 'microservices' && this.options.isGateway)
+    ) {
       imports.push(
         `import { ${entityName}Service } from './services/${this.toKebabCase(entityName)}.service';`,
       );
     }
 
     // Repository import (not needed for gateway in microservices)
-    if (this.options.includeRepository !== false && !(this.options.architecture === 'microservices' && this.options.isGateway)) {
+    if (
+      this.options.includeRepository !== false &&
+      !(this.options.architecture === 'microservices' && this.options.isGateway)
+    ) {
       imports.push(
         `import { ${entityName}Repository } from './repositories/${this.toKebabCase(entityName)}.repository';`,
       );
@@ -220,12 +226,18 @@ ${moduleConfig.join(',\n')}
     const providers: string[] = [];
 
     // Service (not needed for gateway in microservices)
-    if (this.options.includeService !== false && !(this.options.architecture === 'microservices' && this.options.isGateway)) {
+    if (
+      this.options.includeService !== false &&
+      !(this.options.architecture === 'microservices' && this.options.isGateway)
+    ) {
       providers.push(`${entityName}Service`);
     }
 
     // Repository (not needed for gateway in microservices)
-    if (this.options.includeRepository !== false && !(this.options.architecture === 'microservices' && this.options.isGateway)) {
+    if (
+      this.options.includeRepository !== false &&
+      !(this.options.architecture === 'microservices' && this.options.isGateway)
+    ) {
       providers.push(`${entityName}Repository`);
     }
 
@@ -244,12 +256,18 @@ ${moduleConfig.join(',\n')}
     const exports: string[] = [];
 
     // Export service for use in other modules (not needed for gateway in microservices)
-    if (this.options.includeService !== false && !(this.options.architecture === 'microservices' && this.options.isGateway)) {
+    if (
+      this.options.includeService !== false &&
+      !(this.options.architecture === 'microservices' && this.options.isGateway)
+    ) {
       exports.push(`${entityName}Service`);
     }
 
     // Export repository for use in other modules (not needed for gateway in microservices)
-    if (this.options.includeRepository !== false && !(this.options.architecture === 'microservices' && this.options.isGateway)) {
+    if (
+      this.options.includeRepository !== false &&
+      !(this.options.architecture === 'microservices' && this.options.isGateway)
+    ) {
       exports.push(`${entityName}Repository`);
     }
 

@@ -1,5 +1,5 @@
 {
-  "architecture": "monorepo",
+  "architecture": "microservices",
   "database": {
     "type": "postgresql",
     "host": "${DB_HOST}",
@@ -24,5 +24,9 @@
     "audit": true,
     "rbac": false,
     "notifications": false
+  },
+  "microservices": {
+    "services": [],
+    "gatewayApp": "apps/microservices/gateway"
   }
 }

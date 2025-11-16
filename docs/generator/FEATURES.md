@@ -21,18 +21,18 @@ Use this document to understand current capabilities, locate implementation deta
 
 ## Feature Matrix
 
-| Category | Capability | Status | Key Implementation |
-|----------|------------|--------|--------------------|
-| Generators | Entity, DTO (create/update/filter), Repository, Service, Controller, Module, barrel exports | Complete | `libs/generator/src/generators/*`
-| Runtime | Metadata-driven CRUD, pagination, filtering operators, sorting | Complete | `generators/service/service.generator.ts`, `generators/repository/repository.generator.ts`
-| Validation & Swagger | class-validator DTOs, automatic pipes, OpenAPI decorators | Complete | `generators/dto/*.generator.ts`, `generators/controller/controller.generator.ts`
-| Audit Trail | Change capture, diffing, metadata tables, auto wiring | Complete | `libs/generator/src/audit/**`
-| RBAC | Permission decorators, module auto-registration, metadata seeding | Complete | `libs/generator/src/rbac/**`
-| File Upload | Multi-provider storage (local, S3, GCS, Azure) with generated helpers | Complete | `generators/features/file-upload.generator.ts`
-| Caching | Redis cache service, decorators, invalidation strategy | Complete | `libs/generator/src/cache/**`
-| Search | Configurable driver abstractions (Elasticsearch, Algolia, Meilisearch, SQL fallback) | Complete | `libs/generator/src/search/**`
-| Export | CSV/Excel/PDF endpoint scaffolding (manual enable) | Optional | `generators/features/export.generator.ts`
-| CLI | `init`, `generate`, `delete`, placeholders for `sync`, `check`, `list` | Mixed | `libs/generator/src/cli/**`
+| Category             | Capability                                                                                  | Status   | Key Implementation                                                                         |
+| -------------------- | ------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------ |
+| Generators           | Entity, DTO (create/update/filter), Repository, Service, Controller, Module, barrel exports | Complete | `libs/generator/src/generators/*`                                                          |
+| Runtime              | Metadata-driven CRUD, pagination, filtering operators, sorting                              | Complete | `generators/service/service.generator.ts`, `generators/repository/repository.generator.ts` |
+| Validation & Swagger | class-validator DTOs, automatic pipes, OpenAPI decorators                                   | Complete | `generators/dto/*.generator.ts`, `generators/controller/controller.generator.ts`           |
+| Audit Trail          | Change capture, diffing, metadata tables, auto wiring                                       | Complete | `libs/generator/src/audit/**`                                                              |
+| RBAC                 | Permission decorators, module auto-registration, metadata seeding                           | Complete | `libs/generator/src/rbac/**`                                                               |
+| File Upload          | Multi-provider storage (local, S3, GCS, Azure) with generated helpers                       | Complete | `generators/features/file-upload.generator.ts`                                             |
+| Caching              | Redis cache service, decorators, invalidation strategy                                      | Complete | `libs/generator/src/cache/**`                                                              |
+| Search               | Configurable driver abstractions (Elasticsearch, Algolia, Meilisearch, SQL fallback)        | Complete | `libs/generator/src/search/**`                                                             |
+| Export               | CSV/Excel/PDF endpoint scaffolding (manual enable)                                          | Optional | `generators/features/export.generator.ts`                                                  |
+| CLI                  | `init`, `generate`, `delete`, placeholders for `sync`, `check`, `list`                      | Mixed    | `libs/generator/src/cli/**`                                                                |
 
 Legend: Complete = shipped - Optional = manual enablement - Mixed = partially implemented/planned
 
@@ -122,24 +122,24 @@ Legend: Complete = shipped - Optional = manual enablement - Mixed = partially im
 
 The generator reads `architecture` from `generator.config.json` (`standalone`, `monorepo`, or `microservices`) and adapts the output structure.
 
-| Architecture | Behaviour | Implementation Notes |
-|--------------|-----------|-----------------------|
-| Standalone | Modules under `src/<resource>` with REST controllers | Default mode; base path includes schema/table
-| Monorepo | Supports multi-app layout with shared libs | Shares providers via barrels; same REST controllers
-| Microservices | Splits gateway vs. service controllers and message patterns | Uses `@MessagePattern` + `ClientProxy`; see `generators/controller/service-controller.generator.ts`
+| Architecture  | Behaviour                                                   | Implementation Notes                                                                                |
+| ------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Standalone    | Modules under `src/<resource>` with REST controllers        | Default mode; base path includes schema/table                                                       |
+| Monorepo      | Supports multi-app layout with shared libs                  | Shares providers via barrels; same REST controllers                                                 |
+| Microservices | Splits gateway vs. service controllers and message patterns | Uses `@MessagePattern` + `ClientProxy`; see `generators/controller/service-controller.generator.ts` |
 
 Supporting types reside in `libs/generator/src/types/architecture.type.ts`. Selection is handled during `nest-generator init` and respected by generators via `GeneratorService`.
 
 ## Workflow & CLI
 
-| Command | Purpose | Notes |
-|---------|---------|-------|
-| `nest-generator init` | Creates `generator.config.json`, prepares metadata schema, seeds defaults | Prompts for architecture, database, cache, audit options
-| `nest-generator generate <schema.table>` | Generates full module and registers it in `app.module.ts` | Flags: `--features.*`, `--all`, `--storageProvider`, `--skip-prompts`
-| `nest-generator delete <module>` | Removes generated module and cleans references | Supports `--skip-prompts` and `--force`
-| `nest-generator sync` | Planned metadata resync of all modules | Currently prints placeholder warning (Task 21)
-| `nest-generator check` | Planned drift detection | Placeholder
-| `nest-generator list` | Planned module listing | Placeholder
+| Command                                  | Purpose                                                                   | Notes                                                                 |
+| ---------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `nest-generator init`                    | Creates `generator.config.json`, prepares metadata schema, seeds defaults | Prompts for architecture, database, cache, audit options              |
+| `nest-generator generate <schema.table>` | Generates full module and registers it in `app.module.ts`                 | Flags: `--features.*`, `--all`, `--storageProvider`, `--skip-prompts` |
+| `nest-generator delete <module>`         | Removes generated module and cleans references                            | Supports `--skip-prompts` and `--force`                               |
+| `nest-generator sync`                    | Planned metadata resync of all modules                                    | Currently prints placeholder warning (Task 21)                        |
+| `nest-generator check`                   | Planned drift detection                                                   | Placeholder                                                           |
+| `nest-generator list`                    | Planned module listing                                                    | Placeholder                                                           |
 
 `GenerateCommand` (`libs/generator/src/cli/commands/generate.command.ts`) maps CLI flags to the `features` object and orchestrates metadata fetch, file generation, and module registration.
 

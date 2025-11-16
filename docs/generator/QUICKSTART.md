@@ -163,11 +163,11 @@ Learn more: [Architecture Support](./FEATURES.md#architecture-support)
 
 ## Troubleshooting
 
-| Issue | Resolution |
-|-------|------------|
-| `Module not found` when starting the app | Install database drivers: `npm install pg` (PostgreSQL) or `npm install mysql2` (MySQL) |
-| `Table metadata not found` | Re-run `nest-generator init` and ensure metadata rows exist in `meta.table_metadata` and `meta.column_metadata` |
-| `Permission denied` when connecting to DB | Update credentials in `generator.config.json` and ensure the user can create schemas |
+| Issue                                     | Resolution                                                                                                      |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `Module not found` when starting the app  | Install database drivers: `npm install pg` (PostgreSQL) or `npm install mysql2` (MySQL)                         |
+| `Table metadata not found`                | Re-run `nest-generator init` and ensure metadata rows exist in `meta.table_metadata` and `meta.column_metadata` |
+| `Permission denied` when connecting to DB | Update credentials in `generator.config.json` and ensure the user can create schemas                            |
 
 Need more help? Visit the [documentation index](./INDEX.md) or open an issue on [GitHub](https://github.com/ojiepermana/nest/issues).
 

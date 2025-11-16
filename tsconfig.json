@@ -22,18 +22,10 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@ojiepermana/nest": [
-        "libs/nest/src"
-      ],
-      "@ojiepermana/nest-generator": [
-        "libs/generator/src"
-      ],
-      "@ojiepermana/nest-generator/*": [
-        "libs/generator/src/*"
-      ],
-      "@ojiepermana/nest/*": [
-        "libs/nest/src/*"
-      ]
+      "@ojiepermana/nest": ["libs/nest/src"],
+      "@ojiepermana/nest-generator": ["libs/generator/src"],
+      "@ojiepermana/nest-generator/*": ["libs/generator/src/*"],
+      "@ojiepermana/nest/*": ["libs/nest/src/*"]
     }
   }
 }

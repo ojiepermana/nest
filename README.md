@@ -347,13 +347,10 @@ import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 import { UserServiceModule } from './user-service.module';
 
 async function bootstrap() {
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-    UserServiceModule,
-    {
-      transport: Transport.TCP,
-      options: { host: 'localhost', port: 3001 },
-    },
-  );
+  const app = await NestFactory.createMicroservice<MicroserviceOptions>(UserServiceModule, {
+    transport: Transport.TCP,
+    options: { host: 'localhost', port: 3001 },
+  });
   await app.listen();
 }
 bootstrap();
@@ -382,14 +379,14 @@ export class UsersProfileController {
 
 ### Architecture Comparison
 
-| Feature                | Standalone    | Monorepo      | Microservices |
-| ---------------------- | ------------- | ------------- | ------------- |
-| **Setup Complexity**   | ⭐ Simple     | ⭐⭐ Moderate | ⭐⭐⭐ Complex |
-| **Code Sharing**       | ❌ None       | ✅ Shared     | ⚠️ Duplicated |
-| **Scalability**        | ⚠️ Limited    | ⭐⭐ Good     | ⭐⭐⭐ Best   |
-| **Deployment**         | ⭐⭐⭐ Simple | ⭐⭐ Moderate | ⭐ Complex    |
-| **Team Collaboration** | ⚠️ Limited    | ✅ Good       | ✅ Excellent  |
-| **Best For**           | MVPs, Startups | Medium teams  | Enterprise    |
+| Feature                | Standalone     | Monorepo      | Microservices  |
+| ---------------------- | -------------- | ------------- | -------------- |
+| **Setup Complexity**   | ⭐ Simple      | ⭐⭐ Moderate | ⭐⭐⭐ Complex |
+| **Code Sharing**       | ❌ None        | ✅ Shared     | ⚠️ Duplicated  |
+| **Scalability**        | ⚠️ Limited     | ⭐⭐ Good     | ⭐⭐⭐ Best    |
+| **Deployment**         | ⭐⭐⭐ Simple  | ⭐⭐ Moderate | ⭐ Complex     |
+| **Team Collaboration** | ⚠️ Limited     | ✅ Good       | ✅ Excellent   |
+| **Best For**           | MVPs, Startups | Medium teams  | Enterprise     |
 
 📖 **Documentation:**
 

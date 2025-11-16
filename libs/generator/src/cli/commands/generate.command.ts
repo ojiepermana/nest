@@ -542,7 +542,7 @@ export class GenerateCommand {
    */
   private detectIsGateway(outputPath: string, appName?: string): boolean {
     const architecture = this.config?.architecture || 'standalone';
-    
+
     // Only relevant for microservices architecture
     if (architecture !== 'microservices') {
       return false;
@@ -550,7 +550,7 @@ export class GenerateCommand {
 
     const projectRoot = this.findProjectRoot();
     const cwd = process.cwd();
-    
+
     // Check if app name contains 'gateway'
     if (appName && appName.toLowerCase().includes('gateway')) {
       return true;
@@ -668,12 +668,12 @@ export class GenerateCommand {
 
     // 5. Generate Controller
     Logger.info('   ⏳ Generating controller...');
-    
+
     const architecture = this.config?.architecture || 'standalone';
     const isGateway = this.detectIsGateway(outputPath);
-    
+
     let controllerCode: string;
-    
+
     if (architecture === 'microservices' && isGateway) {
       // Generate Gateway Controller (uses ClientProxy)
       Logger.info('   🌐 Detected gateway app - generating gateway controller');
@@ -682,7 +682,8 @@ export class GenerateCommand {
         serviceName: moduleName,
         serviceHost: process.env.SERVICE_HOST || 'localhost',
         servicePort: parseInt(process.env.SERVICE_PORT || '3001'),
-        transport: (process.env.TRANSPORT_TYPE as 'TCP' | 'REDIS' | 'NATS' | 'MQTT' | 'RMQ') || 'TCP',
+        transport:
+          (process.env.TRANSPORT_TYPE as 'TCP' | 'REDIS' | 'NATS' | 'MQTT' | 'RMQ') || 'TCP',
         enableSwagger: features.swagger,
         enableRateLimit: false,
       });
@@ -714,7 +715,7 @@ export class GenerateCommand {
       });
       controllerCode = controllerGenerator.generate();
     }
-    
+
     this.writeFile(join(moduleDir, 'controllers', `${moduleName}.controller.ts`), controllerCode);
     Logger.info('   ✓ Controller generated');
 

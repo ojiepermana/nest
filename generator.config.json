@@ -1,5 +1,5 @@
 {
-  "architecture": "standalone",
+  "architecture": "monorepo",
   "database": {
     "type": "postgresql",
     "host": "${DB_HOST}",

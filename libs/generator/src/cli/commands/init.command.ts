@@ -633,18 +633,62 @@ export class InitCommand {
       microservices: this.config.microservices,
     };
 
-    // Save generator.config.json with env variable placeholders
-    const configPath = join(process.cwd(), 'generator.config.json');
+    // Always save config at project root (find root by looking for package.json with workspace)
+    const projectRoot = this.findProjectRoot();
+    const configPath = join(projectRoot, 'generator.config.json');
+
     writeFileSync(configPath, JSON.stringify(safeConfig, null, 2), 'utf-8');
     Logger.success(`Configuration saved: ${configPath}`);
     Logger.info('💡 Database credentials are stored in .env (not in config file)');
 
-    // Update or create .env file with actual values
-    await this.updateEnvFile();
+    // Update .env at project root
+    await this.updateEnvFile(projectRoot);
   }
 
-  private async updateEnvFile(): Promise<void> {
-    const envPath = join(process.cwd(), '.env');
+  /**
+   * Find project root by looking for package.json
+   * Walks up directory tree until package.json is found
+   */
+  private findProjectRoot(): string {
+    let currentDir = process.cwd();
+    const maxDepth = 10; // Prevent infinite loop
+    let depth = 0;
+
+    while (depth < maxDepth) {
+      const packageJsonPath = join(currentDir, 'package.json');
+
+      if (existsSync(packageJsonPath)) {
+        // Check if it's a workspace root (has workspaces or apps folder)
+        const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+
+        // If has workspaces or is root level package.json, use it
+        if (packageJson.workspaces || existsSync(join(currentDir, 'apps'))) {
+          return currentDir;
+        }
+
+        // If standalone app (no parent with apps folder), use current
+        const parentDir = join(currentDir, '..');
+        if (!existsSync(join(parentDir, 'apps'))) {
+          return currentDir;
+        }
+      }
+
+      // Move up one directory
+      const parentDir = join(currentDir, '..');
+      if (parentDir === currentDir) {
+        // Reached filesystem root
+        break;
+      }
+      currentDir = parentDir;
+      depth++;
+    }
+
+    // Fallback to current directory
+    return process.cwd();
+  }
+
+  private async updateEnvFile(projectRoot: string): Promise<void> {
+    const envPath = join(projectRoot, '.env');
     const db = this.config.database!;
 
     const envContent = `

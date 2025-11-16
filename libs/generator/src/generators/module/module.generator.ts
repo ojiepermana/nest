@@ -19,6 +19,9 @@ export interface ModuleGeneratorOptions {
   customImports?: string[];
   customExports?: string[];
   useTypeORM?: boolean; // Add option to use TypeORM or plain SQL
+  architecture?: 'standalone' | 'monorepo' | 'microservices';
+  isGateway?: boolean;
+  serviceName?: string;
 }
 
 export class ModuleGenerator {
@@ -55,6 +58,11 @@ ${classDeclaration}
     // NestJS common imports
     imports.push("import { Module } from '@nestjs/common';");
 
+    // ClientsModule import for microservices gateway
+    if (this.options.architecture === 'microservices' && this.options.isGateway) {
+      imports.push("import { ClientsModule, Transport } from '@nestjs/microservices';");
+    }
+
     // TypeORM import if repository enabled AND using TypeORM
     if (
       this.options.useTypeORM !== false &&
@@ -83,15 +91,15 @@ ${classDeclaration}
       );
     }
 
-    // Service import
-    if (this.options.includeService !== false) {
+    // Service import (not needed for gateway in microservices)
+    if (this.options.includeService !== false && !(this.options.architecture === 'microservices' && this.options.isGateway)) {
       imports.push(
         `import { ${entityName}Service } from './services/${this.toKebabCase(entityName)}.service';`,
       );
     }
 
-    // Repository import
-    if (this.options.includeRepository !== false) {
+    // Repository import (not needed for gateway in microservices)
+    if (this.options.includeRepository !== false && !(this.options.architecture === 'microservices' && this.options.isGateway)) {
       imports.push(
         `import { ${entityName}Repository } from './repositories/${this.toKebabCase(entityName)}.repository';`,
       );
@@ -147,6 +155,23 @@ ${moduleConfig.join(',\n')}
   private generateModuleImports(entityName: string): string[] {
     const imports: string[] = [];
 
+    // ClientsModule for microservices gateway
+    if (this.options.architecture === 'microservices' && this.options.isGateway) {
+      const serviceName = this.options.serviceName || this.toKebabCase(entityName);
+      const serviceNameUpper = serviceName.toUpperCase().replace(/-/g, '_');
+      imports.push(`
+    ClientsModule.register([
+      {
+        name: '${serviceNameUpper}_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: process.env.${serviceNameUpper}_SERVICE_HOST || 'localhost',
+          port: parseInt(process.env.${serviceNameUpper}_SERVICE_PORT || '3001'),
+        },
+      },
+    ])`);
+    }
+
     // TypeOrmModule.forFeature if repository enabled AND using TypeORM
     if (
       this.options.useTypeORM !== false &&
@@ -194,13 +219,13 @@ ${moduleConfig.join(',\n')}
   private generateProviders(entityName: string): string[] {
     const providers: string[] = [];
 
-    // Service
-    if (this.options.includeService !== false) {
+    // Service (not needed for gateway in microservices)
+    if (this.options.includeService !== false && !(this.options.architecture === 'microservices' && this.options.isGateway)) {
       providers.push(`${entityName}Service`);
     }
 
-    // Repository
-    if (this.options.includeRepository !== false) {
+    // Repository (not needed for gateway in microservices)
+    if (this.options.includeRepository !== false && !(this.options.architecture === 'microservices' && this.options.isGateway)) {
       providers.push(`${entityName}Repository`);
     }
 
@@ -218,13 +243,13 @@ ${moduleConfig.join(',\n')}
   private generateExports(entityName: string): string[] {
     const exports: string[] = [];
 
-    // Export service for use in other modules
-    if (this.options.includeService !== false) {
+    // Export service for use in other modules (not needed for gateway in microservices)
+    if (this.options.includeService !== false && !(this.options.architecture === 'microservices' && this.options.isGateway)) {
       exports.push(`${entityName}Service`);
     }
 
-    // Export repository for use in other modules
-    if (this.options.includeRepository !== false) {
+    // Export repository for use in other modules (not needed for gateway in microservices)
+    if (this.options.includeRepository !== false && !(this.options.architecture === 'microservices' && this.options.isGateway)) {
       exports.push(`${entityName}Repository`);
     }
 

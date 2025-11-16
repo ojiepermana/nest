@@ -10,7 +10,7 @@ describe('ControllerGenerator', () => {
     table_name: 'users',
     display_name: 'Users',
     is_junction_table: false,
-  } as TableMetadata;
+  } as unknown as TableMetadata;
 
   const mockColumns: ColumnMetadata[] = [
     {
@@ -19,14 +19,14 @@ describe('ControllerGenerator', () => {
       data_type: 'integer',
       is_nullable: false,
       is_primary_key: true,
-    } as ColumnMetadata,
+    } as unknown as ColumnMetadata,
     {
       table_name: 'users',
       column_name: 'email',
       data_type: 'varchar',
       is_nullable: false,
       is_primary_key: false,
-    } as ColumnMetadata,
+    } as unknown as ColumnMetadata,
   ];
 
   describe('Basic Controller Generation', () => {
@@ -358,7 +358,7 @@ describe('ControllerGenerator', () => {
           data_type: 'uuid',
           is_nullable: false,
           is_primary_key: true,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const generator = new ControllerGenerator(mockTableMetadata, stringPkColumns, {
@@ -379,7 +379,7 @@ describe('ControllerGenerator', () => {
           data_type: 'uuid',
           is_nullable: false,
           is_primary_key: true,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const generator = new ControllerGenerator(mockTableMetadata, stringPkColumns, {

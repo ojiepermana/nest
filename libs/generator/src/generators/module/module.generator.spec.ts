@@ -15,7 +15,7 @@ describe('ModuleGenerator', () => {
     mockTableMetadata = {
       table_name: 'users',
       schema_name: 'public',
-    } as TableMetadata;
+    } as unknown as TableMetadata;
 
     mockColumns = [
       {
@@ -24,14 +24,14 @@ describe('ModuleGenerator', () => {
         data_type: 'integer',
         is_nullable: false,
         is_primary_key: true,
-      } as ColumnMetadata,
+      } as unknown as ColumnMetadata,
       {
         table_name: 'users',
         column_name: 'name',
         data_type: 'varchar',
         is_nullable: false,
         is_primary_key: false,
-      } as ColumnMetadata,
+      } as unknown as ColumnMetadata,
     ];
   });
 

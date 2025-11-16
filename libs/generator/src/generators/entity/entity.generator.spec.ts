@@ -15,7 +15,7 @@ describe('EntityGenerator', () => {
     mockTableMetadata = {
       table_name: 'users',
       schema_name: 'public',
-    } as TableMetadata;
+    } as unknown as TableMetadata;
 
     mockColumns = [
       {
@@ -32,7 +32,7 @@ describe('EntityGenerator', () => {
         display_in_detail: true,
         column_order: 1,
         default_value: 'nextval(users_id_seq)',
-      } as ColumnMetadata,
+      } as unknown as ColumnMetadata,
       {
         column_name: 'email',
         data_type: 'varchar',
@@ -47,7 +47,7 @@ describe('EntityGenerator', () => {
         display_in_detail: true,
         column_order: 2,
         max_length: 255,
-      } as ColumnMetadata,
+      } as unknown as ColumnMetadata,
       {
         column_name: 'name',
         data_type: 'varchar',
@@ -62,7 +62,7 @@ describe('EntityGenerator', () => {
         display_in_detail: true,
         column_order: 3,
         max_length: 100,
-      } as ColumnMetadata,
+      } as unknown as ColumnMetadata,
     ];
   });
 
@@ -141,7 +141,7 @@ describe('EntityGenerator', () => {
           display_in_form: false,
           display_in_detail: true,
           column_order: 10,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const generator = new EntityGenerator(mockTableMetadata, columnsWithTimestamps, {
@@ -193,7 +193,7 @@ describe('EntityGenerator', () => {
           display_in_detail: true,
           column_order: 1,
           default_value: 'uuid_generate_v4()',
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
         ...mockColumns.slice(1),
       ];
 
@@ -223,7 +223,7 @@ describe('EntityGenerator', () => {
           display_in_detail: true,
           column_order: 1,
           max_length: 20,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
         ...mockColumns.slice(1),
       ];
 
@@ -267,7 +267,7 @@ describe('EntityGenerator', () => {
           display_in_detail: true,
           column_order: 1,
           max_length: 50,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const generator = new EntityGenerator(mockTableMetadata, columnsWithSnakeCase, {
@@ -329,7 +329,7 @@ describe('EntityGenerator', () => {
           display_in_form: false,
           display_in_detail: true,
           column_order: 10,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const generator = new EntityGenerator(mockTableMetadata, columnsWithTimestamps, {
@@ -359,7 +359,7 @@ describe('EntityGenerator', () => {
           display_in_form: false,
           display_in_detail: true,
           column_order: 11,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const generator = new EntityGenerator(mockTableMetadata, columnsWithTimestamps, {
@@ -391,7 +391,7 @@ describe('EntityGenerator', () => {
           display_in_form: false,
           display_in_detail: false,
           column_order: 12,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const generator = new EntityGenerator(mockTableMetadata, columnsWithSoftDelete, {
@@ -458,7 +458,7 @@ describe('EntityGenerator', () => {
           display_in_form: false,
           display_in_detail: true,
           column_order: 4,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const generator = new EntityGenerator(mockTableMetadata, columnsWithTimestamp, {
@@ -487,7 +487,7 @@ describe('EntityGenerator', () => {
           display_in_detail: true,
           column_order: 4,
           default_value: 'true',
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const generator = new EntityGenerator(mockTableMetadata, columnsWithBoolean, {
@@ -518,7 +518,7 @@ describe('EntityGenerator', () => {
           display_in_detail: true,
           column_order: 4,
           default_value: "'user'",
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const generator = new EntityGenerator(mockTableMetadata, columnsWithDefaults, {

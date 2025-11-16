@@ -22,7 +22,7 @@ describe('ServiceTestGenerator', () => {
       primary_key_column: 'id',
       primary_key_type: 'UUID',
       created_at: new Date(),
-    } as TableMetadata;
+    } as unknown as TableMetadata;
 
     columns = [
       {

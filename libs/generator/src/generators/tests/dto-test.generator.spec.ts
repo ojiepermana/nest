@@ -22,7 +22,7 @@ describe('DtoTestGenerator', () => {
       primary_key_column: 'id',
       primary_key_type: 'UUID',
       created_at: new Date(),
-    } as TableMetadata;
+    } as unknown as TableMetadata;
 
     columns = [
       {
@@ -213,7 +213,7 @@ describe('DtoTestGenerator', () => {
         is_required: true,
         is_nullable: false,
         column_order: 1,
-      } as ColumnMetadata;
+      } as unknown as ColumnMetadata;
 
       const result = generator.generateCreateDtoTest(tableMetadata, [emailColumn]);
 
@@ -231,7 +231,7 @@ describe('DtoTestGenerator', () => {
         is_required: true,
         is_nullable: false,
         column_order: 1,
-      } as ColumnMetadata;
+      } as unknown as ColumnMetadata;
 
       const result = generator.generateCreateDtoTest(tableMetadata, [enumColumn]);
 
@@ -250,7 +250,7 @@ describe('DtoTestGenerator', () => {
         is_required: true,
         is_nullable: false,
         column_order: 1,
-      } as ColumnMetadata;
+      } as unknown as ColumnMetadata;
 
       const result = generator.generateCreateDtoTest(tableMetadata, [numericColumn]);
 

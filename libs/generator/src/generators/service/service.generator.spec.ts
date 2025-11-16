@@ -10,7 +10,7 @@ describe('ServiceGenerator', () => {
     table_name: 'users',
     display_name: 'Users',
     is_junction_table: false,
-  } as TableMetadata;
+  } as unknown as TableMetadata;
 
   const mockColumns: ColumnMetadata[] = [
     {
@@ -21,7 +21,7 @@ describe('ServiceGenerator', () => {
       is_primary_key: true,
       is_unique: false,
       is_filterable: true,
-    } as ColumnMetadata,
+    } as unknown as ColumnMetadata,
     {
       table_name: 'users',
       column_name: 'email',
@@ -30,7 +30,7 @@ describe('ServiceGenerator', () => {
       is_primary_key: false,
       is_unique: true,
       is_filterable: true,
-    } as ColumnMetadata,
+    } as unknown as ColumnMetadata,
     {
       table_name: 'users',
       column_name: 'name',
@@ -39,7 +39,7 @@ describe('ServiceGenerator', () => {
       is_primary_key: false,
       is_unique: false,
       is_filterable: true,
-    } as ColumnMetadata,
+    } as unknown as ColumnMetadata,
   ];
 
   describe('Basic Service Generation', () => {

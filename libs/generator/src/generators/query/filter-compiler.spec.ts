@@ -164,7 +164,7 @@ describe('FilterCompiler', () => {
           column_name: 'status',
           data_type: 'varchar',
           is_filterable: false,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -191,12 +191,12 @@ describe('FilterCompiler', () => {
           column_name: 'status',
           data_type: 'varchar',
           is_filterable: true,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
         {
           column_name: 'age',
           data_type: 'integer',
           is_filterable: true,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -222,7 +222,7 @@ describe('FilterCompiler', () => {
           column_name: 'password',
           data_type: 'varchar',
           is_filterable: false,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -246,7 +246,7 @@ describe('FilterCompiler', () => {
           column_name: 'status',
           data_type: 'varchar',
           is_filterable: true,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -271,7 +271,7 @@ describe('FilterCompiler', () => {
           column_name: 'status',
           data_type: 'varchar',
           is_filterable: true,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -298,7 +298,7 @@ describe('FilterCompiler', () => {
           column_name: 'age',
           data_type: 'integer',
           is_filterable: true,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -325,7 +325,7 @@ describe('FilterCompiler', () => {
           column_name: 'status',
           data_type: 'varchar',
           is_filterable: true,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -352,7 +352,7 @@ describe('FilterCompiler', () => {
           column_name: 'status',
           data_type: 'varchar',
           is_filterable: true,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -379,7 +379,7 @@ describe('FilterCompiler', () => {
           column_name: 'age',
           data_type: 'integer',
           is_filterable: true,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -406,7 +406,7 @@ describe('FilterCompiler', () => {
           column_name: 'deleted_at',
           data_type: 'timestamp',
           is_filterable: true,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -433,7 +433,7 @@ describe('FilterCompiler', () => {
           column_name: 'age',
           data_type: 'integer',
           is_filterable: true,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -460,7 +460,7 @@ describe('FilterCompiler', () => {
           column_name: 'is_active',
           data_type: 'boolean',
           is_filterable: true,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -490,7 +490,7 @@ describe('FilterCompiler', () => {
           data_type: 'varchar',
           is_filterable: true,
           enum_values: ['active', 'inactive', 'pending'],
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -518,7 +518,7 @@ describe('FilterCompiler', () => {
           data_type: 'varchar',
           is_filterable: true,
           enum_values: ['active', 'inactive', 'pending'],
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -544,7 +544,7 @@ describe('FilterCompiler', () => {
           data_type: 'varchar',
           is_filterable: true,
           enum_values: ['active', 'inactive', 'pending'],
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -574,7 +574,7 @@ describe('FilterCompiler', () => {
           data_type: 'integer',
           is_filterable: true,
           min_value: 18,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -602,7 +602,7 @@ describe('FilterCompiler', () => {
           data_type: 'integer',
           is_filterable: true,
           max_value: 120,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -631,7 +631,7 @@ describe('FilterCompiler', () => {
           is_filterable: true,
           min_value: 18,
           max_value: 120,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -657,7 +657,7 @@ describe('FilterCompiler', () => {
         {
           column_name: 'status',
           data_type: 'varchar',
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -675,12 +675,12 @@ describe('FilterCompiler', () => {
           column_name: 'status',
           data_type: 'varchar',
           is_filterable: true,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
         {
           column_name: 'password',
           data_type: 'varchar',
           is_filterable: false,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -697,7 +697,7 @@ describe('FilterCompiler', () => {
         {
           column_name: 'name',
           data_type: 'varchar',
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -718,7 +718,7 @@ describe('FilterCompiler', () => {
         {
           column_name: 'age',
           data_type: 'integer',
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -738,7 +738,7 @@ describe('FilterCompiler', () => {
         {
           column_name: 'created_at',
           data_type: 'timestamp',
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({
@@ -761,24 +761,24 @@ describe('FilterCompiler', () => {
           data_type: 'varchar',
           is_filterable: true,
           enum_values: ['active', 'inactive'],
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
         {
           column_name: 'age',
           data_type: 'integer',
           is_filterable: true,
           min_value: 18,
           max_value: 120,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
         {
           column_name: 'name',
           data_type: 'varchar',
           is_filterable: true,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
         {
           column_name: 'is_verified',
           data_type: 'boolean',
           is_filterable: true,
-        } as ColumnMetadata,
+        } as unknown as ColumnMetadata,
       ];
 
       const compiler = new FilterCompiler({

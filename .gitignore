@@ -66,16 +66,10 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Generated modules for testing (ignore all generated modules in apps/)
-apps/standalone/src/branch/
-apps/monorepo/order/src/billing-term/
-apps/monorepo/user/src/*/
-apps/microservices/gateway/src/location-type/
-apps/microservices/order/src/*/
-apps/microservices/user/src/business-entity/
-
-# Pattern to ignore any generated modules (uncomment if needed)
-# apps/**/src/*/controllers/
-# apps/**/src/*/dto/
-# apps/**/src/*/entities/
-# apps/**/src/*/repositories/
-# apps/**/src/*/services/
+apps/**/src/*/controllers/
+apps/**/src/*/dto/
+apps/**/src/*/entities/
+apps/**/src/*/repositories/
+apps/**/src/*/services/
+apps/**/src/*/*.module.ts
+apps/**/src/*/index.ts

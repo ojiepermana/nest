@@ -3,7 +3,7 @@ import { RBACRepository } from './rbac.repository';
 
 describe('RBAC Integration Tests', () => {
   let service: RBACService;
-  let repository: jest.Mocked<RBACRepository>;
+  let repository: any;
 
   beforeEach(() => {
     repository = {
@@ -19,7 +19,7 @@ describe('RBAC Integration Tests', () => {
     } as any;
 
     service = new RBACService(repository, undefined, {
-      cache: { enabled: false },
+      cache: { enabled: false, ttl: 0, prefix: 'test' },
     });
   });
 
@@ -147,7 +147,7 @@ describe('RBAC Integration Tests', () => {
 
   describe('Ownership Verification', () => {
     it('should verify user owns resource', async () => {
-      repository.isSuperAdmin.mockResolvedValue(false);
+      (repository.isSuperAdmin as jest.Mock).mockResolvedValue(false);
       repository.checkOwnership.mockResolvedValue(true);
 
       const result = await service.checkOwnership('user-123', 'app', 'posts', 'post-1', {
@@ -166,7 +166,7 @@ describe('RBAC Integration Tests', () => {
     });
 
     it('should detect when user does not own resource', async () => {
-      repository.isSuperAdmin.mockResolvedValue(false);
+      (repository.isSuperAdmin as jest.Mock).mockResolvedValue(false);
       repository.checkOwnership.mockResolvedValue(false);
 
       const result = await service.checkOwnership('user-123', 'app', 'posts', 'post-2', {

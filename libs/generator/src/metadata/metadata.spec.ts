@@ -235,7 +235,7 @@ describe('MetadataRepository', () => {
     it('should save generated file and return with id', async () => {
       const mockFile: GeneratedFile = {
         id: 'file-123',
-        table_metadata_id: '123',
+        table_id: '123',
         file_type: 'dto',
         file_path: '/src/users/dto/create-user.dto.ts',
         file_name: 'create-user.dto.ts',
@@ -250,7 +250,7 @@ describe('MetadataRepository', () => {
       });
 
       const result = await repository.saveGeneratedFile({
-        table_metadata_id: '123',
+        table_id: '123',
         file_type: 'dto',
         file_path: '/src/users/dto/create-user.dto.ts',
         file_name: 'create-user.dto.ts',

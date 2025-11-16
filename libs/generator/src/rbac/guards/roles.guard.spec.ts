@@ -16,7 +16,7 @@ describe('RolesGuard', () => {
     } as any;
 
     rbacService = {
-      userHasRole: jest.fn(),
+      hasRole: jest.fn(),
     } as any;
 
     guard = new RolesGuard(reflector, rbacService);
@@ -65,7 +65,7 @@ describe('RolesGuard', () => {
         roles: ['admin'],
       });
 
-      mockContext.switchToHttp().getRequest.mockReturnValue({});
+      (mockContext.switchToHttp().getRequest as jest.Mock).mockReturnValue({});
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow(UnauthorizedException);
     });
@@ -83,12 +83,12 @@ describe('RolesGuard', () => {
         },
       });
 
-      rbacService.userHasRole.mockResolvedValue(true);
+      rbacService.hasRole.mockResolvedValue(true);
 
       const result = await guard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(rbacService.userHasRole).toHaveBeenCalledWith('user-123', 'admin', true, true);
+      expect(rbacService.hasRole).toHaveBeenCalledWith('user-123', 'admin', true, true);
     });
 
     it('should check multiple roles with AND logic', async () => {
@@ -104,13 +104,13 @@ describe('RolesGuard', () => {
         },
       });
 
-      rbacService.userHasRole.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
+      rbacService.hasRole.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
 
       const result = await guard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(rbacService.userHasRole).toHaveBeenCalledWith('user-123', 'admin', true, true);
-      expect(rbacService.userHasRole).toHaveBeenCalledWith('user-123', 'moderator', true, true);
+      expect(rbacService.hasRole).toHaveBeenCalledWith('user-123', 'admin', true, true);
+      expect(rbacService.hasRole).toHaveBeenCalledWith('user-123', 'moderator', true, true);
     });
 
     it('should check roles with OR logic', async () => {
@@ -126,13 +126,13 @@ describe('RolesGuard', () => {
         },
       });
 
-      rbacService.userHasRole.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+      rbacService.hasRole.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
 
       const result = await guard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(rbacService.userHasRole).toHaveBeenCalledWith('user-123', 'admin', true, true);
-      expect(rbacService.userHasRole).toHaveBeenCalledWith('user-123', 'moderator', true, true);
+      expect(rbacService.hasRole).toHaveBeenCalledWith('user-123', 'admin', true, true);
+      expect(rbacService.hasRole).toHaveBeenCalledWith('user-123', 'moderator', true, true);
     });
 
     it('should throw ForbiddenException when role check fails', async () => {
@@ -148,7 +148,7 @@ describe('RolesGuard', () => {
         },
       });
 
-      rbacService.userHasRole.mockResolvedValue(false);
+      rbacService.hasRole.mockResolvedValue(false);
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow(ForbiddenException);
     });
@@ -166,7 +166,7 @@ describe('RolesGuard', () => {
         },
       });
 
-      rbacService.userHasRole.mockResolvedValue(false);
+      rbacService.hasRole.mockResolvedValue(false);
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow('Admin access required');
     });
@@ -184,11 +184,11 @@ describe('RolesGuard', () => {
         },
       });
 
-      rbacService.userHasRole.mockResolvedValue(true);
+      rbacService.hasRole.mockResolvedValue(true);
 
       await guard.canActivate(mockContext);
 
-      expect(rbacService.userHasRole).toHaveBeenCalledWith('user-123', 'admin', false, true);
+      expect(rbacService.hasRole).toHaveBeenCalledWith('user-123', 'admin', false, true);
     });
 
     it('should respect checkExpiration option', async () => {
@@ -204,11 +204,11 @@ describe('RolesGuard', () => {
         },
       });
 
-      rbacService.userHasRole.mockResolvedValue(true);
+      rbacService.hasRole.mockResolvedValue(true);
 
       await guard.canActivate(mockContext);
 
-      expect(rbacService.userHasRole).toHaveBeenCalledWith('user-123', 'admin', true, false);
+      expect(rbacService.hasRole).toHaveBeenCalledWith('user-123', 'admin', true, false);
     });
 
     it('should warn if RBACService not provided', async () => {

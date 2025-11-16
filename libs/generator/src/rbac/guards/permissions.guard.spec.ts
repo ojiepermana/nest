@@ -20,7 +20,6 @@ describe('PermissionsGuard', () => {
       hasAllPermissions: jest.fn(),
       hasAnyPermission: jest.fn(),
       checkOwnership: jest.fn(),
-      userHasPermission: jest.fn(),
     } as any;
 
     guard = new PermissionsGuard(reflector, rbacService);
@@ -74,7 +73,7 @@ describe('PermissionsGuard', () => {
         permissions: ['users.read'],
       });
 
-      mockContext.switchToHttp().getRequest.mockReturnValue({});
+      (mockContext.switchToHttp().getRequest as jest.Mock).mockReturnValue({});
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow(UnauthorizedException);
     });
@@ -92,12 +91,12 @@ describe('PermissionsGuard', () => {
         },
       });
 
-      rbacService.userHasPermission.mockResolvedValue(true);
+      rbacService.hasPermission.mockResolvedValue(true);
 
       const result = await guard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(rbacService.userHasPermission).toHaveBeenCalledWith('user-123', 'users.read');
+      expect(rbacService.hasPermission).toHaveBeenCalledWith('user-123', 'users.read');
     });
 
     it('should check multiple permissions with AND logic', async () => {
@@ -113,13 +112,13 @@ describe('PermissionsGuard', () => {
         },
       });
 
-      rbacService.userHasPermission.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
+      rbacService.hasPermission.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
 
       const result = await guard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(rbacService.userHasPermission).toHaveBeenCalledWith('user-123', 'users.read');
-      expect(rbacService.userHasPermission).toHaveBeenCalledWith('user-123', 'users.update');
+      expect(rbacService.hasPermission).toHaveBeenCalledWith('user-123', 'users.read');
+      expect(rbacService.hasPermission).toHaveBeenCalledWith('user-123', 'users.update');
     });
 
     it('should check permissions with OR logic', async () => {
@@ -135,13 +134,13 @@ describe('PermissionsGuard', () => {
         },
       });
 
-      rbacService.userHasPermission.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+      rbacService.hasPermission.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
 
       const result = await guard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(rbacService.userHasPermission).toHaveBeenCalledWith('user-123', 'users.read');
-      expect(rbacService.userHasPermission).toHaveBeenCalledWith('user-123', 'admin.access');
+      expect(rbacService.hasPermission).toHaveBeenCalledWith('user-123', 'users.read');
+      expect(rbacService.hasPermission).toHaveBeenCalledWith('user-123', 'admin.access');
     });
 
     it('should throw ForbiddenException when permission denied', async () => {
@@ -157,7 +156,7 @@ describe('PermissionsGuard', () => {
         },
       });
 
-      rbacService.userHasPermission.mockResolvedValue(false);
+      rbacService.hasPermission.mockResolvedValue(false);
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow(ForbiddenException);
     });
@@ -175,7 +174,7 @@ describe('PermissionsGuard', () => {
         },
       });
 
-      rbacService.userHasPermission.mockResolvedValue(false);
+      rbacService.hasPermission.mockResolvedValue(false);
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow('Custom error message');
     });
@@ -193,7 +192,7 @@ describe('PermissionsGuard', () => {
         },
       });
 
-      rbacService.userHasPermission.mockResolvedValue(true);
+      rbacService.hasPermission.mockResolvedValue(true);
       rbacService.checkOwnership.mockResolvedValue(true);
 
       const result = await guard.canActivate(mockContext);
@@ -215,7 +214,7 @@ describe('PermissionsGuard', () => {
         },
       });
 
-      rbacService.userHasPermission.mockResolvedValue(true);
+      rbacService.hasPermission.mockResolvedValue(true);
       rbacService.checkOwnership.mockResolvedValue(false);
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow(ForbiddenException);

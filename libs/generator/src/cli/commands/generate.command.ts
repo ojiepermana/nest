@@ -93,7 +93,7 @@ export class GenerateCommand {
     );
 
     // Step 7: Generate all files
-    this.generateFiles(tableMetadata, columns, features, outputPath);
+    this.generateFiles(tableMetadata, columns, features, outputPath, options.appName);
 
     // Extract module name for post-generation steps
     const moduleName = this.toModuleName(tableName.split('.').pop() || tableName);
@@ -580,6 +580,7 @@ export class GenerateCommand {
     columns: ColumnMetadata[],
     features: Required<NonNullable<GenerateCommandOptions['features']>>,
     outputPath: string,
+    appName?: string,
   ): void {
     const tableName = tableMetadata.table_name;
     const schema = tableMetadata.schema_name;
@@ -737,6 +738,7 @@ export class GenerateCommand {
           features,
           basePath,
           schema || 'default',
+          appName,
         );
       }
     } else {
@@ -1060,46 +1062,74 @@ export * from './controllers/${moduleName}.controller';
   }
 
   /**
-   * Register schema module to gateway.module.ts
+   * Register schema module to gateway module (app.module.ts or gateway.module.ts)
    */
   private registerModuleToGateway(gatewayDir: string, schemaName: string): void {
-    const gatewayModulePath = join(gatewayDir, 'src', 'gateway.module.ts');
+    try {
+      const srcDir = join(gatewayDir, 'src');
 
-    if (!existsSync(gatewayModulePath)) {
-      Logger.warn('   ⚠ gateway.module.ts not found, skipping auto-registration');
-      return;
-    }
+      // Try to find gateway module file
+      let gatewayModulePath = join(srcDir, 'gateway.module.ts');
+      let moduleFilename = 'gateway.module.ts';
 
-    let moduleContent = readFileSync(gatewayModulePath, 'utf-8');
-    const pascalSchema = this.toPascalCase(schemaName);
-    const moduleImport = `import { ${pascalSchema}Module } from './${schemaName}/${schemaName}.module';`;
+      // If gateway.module.ts not found, try app.module.ts
+      if (!existsSync(gatewayModulePath)) {
+        gatewayModulePath = join(srcDir, 'app.module.ts');
+        moduleFilename = 'app.module.ts';
+      }
 
-    // Check if already imported
-    if (moduleContent.includes(moduleImport)) {
-      return; // Already registered
-    }
+      // If still not found, search for any *.module.ts in src directory
+      if (!existsSync(gatewayModulePath)) {
+        const files = readdirSync(srcDir);
+        const moduleFiles = files.filter(
+          (file) =>
+            file.endsWith('.module.ts') &&
+            file !== 'app.module.ts' &&
+            file !== `${schemaName}.module.ts`,
+        );
 
-    // Add import after last import statement
-    const lastImportMatch = moduleContent.match(/^import .* from .*$/gm);
-    if (lastImportMatch) {
-      const lastImport = lastImportMatch[lastImportMatch.length - 1];
-      moduleContent = moduleContent.replace(lastImport, `${lastImport}\n${moduleImport}`);
-    }
-
-    // Add to imports array
-    const importsMatch = moduleContent.match(/imports:\s*\[([\s\S]*?)\]/);
-    if (importsMatch && !importsMatch[1].includes(`${pascalSchema}Module`)) {
-      moduleContent = moduleContent.replace(/imports:\s*\[([\s\S]*?)\]/, (match, p1) => {
-        const imports = p1.trim();
-        if (imports) {
-          return `imports: [${imports}, ${pascalSchema}Module]`;
+        if (moduleFiles.length > 0) {
+          moduleFilename = moduleFiles[0];
+          gatewayModulePath = join(srcDir, moduleFilename);
+        } else {
+          Logger.warn(`   ⚠ No module file found in ${srcDir}, skipping auto-registration`);
+          return;
         }
-        return `imports: [${pascalSchema}Module]`;
-      });
-    }
+      }
 
-    writeFileSync(gatewayModulePath, moduleContent, 'utf-8');
-    Logger.info(`   ✓ Registered ${pascalSchema}Module to gateway.module.ts`);
+      let moduleContent = readFileSync(gatewayModulePath, 'utf-8');
+      const pascalSchema = this.toPascalCase(schemaName);
+      const moduleImport = `import { ${pascalSchema}Module } from './${schemaName}/${schemaName}.module';`;
+
+      // Check if already imported
+      if (moduleContent.includes(moduleImport)) {
+        return; // Already registered
+      }
+
+      // Add import after last import statement
+      const lastImportMatch = moduleContent.match(/^import .* from .*$/gm);
+      if (lastImportMatch) {
+        const lastImport = lastImportMatch[lastImportMatch.length - 1];
+        moduleContent = moduleContent.replace(lastImport, `${lastImport}\n${moduleImport}`);
+      }
+
+      // Add to imports array
+      const importsMatch = moduleContent.match(/imports:\s*\[([\s\S]*?)\]/);
+      if (importsMatch && !importsMatch[1].includes(`${pascalSchema}Module`)) {
+        moduleContent = moduleContent.replace(/imports:\s*\[([\s\S]*?)\]/, (match, p1) => {
+          const imports = p1.trim();
+          if (imports) {
+            return `imports: [${imports}, ${pascalSchema}Module]`;
+          }
+          return `imports: [${pascalSchema}Module]`;
+        });
+      }
+
+      writeFileSync(gatewayModulePath, moduleContent, 'utf-8');
+      Logger.info(`   ✓ Registered ${pascalSchema}Module to ${moduleFilename}`);
+    } catch (error) {
+      Logger.warn(`   ⚠ Failed to register to gateway module: ${(error as Error).message}`);
+    }
   }
 
   /**
@@ -1429,6 +1459,7 @@ export * from './controllers/${moduleName}.controller';
     features: any,
     basePath: string,
     schema: string,
+    appName?: string,
   ): void {
     try {
       const projectRoot = this.findProjectRoot();
@@ -1455,9 +1486,13 @@ export * from './controllers/${moduleName}.controller';
       this.ensureDirectory(join(gatewaySchemaDir, 'dto', moduleName));
 
       // Generate Gateway Controller
+      // Use appName for service injection (e.g., 'entity' -> ENTITY_SERVICE)
+      // If no appName, extract from schema (e.g., 'entity.location' -> 'entity')
+      const serviceNameForInjection = appName || schema.split('.')[0] || moduleName;
+
       const gatewayGenerator = new GatewayControllerGenerator(tableMetadata, columns, {
         tableName,
-        serviceName: moduleName,
+        serviceName: serviceNameForInjection,
         serviceHost: process.env.SERVICE_HOST || 'localhost',
         servicePort: parseInt(process.env.SERVICE_PORT || '3001'),
         transport:

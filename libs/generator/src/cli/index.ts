@@ -13,9 +13,45 @@ import { InitCommand } from './commands/init.command';
 import { GenerateCommand } from './commands/generate.command';
 import { DeleteCommand } from './commands/delete.command';
 import { Logger } from '../utils/logger.util';
+import { join } from 'path';
+import { existsSync } from 'fs';
 
-// Load environment variables from .env file
-dotenvConfig();
+/**
+ * Find and load .env file from project root
+ */
+function loadEnvironment(): void {
+  let currentDir = process.cwd();
+  const root = '/';
+
+  // Walk up directory tree to find .env file
+  while (currentDir !== root) {
+    const envPath = join(currentDir, '.env');
+    if (existsSync(envPath)) {
+      dotenvConfig({ path: envPath });
+      return;
+    }
+
+    // Check for workspace markers (nest-cli.json, package.json with workspaces)
+    const nestCliPath = join(currentDir, 'nest-cli.json');
+    const packageJsonPath = join(currentDir, 'package.json');
+
+    if (existsSync(nestCliPath) || existsSync(packageJsonPath)) {
+      const envPath = join(currentDir, '.env');
+      if (existsSync(envPath)) {
+        dotenvConfig({ path: envPath });
+        return;
+      }
+    }
+
+    currentDir = join(currentDir, '..');
+  }
+
+  // Fallback to current directory
+  dotenvConfig();
+}
+
+// Load environment variables from .env file at project root
+loadEnvironment();
 
 const program = new Command();
 
@@ -45,6 +81,7 @@ program
   .command('generate <table>')
   .description('Generate CRUD module from metadata (format: schema.table)')
   .option('--output <path>', 'Output directory path')
+  .option('--app <name>', 'App name for monorepo/microservices (e.g., user, order)')
   .option('--skip-prompts', 'Skip interactive prompts')
   .option(
     '--all',
@@ -62,6 +99,7 @@ program
       await generateCommand.execute({
         tableName: table,
         outputPath: options.output,
+        appName: options.app,
         skipPrompts: options.skipPrompts,
         all: options.all,
         features: {

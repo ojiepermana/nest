@@ -37,6 +37,7 @@ import type {
 export interface GenerateCommandOptions {
   tableName?: string;
   outputPath?: string;
+  appName?: string;
   features?: {
     swagger?: boolean;
     caching?: boolean;
@@ -82,8 +83,12 @@ export class GenerateCommand {
     // Step 5: Prompt for features or use provided
     const features = await this.promptFeatures(options.features, skipPrompts, options.all);
 
-    // Step 6: Prompt for output path or use provided
-    const outputPath = await this.promptOutputPath(options.outputPath, skipPrompts);
+    // Step 6: Prompt for output path or use provided (with app name if specified)
+    const outputPath = await this.promptOutputPath(
+      options.outputPath,
+      skipPrompts,
+      options.appName,
+    );
 
     // Step 7: Generate all files
     this.generateFiles(tableMetadata, columns, features, outputPath);
@@ -125,12 +130,19 @@ export class GenerateCommand {
    * Load generator configuration
    */
   private loadConfig(): void {
-    const configPath = join(process.cwd(), 'generator.config.json');
+    // Try to find config in current directory first, then walk up to project root
+    let configPath = join(process.cwd(), 'generator.config.json');
 
     if (!existsSync(configPath)) {
-      Logger.error('❌ generator.config.json not found!');
-      Logger.info('💡 Run `npx nest-generator init` first to initialize.');
-      process.exit(1);
+      // Try to find project root
+      const projectRoot = this.findProjectRoot();
+      configPath = join(projectRoot, 'generator.config.json');
+
+      if (!existsSync(configPath)) {
+        Logger.error('❌ generator.config.json not found!');
+        Logger.info('💡 Run `npx nest-generator init` first to initialize.');
+        process.exit(1);
+      }
     }
 
     const configContent = readFileSync(configPath, 'utf-8');
@@ -139,6 +151,42 @@ export class GenerateCommand {
     // Resolve environment variables in config
     this.config = this.resolveEnvVariables(rawConfig);
     Logger.info('✓ Configuration loaded');
+  }
+
+  /**
+   * Find project root by looking for package.json
+   * Same logic as init command
+   */
+  private findProjectRoot(): string {
+    let currentDir = process.cwd();
+    const maxDepth = 10;
+    let depth = 0;
+
+    while (depth < maxDepth) {
+      const packageJsonPath = join(currentDir, 'package.json');
+
+      if (existsSync(packageJsonPath)) {
+        const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+
+        if (packageJson.workspaces || existsSync(join(currentDir, 'apps'))) {
+          return currentDir;
+        }
+
+        const parentDir = join(currentDir, '..');
+        if (!existsSync(join(parentDir, 'apps'))) {
+          return currentDir;
+        }
+      }
+
+      const parentDir = join(currentDir, '..');
+      if (parentDir === currentDir) {
+        break;
+      }
+      currentDir = parentDir;
+      depth++;
+    }
+
+    return process.cwd();
   }
 
   /**
@@ -376,13 +424,17 @@ export class GenerateCommand {
   /**
    * Prompt for output path
    */
-  private async promptOutputPath(providedPath?: string, skipPrompts?: boolean): Promise<string> {
+  private async promptOutputPath(
+    providedPath?: string,
+    skipPrompts?: boolean,
+    appName?: string,
+  ): Promise<string> {
     if (providedPath) {
       return providedPath;
     }
 
-    // Determine default output path based on architecture
-    const defaultPath = this.getDefaultOutputPath();
+    // Determine default output path based on architecture and app name
+    const defaultPath = this.getDefaultOutputPath(appName);
 
     if (skipPrompts) {
       return defaultPath;
@@ -403,34 +455,85 @@ export class GenerateCommand {
   /**
    * Get default output path based on architecture
    */
-  private getDefaultOutputPath(): string {
+  private getDefaultOutputPath(appName?: string): string {
     const architecture = this.config?.architecture || 'standalone';
+    const cwd = process.cwd();
+    const projectRoot = this.findProjectRoot();
 
     switch (architecture) {
       case 'standalone':
-        // Check if apps/standalone/src exists
-        if (existsSync(join(process.cwd(), 'apps/standalone/src'))) {
-          return join(process.cwd(), 'apps/standalone/src');
+        // If in project root, use apps/standalone/src
+        if (cwd === projectRoot && existsSync(join(projectRoot, 'apps/standalone/src'))) {
+          return join(projectRoot, 'apps/standalone/src');
         }
-        // Fallback to src if in a standalone app root
-        return join(process.cwd(), 'src');
+        // If already in standalone app directory, use src
+        return join(cwd, 'src');
 
       case 'monorepo':
-        // For monorepo, need to determine which app
-        // Default to src (user should be in the app directory)
-        return join(process.cwd(), 'src');
+        // If app name is provided via --app flag, use it
+        if (appName) {
+          const appPath = join(projectRoot, 'apps/monorepo', appName, 'src');
+          if (existsSync(join(projectRoot, 'apps/monorepo', appName))) {
+            return appPath;
+          }
+          Logger.error(`❌ App '${appName}' not found in apps/monorepo/`);
+          process.exit(1);
+        }
+
+        // Detect which app we're in by checking current directory path
+        const relativePath = cwd.replace(projectRoot, '');
+
+        // If in apps/monorepo/[app-name], use src in current directory
+        if (relativePath.includes('apps/monorepo/')) {
+          return join(cwd, 'src');
+        }
+
+        // If in project root, cannot auto-detect app
+        if (cwd === projectRoot) {
+          Logger.warn(
+            '⚠️  Running from project root. Please use --app flag or cd into the app directory.',
+          );
+          Logger.info('   Example: nest-generator generate table --app=user');
+          Logger.info('   Or:      cd apps/monorepo/user && nest-generator generate table');
+          process.exit(1);
+        }
+
+        // Default to src in current directory
+        return join(cwd, 'src');
 
       case 'microservices':
-        // For microservices, need to determine which service
-        // Default to src (user should be in the service directory)
-        return join(process.cwd(), 'src');
+        // If app name is provided via --app flag, use it
+        if (appName) {
+          const servicePath = join(projectRoot, 'apps/microservices', appName, 'src');
+          if (existsSync(join(projectRoot, 'apps/microservices', appName))) {
+            return servicePath;
+          }
+          Logger.error(`❌ Service '${appName}' not found in apps/microservices/`);
+          process.exit(1);
+        }
+
+        // Same logic as monorepo
+        const microservicePath = cwd.replace(projectRoot, '');
+
+        if (microservicePath.includes('apps/microservices/')) {
+          return join(cwd, 'src');
+        }
+
+        if (cwd === projectRoot) {
+          Logger.warn(
+            '⚠️  Running from project root. Please use --app flag or cd into the service directory.',
+          );
+          Logger.info('   Example: nest-generator generate table --app=user');
+          Logger.info('   Or:      cd apps/microservices/user && nest-generator generate table');
+          process.exit(1);
+        }
+
+        return join(cwd, 'src');
 
       default:
-        return join(process.cwd(), 'src');
+        return join(cwd, 'src');
     }
-  }
-
-  /**
+  } /**
    * Generate all files
    */
   private generateFiles(

@@ -507,6 +507,7 @@ npm run publish:all-libs
 ### Generator Documentation
 
 **Complete Documentation Index](./docs/generator/INDEX.md)** - All generator documentation in one place
+
 - **[Quick Start Guide](./docs/generator/QUICKSTART.md)** - Get started in 5 minutes
 - **[Feature Scoring](./docs/generator/FEATURE_SCORING.md)** - Complete feature analysis (119/100)
 - **[Microservices Quickstart](./docs/generator/quickstart/MICROSERVICES_QUICKSTART.md)** - Microservices setup guide (NEW!)

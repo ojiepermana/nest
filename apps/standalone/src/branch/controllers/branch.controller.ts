@@ -1,45 +1,46 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload, EventPattern, Ctx, RmqContext } from '@nestjs/microservices';
-import { EntityService } from '../services/entity.service';
-import { CreateEntityDto } from '../dto/create-entity.dto';
-import { UpdateEntityDto } from '../dto/update-entity.dto';
-import { EntityFilterDto } from '../dto/entity-filter.dto';
+import { BranchService } from '../services/branch.service';
+import { CreateBranchDto } from '../dto/branch/create-branch.dto';
+import { UpdateBranchDto } from '../dto/branch/update-branch.dto';
+import { BranchFilterDto } from '../dto/branch/branch-filter.dto';
 
 @Controller()
-export class EntityController {
-  constructor(private readonly service: EntityService) {}
+export class BranchController {
+  constructor(private readonly service: BranchService) {}
+
 
   // GENERATED_HANDLER_START: findAll
-  @MessagePattern('entity.findAll')
-  async findAll(@Payload() filters: EntityFilterDto) {
+  @MessagePattern('branch.findAll')
+  async findAll(@Payload() filters: BranchFilterDto) {
     return this.service.findAll();
   }
   // GENERATED_HANDLER_END: findAll
 
   // GENERATED_HANDLER_START: findOne
-  @MessagePattern('entity.findOne')
+  @MessagePattern('branch.findOne')
   async findOne(@Payload() data: { id: string }) {
     return this.service.findOne(data.id);
   }
   // GENERATED_HANDLER_END: findOne
 
   // GENERATED_HANDLER_START: create
-  @MessagePattern('entity.create')
-  async create(@Payload() dto: CreateEntityDto) {
+  @MessagePattern('branch.create')
+  async create(@Payload() dto: CreateBranchDto) {
     return this.service.create(dto);
   }
   // GENERATED_HANDLER_END: create
 
   // GENERATED_HANDLER_START: update
-  @MessagePattern('entity.update')
-  async update(@Payload() data: { id: string } & UpdateEntityDto) {
+  @MessagePattern('branch.update')
+  async update(@Payload() data: { id: string } & UpdateBranchDto) {
     const { id, ...dto } = data;
     return this.service.update(id, dto);
   }
   // GENERATED_HANDLER_END: update
 
   // GENERATED_HANDLER_START: remove
-  @MessagePattern('entity.remove')
+  @MessagePattern('branch.remove')
   async remove(@Payload() data: { id: string }) {
     return this.service.remove(data.id);
   }
@@ -48,4 +49,6 @@ export class EntityController {
   // CUSTOM_HANDLER_START: custom-handlers
   // Add your custom message pattern handlers here
   // CUSTOM_HANDLER_END: custom-handlers
+
+
 }

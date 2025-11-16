@@ -1,18 +1,10 @@
 /**
- * Main entity records for customers, vendors, and business partners
- * Table: entity
+ * Company branch offices and regional locations
+ * Table: branch
  */
-export class Entity {
+export class Branch {
   /** Address */
   address?: string;
-  /** Avatar Doc Id */
-  avatarDocId?: string;
-  /** Birth Date */
-  birthDate?: Date;
-  /** Brand */
-  brand?: string;
-  /** Business Entity Id */
-  businessEntityId?: string;
   /** Unique code for identification */
   code?: string;
   /** Record creation timestamp */
@@ -25,18 +17,14 @@ export class Entity {
   email?: string;
   /** Primary key - unique identifier */
   id?: string;
-  /** Local Phone */
-  localPhone?: string;
-  /** Name or title */
-  name?: string;
+  /** No */
+  no?: number;
   /** Legacy system ID for data migration */
   oldId?: string;
-  /** Postcode */
-  postcode?: string;
   /** Region Code */
   regionCode?: string;
-  /** Record status (active/inactive) */
-  status?: string;
+  /** Regional */
+  regional?: string;
   /** Type */
   type?: string;
   /** Last update timestamp (auto-updated) */

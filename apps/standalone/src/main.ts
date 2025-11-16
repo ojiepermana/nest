@@ -21,6 +21,7 @@ async function bootstrap() {
     .setDescription('Auto-generated CRUD API documentation')
     .setVersion('1.0')
     .addTag('entity', 'Entity CRUD operations')
+    .addTag('branch', 'Branch CRUD operations')
     .addBearerAuth()
     .build();
 

@@ -10,7 +10,8 @@ import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.i
 
 export interface GatewayControllerGeneratorOptions {
   tableName: string;
-  serviceName: string;
+  serviceName: string; // For @Inject - app name (e.g., 'entity', 'user')
+  resourceName?: string; // For message patterns - table name (e.g., 'location', 'business-entity')
   serviceHost: string;
   servicePort: number;
   transport: 'TCP' | 'REDIS' | 'NATS' | 'MQTT' | 'RMQ';
@@ -102,7 +103,8 @@ export class ${controllerName} {`;
    * Generate proxy endpoints
    */
   private generateProxyEndpoints(entityName: string): string {
-    const serviceName = this.options.serviceName.toLowerCase();
+    // Use resourceName for message patterns (table name), or fallback to serviceName
+    const resourceName = (this.options.resourceName || this.options.serviceName).toLowerCase();
     const camelName = toCamelCase(entityName);
 
     const endpoints = `
@@ -112,7 +114,7 @@ export class ${controllerName} {`;
   @Get()
   async findAll(@Query() filters: ${entityName}FilterDto) {
     return firstValueFrom(
-      this.client.send('${serviceName}.findAll', filters),
+      this.client.send('${resourceName}.findAll', filters),
     );
   }
   // GENERATED_ENDPOINT_END: findAll
@@ -122,7 +124,7 @@ export class ${controllerName} {`;
   @Get('recap')
   async getRecap(@Query() dto: any) {
     return firstValueFrom(
-      this.client.send('${serviceName}.getRecap', dto),
+      this.client.send('${resourceName}.getRecap', dto),
     );
   }
   // GENERATED_ENDPOINT_END: recap
@@ -132,7 +134,7 @@ export class ${controllerName} {`;
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return firstValueFrom(
-      this.client.send('${serviceName}.findOne', { id }),
+      this.client.send('${resourceName}.findOne', { id }),
     );
   }
   // GENERATED_ENDPOINT_END: findOne
@@ -142,7 +144,7 @@ export class ${controllerName} {`;
   @Post()
   async create(@Body() dto: Create${entityName}Dto) {
     return firstValueFrom(
-      this.client.send('${serviceName}.create', dto),
+      this.client.send('${resourceName}.create', dto),
     );
   }
   // GENERATED_ENDPOINT_END: create
@@ -155,7 +157,7 @@ export class ${controllerName} {`;
     @Body() dto: Update${entityName}Dto,
   ) {
     return firstValueFrom(
-      this.client.send('${serviceName}.update', { id, ...dto }),
+      this.client.send('${resourceName}.update', { id, ...dto }),
     );
   }
   // GENERATED_ENDPOINT_END: update
@@ -165,7 +167,7 @@ export class ${controllerName} {`;
   @Delete(':id')
   async remove(@Param('id') id: string) {
     return firstValueFrom(
-      this.client.send('${serviceName}.remove', { id }),
+      this.client.send('${resourceName}.remove', { id }),
     );
   }
   // GENERATED_ENDPOINT_END: remove

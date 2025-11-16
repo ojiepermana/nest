@@ -8,6 +8,15 @@
     "tsConfigPath": "apps/standalone/tsconfig.app.json"
   },
   "projects": {
+    "entity": {
+      "type": "application",
+      "root": "apps/entity",
+      "entryFile": "main",
+      "sourceRoot": "apps/entity/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/entity/tsconfig.app.json"
+      }
+    },
     "generator": {
       "type": "library",
       "root": "libs/generator",
@@ -24,33 +33,6 @@
         ]
       }
     },
-    "standalone": {
-      "type": "application",
-      "root": "apps/standalone",
-      "entryFile": "main",
-      "sourceRoot": "apps/standalone/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/standalone/tsconfig.app.json"
-      }
-    },
-    "monorepo-user": {
-      "type": "application",
-      "root": "apps/monorepo/user",
-      "entryFile": "main",
-      "sourceRoot": "apps/monorepo/user/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/monorepo/user/tsconfig.app.json"
-      }
-    },
-    "monorepo-order": {
-      "type": "application",
-      "root": "apps/monorepo/order",
-      "entryFile": "main",
-      "sourceRoot": "apps/monorepo/order/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/monorepo/order/tsconfig.app.json"
-      }
-    },
     "microservices-gateway": {
       "type": "application",
       "root": "apps/microservices/gateway",
@@ -58,6 +40,15 @@
       "sourceRoot": "apps/microservices/gateway/src",
       "compilerOptions": {
         "tsConfigPath": "apps/microservices/gateway/tsconfig.app.json"
+      }
+    },
+    "microservices-order": {
+      "type": "application",
+      "root": "apps/microservices/order",
+      "entryFile": "main",
+      "sourceRoot": "apps/microservices/order/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/microservices/order/tsconfig.app.json"
       }
     },
     "microservices-user": {
@@ -69,13 +60,31 @@
         "tsConfigPath": "apps/microservices/user/tsconfig.app.json"
       }
     },
-    "microservices-order": {
+    "monorepo-order": {
       "type": "application",
-      "root": "apps/microservices/order",
+      "root": "apps/monorepo/order",
       "entryFile": "main",
-      "sourceRoot": "apps/microservices/order/src",
+      "sourceRoot": "apps/monorepo/order/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/microservices/order/tsconfig.app.json"
+        "tsConfigPath": "apps/monorepo/order/tsconfig.app.json"
+      }
+    },
+    "monorepo-user": {
+      "type": "application",
+      "root": "apps/monorepo/user",
+      "entryFile": "main",
+      "sourceRoot": "apps/monorepo/user/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/monorepo/user/tsconfig.app.json"
+      }
+    },
+    "standalone": {
+      "type": "application",
+      "root": "apps/standalone",
+      "entryFile": "main",
+      "sourceRoot": "apps/standalone/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/standalone/tsconfig.app.json"
       }
     }
   },

@@ -1113,22 +1113,150 @@ export * from './controllers/${moduleName}.controller';
         moduleContent = moduleContent.replace(lastImport, `${lastImport}\n${moduleImport}`);
       }
 
-      // Add to imports array
-      const importsMatch = moduleContent.match(/imports:\s*\[([\s\S]*?)\]/);
+      // Add to imports array with proper formatting
+      const importsMatch = moduleContent.match(/imports:\s*\[([^\]]*)\]/s);
       if (importsMatch && !importsMatch[1].includes(`${pascalSchema}Module`)) {
-        moduleContent = moduleContent.replace(/imports:\s*\[([\s\S]*?)\]/, (match, p1) => {
-          const imports = p1.trim();
-          if (imports) {
-            return `imports: [${imports}, ${pascalSchema}Module]`;
-          }
-          return `imports: [${pascalSchema}Module]`;
-        });
+        const currentImports = importsMatch[1];
+
+        // If empty array, just add the module
+        if (!currentImports.trim()) {
+          moduleContent = moduleContent.replace(
+            /imports:\s*\[([^\]]*)\]/s,
+            `imports: [\n    ${pascalSchema}Module,\n  ]`,
+          );
+        } else {
+          // Add at the beginning of imports array with proper indent
+          moduleContent = moduleContent.replace(
+            /imports:\s*\[/,
+            `imports: [\n    ${pascalSchema}Module,`,
+          );
+        }
       }
 
       writeFileSync(gatewayModulePath, moduleContent, 'utf-8');
       Logger.info(`   ✓ Registered ${pascalSchema}Module to ${moduleFilename}`);
     } catch (error) {
       Logger.warn(`   ⚠ Failed to register to gateway module: ${(error as Error).message}`);
+    }
+  }
+
+  /**
+   * Register service client to gateway module's ClientsModule
+   * Bug Fix #1 & #3: Proper array formatting and auto-register service client
+   */
+  private registerServiceClientToGateway(gatewayDir: string, serviceName: string): void {
+    try {
+      const srcDir = join(gatewayDir, 'src');
+
+      // Find gateway module file
+      let gatewayModulePath = join(srcDir, 'gateway.module.ts');
+      if (!existsSync(gatewayModulePath)) {
+        gatewayModulePath = join(srcDir, 'app.module.ts');
+      }
+      if (!existsSync(gatewayModulePath)) {
+        Logger.warn('   ⚠ Gateway module not found, skipping service client registration');
+        return;
+      }
+
+      let moduleContent = readFileSync(gatewayModulePath, 'utf-8');
+      const serviceConstant = `${serviceName.toUpperCase()}_SERVICE`;
+
+      // Check if service client already registered
+      if (moduleContent.includes(serviceConstant)) {
+        Logger.info(`   ℹ ${serviceConstant} already registered`);
+        return;
+      }
+
+      // Add ClientsModule and Transport imports if not present
+      if (!moduleContent.includes("from '@nestjs/microservices'")) {
+        const lastImportMatch = moduleContent.match(/^import .* from .*$/gm);
+        if (lastImportMatch) {
+          const lastImport = lastImportMatch[lastImportMatch.length - 1];
+          const microservicesImport = `import { ClientsModule, Transport } from '@nestjs/microservices';`;
+          moduleContent = moduleContent.replace(
+            lastImport,
+            `${lastImport}\n${microservicesImport}`,
+          );
+        }
+      }
+
+      // Get service port from config or use default based on service name
+      const servicePort = process.env[`${serviceConstant}_PORT`] || '3001';
+
+      // Build service client registration
+      const clientConfig = `    ClientsModule.register([
+      {
+        name: '${serviceConstant}',
+        transport: Transport.TCP,
+        options: {
+          host: process.env.${serviceConstant}_HOST || 'localhost',
+          port: parseInt(process.env.${serviceConstant}_PORT || '${servicePort}'),
+        },
+      },
+    ])`;
+
+      // Fix Bug #1: Add as separate item in imports array, not concatenated
+      const importsMatch = moduleContent.match(/imports:\s*\[([^\]]*)\]/s);
+      if (importsMatch) {
+        const currentImports = importsMatch[1].trim();
+
+        // Check if ClientsModule.register already exists
+        if (currentImports.includes('ClientsModule.register')) {
+          Logger.info('   ℹ ClientsModule already configured, skipping');
+          return;
+        }
+
+        let newImports;
+        if (currentImports) {
+          // Re-format existing imports to multi-line with proper indentation
+          const existingModules = currentImports
+            .split(',')
+            .map((m) => m.trim())
+            .filter((m) => m);
+          const formattedExisting = existingModules.map((m) => `    ${m}`).join(',\n');
+          newImports = `imports: [\n${formattedExisting},\n${clientConfig},\n  ]`;
+        } else {
+          newImports = `imports: [\n${clientConfig},\n  ]`;
+        }
+
+        moduleContent = moduleContent.replace(/imports:\s*\[([^\]]*)\]/s, newImports);
+        writeFileSync(gatewayModulePath, moduleContent, 'utf-8');
+        Logger.info(`   ✓ Registered ${serviceConstant} to ClientsModule`);
+      }
+    } catch (error) {
+      Logger.warn(`   ⚠ Failed to register service client: ${(error as Error).message}`);
+    }
+  }
+
+  /**
+   * Add environment variables to gateway .env file
+   * Bug Fix #4: Auto-append environment variables
+   */
+  private addGatewayEnvironmentVariables(gatewayDir: string, serviceName: string): void {
+    try {
+      const envPath = join(gatewayDir, '.env');
+      const serviceConstant = serviceName.toUpperCase();
+      const envVarHost = `${serviceConstant}_SERVICE_HOST`;
+      const envVarPort = `${serviceConstant}_SERVICE_PORT`;
+
+      let envContent = '';
+      if (existsSync(envPath)) {
+        envContent = readFileSync(envPath, 'utf-8');
+      }
+
+      // Check if variables already exist
+      if (envContent.includes(envVarHost) && envContent.includes(envVarPort)) {
+        return; // Already configured
+      }
+
+      // Append environment variables
+      const newEnvVars = `\n# ${serviceName.charAt(0).toUpperCase() + serviceName.slice(1)} Service Configuration\n${envVarHost}=localhost\n${envVarPort}=3001\n`;
+
+      envContent += newEnvVars;
+      writeFileSync(envPath, envContent, 'utf-8');
+      Logger.info(`   ✓ Added ${serviceName} service environment variables to .env`);
+    } catch (error) {
+      Logger.warn(`   ⚠ Failed to add environment variables: ${(error as Error).message}`);
     }
   }
 
@@ -1492,7 +1620,8 @@ export * from './controllers/${moduleName}.controller';
 
       const gatewayGenerator = new GatewayControllerGenerator(tableMetadata, columns, {
         tableName,
-        serviceName: serviceNameForInjection,
+        serviceName: serviceNameForInjection, // For @Inject('ENTITY_SERVICE')
+        resourceName: moduleName, // For message patterns (location, business-entity, etc.)
         serviceHost: process.env.SERVICE_HOST || 'localhost',
         servicePort: parseInt(process.env.SERVICE_PORT || '3001'),
         transport:
@@ -1531,6 +1660,12 @@ export * from './controllers/${moduleName}.controller';
 
       // Register schema module to gateway.module.ts
       this.registerModuleToGateway(gatewayDir, schemaName);
+
+      // Register service client to gateway module if not exists
+      this.registerServiceClientToGateway(gatewayDir, serviceNameForInjection);
+
+      // Add environment variables to gateway .env if not exists
+      this.addGatewayEnvironmentVariables(gatewayDir, serviceNameForInjection);
 
       Logger.success(`   ✓ Gateway controller generated at: ${gatewayAppPath}/src/${schemaName}`);
     } catch (error) {

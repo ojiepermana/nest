@@ -168,14 +168,34 @@ Distributed services with API gateway pattern:
 
 ## Generated Files
 
-For each table in metadata, generates:
+For each table in metadata, generates an organized directory structure:
 
-- `dto/*.dto.ts` - DTOs with validation (Create, Update, Filter, Response)
-- `*.query.ts` - SQL queries (JOINs, CTEs, Aggregations)
-- `repositories/*.repository.ts` - Database operations with raw SQL
-- `services/*.service.ts` - Business logic with audit trail
-- `controllers/*.controller.ts` - REST endpoints or @MessagePattern handlers
-- `*.module.ts` - NestJS module with all dependencies
+```
+{module-name}/
+├── controllers/
+│   └── {table}.controller.ts      # REST or @MessagePattern handlers
+├── dto/
+│   └── {table}/
+│       ├── create-{table}.dto.ts  # Create DTO with validation
+│       ├── update-{table}.dto.ts  # Update DTO (partial)
+│       └── {table}-filter.dto.ts  # Query filters (12+ operators)
+├── entities/
+│   └── {table}.entity.ts          # Plain TypeScript entity
+├── repositories/
+│   └── {table}.repository.ts      # Database operations (raw SQL)
+├── services/
+│   └── {table}.service.ts         # Business logic + audit
+├── {module-name}.module.ts        # NestJS module wiring
+└── index.ts                       # Barrel exports
+```
+
+**Example for `users.profile` schema:**
+
+- `controllers/users.controller.ts` and `controllers/profile.controller.ts`
+- `dto/users/` and `dto/profile/` subdirectories
+- `entities/users.entity.ts` and `entities/profile.entity.ts`
+- `repositories/users.repository.ts` and `repositories/profile.repository.ts`
+- `services/users.service.ts` and `services/profile.service.ts`
 
 **Architecture-specific:**
 

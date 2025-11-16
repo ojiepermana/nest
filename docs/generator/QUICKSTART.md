@@ -75,7 +75,32 @@ Key flags you can pass:
 - `--storageProvider <local|s3|gcs|azure>` when enabling file upload
 - `--all` to enable every available feature in one go
 
-The generator will fetch metadata, create the module under `src/users/` (path depends on architecture), and auto-register the module in `app.module.ts`. Swagger configuration and RBAC module registration are also handled when the related features are enabled.
+The generator will fetch metadata, create an organized module structure with subdirectories for each component type (controllers/, dto/, entities/, repositories/, services/), and auto-register the module in `app.module.ts`.
+
+**Generated structure example for `schema.table`:**
+
+```
+src/modules/{schema-table}/
+├── controllers/
+│   └── table.controller.ts
+├── dto/
+│   └── table/
+│       ├── create-table.dto.ts
+│       ├── update-table.dto.ts
+│       └── table-filter.dto.ts
+├── entities/
+│   └── table.entity.ts
+├── repositories/
+│   └── table.repository.ts
+├── services/
+│   └── table.service.ts
+├── {schema-table}.module.ts
+└── index.ts
+```
+
+For multi-table schemas (e.g., `users.profile` and `users.settings`), each table gets its own subdirectory within dto/, and separate files in controllers/, entities/, repositories/, and services/.
+
+Swagger configuration and RBAC module registration are also handled when the related features are enabled.
 
 ### 4. Run the application
 

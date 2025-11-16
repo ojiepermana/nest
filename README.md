@@ -140,12 +140,29 @@ Options:
 
 ```
 src/modules/users-profile/
-├── users-profile.dto.ts          # DTOs (Create, Update, Filter, Response)
-├── users-profile.query.ts        # SQL queries (JOINs, CTEs, Aggregations)
-├── users-profile.repository.ts   # Database operations
-├── users-profile.service.ts      # Business logic with audit
-├── users-profile.controller.ts   # REST endpoints with RBAC
-└── users-profile.module.ts       # NestJS module
+├── controllers/
+│   ├── users.controller.ts       # Users resource controller
+│   └── profile.controller.ts     # Profile resource controller
+├── dto/
+│   ├── users/
+│   │   ├── create-users.dto.ts
+│   │   ├── update-users.dto.ts
+│   │   └── users-filter.dto.ts
+│   └── profile/
+│       ├── create-profile.dto.ts
+│       ├── update-profile.dto.ts
+│       └── profile-filter.dto.ts
+├── entities/
+│   ├── users.entity.ts
+│   └── profile.entity.ts
+├── repositories/
+│   ├── users.repository.ts
+│   └── profile.repository.ts
+├── services/
+│   ├── users.service.ts
+│   └── profile.service.ts
+├── users-profile.module.ts       # Module wiring all components
+└── index.ts                      # Barrel exports
 ```
 
 **5. Use RBAC decorators:**
@@ -197,12 +214,30 @@ npx @ojiepermana/nest-generator generate users.profile
 apps/standalone/
 ├── src/
 │   ├── modules/
-│   │   └── users-profile/        # Generated module
-│   │       ├── users-profile.dto.ts
-│   │       ├── users-profile.repository.ts
-│   │       ├── users-profile.service.ts
-│   │       ├── users-profile.controller.ts
-│   │       └── users-profile.module.ts
+│   │   └── users-profile/         # Generated module
+│   │       ├── controllers/
+│   │       │   ├── users.controller.ts
+│   │       │   └── profile.controller.ts
+│   │       ├── dto/
+│   │       │   ├── users/
+│   │       │   │   ├── create-users.dto.ts
+│   │       │   │   ├── update-users.dto.ts
+│   │       │   │   └── users-filter.dto.ts
+│   │       │   └── profile/
+│   │       │       ├── create-profile.dto.ts
+│   │       │       ├── update-profile.dto.ts
+│   │       │       └── profile-filter.dto.ts
+│   │       ├── entities/
+│   │       │   ├── users.entity.ts
+│   │       │   └── profile.entity.ts
+│   │       ├── repositories/
+│   │       │   ├── users.repository.ts
+│   │       │   └── profile.repository.ts
+│   │       ├── services/
+│   │       │   ├── users.service.ts
+│   │       │   └── profile.service.ts
+│   │       ├── users-profile.module.ts
+│   │       └── index.ts
 │   ├── database/                 # Shared database module
 │   ├── rbac/                     # RBAC system (if enabled)
 │   └── app.module.ts
@@ -248,12 +283,32 @@ apps/monorepo/
 │   ├── src/
 │   │   ├── modules/
 │   │   │   └── users-profile/    # Generated module
+│   │   │       ├── controllers/
+│   │   │       │   ├── users.controller.ts
+│   │   │       │   └── profile.controller.ts
+│   │   │       ├── dto/
+│   │   │       │   ├── users/*.dto.ts
+│   │   │       │   └── profile/*.dto.ts
+│   │   │       ├── entities/
+│   │   │       │   ├── users.entity.ts
+│   │   │       │   └── profile.entity.ts
+│   │   │       ├── repositories/
+│   │   │       ├── services/
+│   │   │       ├── users-profile.module.ts
+│   │   │       └── index.ts
 │   │   └── user.module.ts
 │   └── generator.config.json
 ├── order/
 │   ├── src/
 │   │   ├── modules/
 │   │   │   └── orders/           # Generated module
+│   │   │       ├── controllers/
+│   │   │       │   └── orders.controller.ts
+│   │   │       ├── dto/orders/
+│   │   │       ├── entities/
+│   │   │       ├── repositories/
+│   │   │       ├── services/
+│   │   │       └── orders.module.ts
 │   │   └── order.module.ts
 │   └── generator.config.json
 └── libs/                         # Shared libraries (optional)
@@ -309,20 +364,43 @@ npx @ojiepermana/nest-generator generate users.profile
 apps/microservices/
 ├── gateway/                      # API Gateway
 │   ├── src/
-│   │   ├── controllers/
-│   │   │   └── users-profile.controller.ts  # HTTP endpoints
+│   │   ├── modules/
+│   │   │   └── users-profile/
+│   │   │       ├── controllers/
+│   │   │       │   ├── users.controller.ts      # HTTP + ClientProxy
+│   │   │       │   └── profile.controller.ts    # HTTP + ClientProxy
+│   │   │       └── users-profile.module.ts
 │   │   └── gateway.module.ts
 │   └── generator.config.json
 ├── user/                         # User Microservice
 │   ├── src/
 │   │   ├── modules/
 │   │   │   └── users-profile/    # Generated module
+│   │   │       ├── controllers/
+│   │   │       │   ├── users.controller.ts      # @MessagePattern
+│   │   │       │   └── profile.controller.ts    # @MessagePattern
+│   │   │       ├── dto/
+│   │   │       │   ├── users/*.dto.ts
+│   │   │       │   └── profile/*.dto.ts
+│   │   │       ├── entities/
+│   │   │       │   ├── users.entity.ts
+│   │   │       │   └── profile.entity.ts
+│   │   │       ├── repositories/
+│   │   │       ├── services/
+│   │   │       └── users-profile.module.ts
 │   │   └── main.ts
 │   └── generator.config.json
 └── order/                        # Order Microservice
     ├── src/
     │   ├── modules/
     │   │   └── orders/
+    │   │       ├── controllers/
+    │   │       │   └── orders.controller.ts
+    │   │       ├── dto/orders/
+    │   │       ├── entities/
+    │   │       ├── repositories/
+    │   │       ├── services/
+    │   │       └── orders.module.ts
     │   └── main.ts
     └── generator.config.json
 ```

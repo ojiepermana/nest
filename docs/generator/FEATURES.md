@@ -44,24 +44,28 @@ Legend: Complete = shipped - Optional = manual enablement
 
 - Emits plain TypeScript classes that mirror metadata columns (no ORM dependency)
 - Handles soft delete columns, defaults, enums, and database type mapping
+- **Output**: `entities/{table-name}.entity.ts` (e.g., `entities/users.entity.ts`, `entities/profile.entity.ts`)
 - Source: `generators/entity/entity.generator.ts`
 
 ### DTO Generators
 
 - Produce `Create`, `Update`, and `Filter` DTOs with class-validator + Swagger decorators
 - Filter DTO supports 12 operators (`_eq`, `_between`, `_like`, etc.) and ignores pagination keys
+- **Output**: `dto/{table-name}/` subdirectories (e.g., `dto/users/create-users.dto.ts`, `dto/profile/create-profile.dto.ts`)
 - Sources: `generators/dto/create-dto.generator.ts`, `update-dto.generator.ts`, `filter-dto.generator.ts`
 
 ### Repository Generator
 
 - Builds parameterised SQL for PostgreSQL and MySQL using metadata-provided schema
 - Supports pagination, sorting, JOIN detection, recap/analytics queries, and caching hooks
+- **Output**: `repositories/{table-name}.repository.ts` (e.g., `repositories/users.repository.ts`)
 - Source: `generators/repository/repository.generator.ts`
 
 ### Service Generator
 
 - Wraps repository calls and applies audit logging, caching, RBAC guards, and transactions
 - Exposes `findWithFilters`, `findOne`, `create`, `update`, `remove`, recap helpers, and statistics
+- **Output**: `services/{table-name}.service.ts` (e.g., `services/users.service.ts`)
 - Source: `generators/service/service.generator.ts`
 
 ### Controller Generator
@@ -69,12 +73,14 @@ Legend: Complete = shipped - Optional = manual enablement
 - REST endpoints (`POST`, `GET`, `GET /filter`, `GET :id`, `PUT`, `DELETE`) with optional RBAC decorators
 - **Microservices**: Detects architecture and generates either HTTP controllers or @MessagePattern handlers
 - Adds Swagger metadata, DTO validation pipes, and pagination parameters automatically
+- **Output**: `controllers/{table-name}.controller.ts` (e.g., `controllers/users.controller.ts`, `controllers/profile.controller.ts`)
 - Sources: `generators/controller/controller.generator.ts`, `gateway-controller.generator.ts`, `service-controller.generator.ts`
 
 ### Module Generator
 
 - Wires providers, feature modules (Audit, Cache, RBAC, Storage), and exports services
 - Adjusts imports based on architecture (standalone, monorepo, microservices)
+- **Output**: `{module-name}.module.ts` and `index.ts` (barrel exports)
 - Source: `generators/module/module.generator.ts`
 
 ### Test Generator

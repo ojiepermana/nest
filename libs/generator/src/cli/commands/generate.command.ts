@@ -592,15 +592,26 @@ export class GenerateCommand {
 
     Logger.info('\n🔨 Generating files...');
 
-    // Create directory structure
-    const moduleDir = join(outputPath, moduleName);
-    this.ensureDirectory(moduleDir);
-    this.ensureDirectory(join(moduleDir, 'entities'));
-    this.ensureDirectory(join(moduleDir, 'dto'));
-    this.ensureDirectory(join(moduleDir, 'dto', moduleName)); // DTO subdirectory per table
-    this.ensureDirectory(join(moduleDir, 'repositories'));
-    this.ensureDirectory(join(moduleDir, 'services'));
-    this.ensureDirectory(join(moduleDir, 'controllers'));
+    const architecture = this.config?.architecture || 'standalone';
+    const isGateway = this.detectIsGateway(outputPath);
+
+    // For microservices: Generate shared contracts first
+    if (architecture === 'microservices' && !isGateway) {
+      this.generateSharedContracts(tableMetadata, columns, moduleName, features);
+    }
+
+    // Create directory structure based on SCHEMA
+    // Structure: src/{schema}/controllers/{table}.controller.ts
+    const schemaName = this.toKebabCase(schema || 'default');
+    const schemaDir = join(outputPath, schemaName);
+
+    this.ensureDirectory(schemaDir);
+    this.ensureDirectory(join(schemaDir, 'controllers'));
+    this.ensureDirectory(join(schemaDir, 'entities'));
+    this.ensureDirectory(join(schemaDir, 'dto'));
+    this.ensureDirectory(join(schemaDir, 'dto', moduleName)); // DTO subdirectory per table
+    this.ensureDirectory(join(schemaDir, 'repositories'));
+    this.ensureDirectory(join(schemaDir, 'services'));
 
     // 1. Generate Entity
     Logger.info('   ⏳ Generating entity...');
@@ -612,43 +623,51 @@ export class GenerateCommand {
       useTypeORM: false, // Use plain TypeScript classes instead of TypeORM
     });
     const entityCode = entityGenerator.generate();
-    this.writeFile(join(moduleDir, 'entities', `${moduleName}.entity.ts`), entityCode);
+    this.writeFile(join(schemaDir, 'entities', `${moduleName}.entity.ts`), entityCode);
     Logger.info('   ✓ Entity generated');
 
     // 2. Generate DTOs
     Logger.info('   ⏳ Generating DTOs...');
-    const createDtoGenerator = new CreateDtoGenerator({
-      includeSwagger: features.swagger,
-      includeComments: true,
-    });
-    const createDtoResult = createDtoGenerator.generate(tableMetadata, columns);
-    const createDtoCode = [...createDtoResult.imports, '', createDtoResult.code].join('\n');
-    this.writeFile(
-      join(moduleDir, 'dto', moduleName, `create-${moduleName}.dto.ts`),
-      createDtoCode,
-    );
 
-    const updateDtoGenerator = new UpdateDtoGenerator({
-      includeSwagger: features.swagger,
-      includeComments: true,
-    });
-    const updateDtoResult = updateDtoGenerator.generate(tableMetadata, columns);
-    const updateDtoCode = [...updateDtoResult.imports, '', updateDtoResult.code].join('\n');
-    this.writeFile(
-      join(moduleDir, 'dto', moduleName, `update-${moduleName}.dto.ts`),
-      updateDtoCode,
-    );
+    // For microservices service apps: Import from contracts instead of generating
+    if (architecture === 'microservices' && !isGateway) {
+      this.generateServiceDtosWithContracts(schemaDir, moduleName, tableMetadata, columns);
+    } else {
+      // Standalone, Monorepo, or Gateway: Generate DTOs directly
+      const createDtoGenerator = new CreateDtoGenerator({
+        includeSwagger: features.swagger,
+        includeComments: true,
+      });
+      const createDtoResult = createDtoGenerator.generate(tableMetadata, columns);
+      const createDtoCode = [...createDtoResult.imports, '', createDtoResult.code].join('\n');
+      this.writeFile(
+        join(schemaDir, 'dto', moduleName, `create-${moduleName}.dto.ts`),
+        createDtoCode,
+      );
 
-    const filterDtoGenerator = new FilterDtoGenerator({
-      includeSwagger: features.swagger,
-      includeComments: true,
-    });
-    const filterDtoResult = filterDtoGenerator.generate(tableMetadata, columns);
-    const filterDtoCode = [...filterDtoResult.imports, '', filterDtoResult.code].join('\n');
-    this.writeFile(
-      join(moduleDir, 'dto', moduleName, `${moduleName}-filter.dto.ts`),
-      filterDtoCode,
-    );
+      const updateDtoGenerator = new UpdateDtoGenerator({
+        includeSwagger: features.swagger,
+        includeComments: true,
+      });
+      const updateDtoResult = updateDtoGenerator.generate(tableMetadata, columns);
+      const updateDtoCode = [...updateDtoResult.imports, '', updateDtoResult.code].join('\n');
+      this.writeFile(
+        join(schemaDir, 'dto', moduleName, `update-${moduleName}.dto.ts`),
+        updateDtoCode,
+      );
+
+      const filterDtoGenerator = new FilterDtoGenerator({
+        includeSwagger: features.swagger,
+        includeComments: true,
+      });
+      const filterDtoResult = filterDtoGenerator.generate(tableMetadata, columns);
+      const filterDtoCode = [...filterDtoResult.imports, '', filterDtoResult.code].join('\n');
+      this.writeFile(
+        join(schemaDir, 'dto', moduleName, `${moduleName}-filter.dto.ts`),
+        filterDtoCode,
+      );
+    }
+
     Logger.info('   ✓ DTOs generated (Create, Update, Filter)');
 
     // 3. Generate Repository
@@ -659,7 +678,7 @@ export class GenerateCommand {
       useTypeORM: false,
     });
     const repositoryCode = repositoryGenerator.generate();
-    this.writeFile(join(moduleDir, 'repositories', `${moduleName}.repository.ts`), repositoryCode);
+    this.writeFile(join(schemaDir, 'repositories', `${moduleName}.repository.ts`), repositoryCode);
     Logger.info('   ✓ Repository generated');
 
     // 4. Generate Service
@@ -673,14 +692,11 @@ export class GenerateCommand {
       enableTransactions: false, // Disable for plain SQL (no TypeORM DataSource)
     });
     const serviceCode = serviceGenerator.generate();
-    this.writeFile(join(moduleDir, 'services', `${moduleName}.service.ts`), serviceCode);
+    this.writeFile(join(schemaDir, 'services', `${moduleName}.service.ts`), serviceCode);
     Logger.info('   ✓ Service generated');
 
     // 5. Generate Controller
     Logger.info('   ⏳ Generating controller...');
-
-    const architecture = this.config?.architecture || 'standalone';
-    const isGateway = this.detectIsGateway(outputPath);
 
     let controllerCode: string;
 
@@ -707,6 +723,20 @@ export class GenerateCommand {
         enableEvents: false,
       });
       controllerCode = serviceControllerGenerator.generate();
+
+      // Auto-generate Gateway Controller if gatewayApp is configured
+      if (this.config?.microservices?.gatewayApp) {
+        Logger.info('   🌐 Auto-generating gateway controller...');
+        this.generateGatewayController(
+          tableMetadata,
+          columns,
+          moduleName,
+          tableName,
+          features,
+          basePath,
+          schema || 'default',
+        );
+      }
     } else {
       // Generate standard REST Controller
       Logger.info('   🎯 Generating standard REST controller');
@@ -726,30 +756,244 @@ export class GenerateCommand {
       controllerCode = controllerGenerator.generate();
     }
 
-    this.writeFile(join(moduleDir, 'controllers', `${moduleName}.controller.ts`), controllerCode);
+    this.writeFile(join(schemaDir, 'controllers', `${moduleName}.controller.ts`), controllerCode);
     Logger.info('   ✓ Controller generated');
 
-    // 6. Generate Module
-    Logger.info('   ⏳ Generating module...');
-    const moduleGenerator = new ModuleGenerator(tableMetadata, columns, {
-      tableName,
-      entityName,
-      enableCaching: features.caching,
-      enableAuditLog: features.auditLog,
-      useTypeORM: false,
+    // 6. Update Schema Module (aggregates all tables in schema)
+    Logger.info('   ⏳ Updating schema module...');
+    this.generateOrUpdateSchemaModule(
+      schemaDir,
+      schemaName,
+      moduleName,
+      features,
       architecture,
       isGateway,
-      serviceName: moduleName,
-    });
-    const moduleCode = moduleGenerator.generate();
-    this.writeFile(join(moduleDir, `${moduleName}.module.ts`), moduleCode);
-    Logger.info('   ✓ Module generated');
+    );
+    Logger.info('   ✓ Schema module updated');
 
-    // 7. Generate barrel export (index.ts)
-    Logger.info('   ⏳ Generating barrel exports...');
-    const indexCode = this.generateIndexFile(entityName, moduleName);
-    this.writeFile(join(moduleDir, 'index.ts'), indexCode);
-    Logger.info('   ✓ Index file generated');
+    // 7. Update barrel export (index.ts) at schema level
+    Logger.info('   ⏳ Updating barrel exports...');
+    this.generateOrUpdateSchemaIndex(schemaDir, schemaName, moduleName);
+    Logger.info('   ✓ Index file updated');
+  }
+
+  /**
+   * Generate or update schema-level module that aggregates all tables
+   */
+  private generateOrUpdateSchemaModule(
+    schemaDir: string,
+    schemaName: string,
+    tableName: string,
+    features: any,
+    architecture: string,
+    isGateway: boolean,
+  ): void {
+    const moduleFilePath = join(schemaDir, `${schemaName}.module.ts`);
+    const pascalSchema = this.toPascalCase(schemaName);
+    const pascalTable = this.toPascalCase(tableName);
+
+    // Check if module already exists
+    if (existsSync(moduleFilePath)) {
+      // Update existing module - add new providers/controllers
+      let moduleContent = readFileSync(moduleFilePath, 'utf-8');
+
+      // Add controller import
+      const controllerImport = `import { ${pascalTable}Controller } from './controllers/${tableName}.controller';`;
+      if (!moduleContent.includes(controllerImport)) {
+        const lastImportMatch = moduleContent.match(/^import .* from .*$/gm);
+        if (lastImportMatch) {
+          const lastImport = lastImportMatch[lastImportMatch.length - 1];
+          moduleContent = moduleContent.replace(lastImport, `${lastImport}\n${controllerImport}`);
+        }
+      }
+
+      // Add service import
+      const serviceImport = `import { ${pascalTable}Service } from './services/${tableName}.service';`;
+      if (!moduleContent.includes(serviceImport)) {
+        const controllerImportLine = moduleContent.indexOf(controllerImport);
+        if (controllerImportLine !== -1) {
+          moduleContent = moduleContent.replace(
+            controllerImport,
+            `${controllerImport}\n${serviceImport}`,
+          );
+        }
+      }
+
+      // Add repository import
+      const repositoryImport = `import { ${pascalTable}Repository } from './repositories/${tableName}.repository';`;
+      if (!moduleContent.includes(repositoryImport)) {
+        const serviceImportLine = moduleContent.indexOf(serviceImport);
+        if (serviceImportLine !== -1) {
+          moduleContent = moduleContent.replace(
+            serviceImport,
+            `${serviceImport}\n${repositoryImport}`,
+          );
+        }
+      }
+
+      // Add controller to controllers array
+      const controllersMatch = moduleContent.match(/controllers:\s*\[([\s\S]*?)\]/);
+      if (controllersMatch && !controllersMatch[1].includes(`${pascalTable}Controller`)) {
+        moduleContent = moduleContent.replace(/controllers:\s*\[([\s\S]*?)\]/, (match, p1) => {
+          const controllers = p1.trim();
+          if (controllers) {
+            return `controllers: [${controllers}, ${pascalTable}Controller]`;
+          }
+          return `controllers: [${pascalTable}Controller]`;
+        });
+      }
+
+      // Add providers
+      const providersMatch = moduleContent.match(/providers:\s*\[([\s\S]*?)\]/);
+      if (providersMatch && !providersMatch[1].includes(`${pascalTable}Service`)) {
+        moduleContent = moduleContent.replace(/providers:\s*\[([\s\S]*?)\]/, (match, p1) => {
+          const providers = p1.trim();
+          const newProviders = `${pascalTable}Service, ${pascalTable}Repository`;
+          if (providers) {
+            return `providers: [${providers}, ${newProviders}]`;
+          }
+          return `providers: [${newProviders}]`;
+        });
+      }
+
+      // Add exports
+      const exportsMatch = moduleContent.match(/exports:\s*\[([\s\S]*?)\]/);
+      if (exportsMatch && !exportsMatch[1].includes(`${pascalTable}Service`)) {
+        moduleContent = moduleContent.replace(/exports:\s*\[([\s\S]*?)\]/, (match, p1) => {
+          const exports = p1.trim();
+          const newExports = `${pascalTable}Service, ${pascalTable}Repository`;
+          if (exports) {
+            return `exports: [${exports}, ${newExports}]`;
+          }
+          return `exports: [${newExports}]`;
+        });
+      }
+
+      writeFileSync(moduleFilePath, moduleContent, 'utf-8');
+      Logger.info(`   ✓ Added ${tableName} to existing ${schemaName}.module.ts`);
+    } else {
+      // Create new module
+      const moduleCode = this.generateSchemaModuleCode(
+        schemaName,
+        tableName,
+        features,
+        architecture,
+        isGateway,
+      );
+      this.writeFile(moduleFilePath, moduleCode);
+      Logger.info(`   ✓ Created new ${schemaName}.module.ts`);
+    }
+  }
+
+  /**
+   * Generate schema module code for first table
+   */
+  private generateSchemaModuleCode(
+    schemaName: string,
+    tableName: string,
+    features: any,
+    architecture: string,
+    isGateway: boolean,
+  ): string {
+    const pascalSchema = this.toPascalCase(schemaName);
+    const pascalTable = this.toPascalCase(tableName);
+
+    return `import { Module } from '@nestjs/common';
+import { ${pascalTable}Controller } from './controllers/${tableName}.controller';
+import { ${pascalTable}Service } from './services/${tableName}.service';
+import { ${pascalTable}Repository } from './repositories/${tableName}.repository';
+
+@Module({
+  controllers: [${pascalTable}Controller],
+  providers: [${pascalTable}Service, ${pascalTable}Repository],
+  exports: [${pascalTable}Service, ${pascalTable}Repository],
+})
+export class ${pascalSchema}Module {}
+`;
+  }
+
+  /**
+   * Generate or update schema-level index.ts
+   */
+  private generateOrUpdateSchemaIndex(
+    schemaDir: string,
+    schemaName: string,
+    tableName: string,
+  ): void {
+    const indexFilePath = join(schemaDir, 'index.ts');
+    const pascalTable = this.toPascalCase(tableName);
+
+    const exports = [
+      `export * from './dto/${tableName}/create-${tableName}.dto';`,
+      `export * from './dto/${tableName}/update-${tableName}.dto';`,
+      `export * from './dto/${tableName}/${tableName}-filter.dto';`,
+      `export * from './entities/${tableName}.entity';`,
+      `export * from './controllers/${tableName}.controller';`,
+      `export * from './services/${tableName}.service';`,
+      `export * from './repositories/${tableName}.repository';`,
+    ];
+
+    if (existsSync(indexFilePath)) {
+      // Update existing index
+      let indexContent = readFileSync(indexFilePath, 'utf-8');
+
+      exports.forEach((exportLine) => {
+        if (!indexContent.includes(exportLine)) {
+          indexContent += `${exportLine}\n`;
+        }
+      });
+
+      // Add module export if not exists
+      const moduleExport = `export * from './${schemaName}.module';`;
+      if (!indexContent.includes(moduleExport)) {
+        indexContent += `${moduleExport}\n`;
+      }
+
+      writeFileSync(indexFilePath, indexContent, 'utf-8');
+    } else {
+      // Create new index
+      const indexCode = `// ${this.toPascalCase(schemaName)} Schema - Barrel Exports
+${exports.join('\n')}
+export * from './${schemaName}.module';
+`;
+      this.writeFile(indexFilePath, indexCode);
+    }
+  }
+
+  /**
+   * Generate or update contracts schema-level index.ts
+   */
+  private generateOrUpdateContractsIndex(
+    contractsSchemaDir: string,
+    schemaName: string,
+    tableName: string,
+  ): void {
+    const indexFilePath = join(contractsSchemaDir, 'index.ts');
+
+    const exports = [
+      `export * from './dto/${tableName}/create-${tableName}.dto';`,
+      `export * from './dto/${tableName}/update-${tableName}.dto';`,
+      `export * from './dto/${tableName}/${tableName}-filter.dto';`,
+    ];
+
+    if (existsSync(indexFilePath)) {
+      // Update existing index
+      let indexContent = readFileSync(indexFilePath, 'utf-8');
+
+      exports.forEach((exportLine) => {
+        if (!indexContent.includes(exportLine)) {
+          indexContent += `${exportLine}\n`;
+        }
+      });
+
+      writeFileSync(indexFilePath, indexContent, 'utf-8');
+    } else {
+      // Create new index
+      const indexCode = `// ${this.toPascalCase(schemaName)} Contracts - Shared DTOs for Microservices
+${exports.join('\n')}
+`;
+      this.writeFile(indexFilePath, indexCode);
+    }
   }
 
   /**
@@ -1015,6 +1259,307 @@ export * from './controllers/${moduleName}.controller';
       Logger.error(`   ✗ Failed to register RbacModule: ${(error as Error).message}`);
       Logger.warn('   ℹ Please manually add RbacModule to app.module.ts imports');
     }
+  }
+
+  /**
+   * Auto-generate Gateway Controller in gateway app with schema-based structure
+   * Called when generating service controller in microservices architecture
+   */
+  private generateGatewayController(
+    tableMetadata: TableMetadata,
+    columns: ColumnMetadata[],
+    moduleName: string,
+    tableName: string,
+    features: any,
+    basePath: string,
+    schema: string,
+  ): void {
+    try {
+      const projectRoot = this.findProjectRoot();
+      const gatewayAppPath = this.config?.microservices?.gatewayApp;
+
+      if (!gatewayAppPath) {
+        Logger.warn('   ⚠ gatewayApp not configured in generator.config.json');
+        return;
+      }
+
+      // Resolve gateway path
+      const gatewayDir = join(projectRoot, gatewayAppPath);
+      if (!existsSync(gatewayDir)) {
+        Logger.warn(`   ⚠ Gateway app not found at: ${gatewayDir}`);
+        return;
+      }
+
+      // Create gateway SCHEMA directory (not table directory)
+      const schemaName = this.toKebabCase(schema);
+      const gatewaySchemaDir = join(gatewayDir, 'src', schemaName);
+      this.ensureDirectory(gatewaySchemaDir);
+      this.ensureDirectory(join(gatewaySchemaDir, 'controllers'));
+      this.ensureDirectory(join(gatewaySchemaDir, 'dto'));
+      this.ensureDirectory(join(gatewaySchemaDir, 'dto', moduleName));
+
+      // Generate Gateway Controller
+      const gatewayGenerator = new GatewayControllerGenerator(tableMetadata, columns, {
+        tableName,
+        serviceName: moduleName,
+        serviceHost: process.env.SERVICE_HOST || 'localhost',
+        servicePort: parseInt(process.env.SERVICE_PORT || '3001'),
+        transport:
+          (process.env.TRANSPORT_TYPE as 'TCP' | 'REDIS' | 'NATS' | 'MQTT' | 'RMQ') || 'TCP',
+        enableSwagger: features.swagger,
+        enableRateLimit: false,
+      });
+      const gatewayControllerCode = gatewayGenerator.generate();
+      this.writeFile(
+        join(gatewaySchemaDir, 'controllers', `${moduleName}.controller.ts`),
+        gatewayControllerCode,
+      );
+
+      // Generate DTOs in gateway that extend from contracts (with Swagger)
+      this.ensureDirectory(join(gatewaySchemaDir, 'dto', moduleName));
+      this.generateGatewayDtosWithContracts(
+        join(gatewaySchemaDir, 'dto', moduleName),
+        moduleName,
+        tableMetadata,
+        columns,
+        features.swagger,
+      );
+
+      // Generate/Update Gateway Schema Module
+      this.generateOrUpdateSchemaModule(
+        gatewaySchemaDir,
+        schemaName,
+        moduleName,
+        features,
+        'microservices',
+        true,
+      );
+
+      // Generate/Update barrel export for gateway schema
+      this.generateOrUpdateSchemaIndex(gatewaySchemaDir, schemaName, moduleName);
+
+      Logger.success(`   ✓ Gateway controller generated at: ${gatewayAppPath}/src/${schemaName}`);
+    } catch (error) {
+      Logger.error(`   ✗ Failed to generate gateway controller: ${(error as Error).message}`);
+      Logger.warn('   ℹ You can manually generate gateway controller with --app=gateway');
+    }
+  }
+
+  /**
+   * Generate barrel export for gateway module (only DTOs and Module)
+   */
+  private generateGatewayIndexFile(moduleName: string): string {
+    return `// Gateway Module - Barrel Exports
+export * from './dto/${moduleName}/create-${moduleName}.dto';
+export * from './dto/${moduleName}/update-${moduleName}.dto';
+export * from './dto/${moduleName}/${moduleName}-filter.dto';
+export * from './controllers/${moduleName}.controller';
+export * from './${moduleName}.module';
+`;
+  }
+
+  /**
+   * Generate shared contracts for microservices (organized by schema)
+   */
+  private generateSharedContracts(
+    tableMetadata: TableMetadata,
+    columns: ColumnMetadata[],
+    moduleName: string,
+    features: any,
+  ): void {
+    try {
+      const projectRoot = this.findProjectRoot();
+      const schema = tableMetadata.schema_name || 'default';
+      const schemaName = this.toKebabCase(schema);
+      const contractsSchemaDir = join(projectRoot, 'libs', 'contracts', schemaName);
+
+      Logger.info('   📝 Generating shared contracts...');
+
+      // Create contracts directory structure (per schema)
+      this.ensureDirectory(join(contractsSchemaDir, 'dto', moduleName));
+      this.ensureDirectory(join(contractsSchemaDir, 'interfaces'));
+
+      // Generate base DTOs in contracts (without Swagger decorators)
+      const createDtoGenerator = new CreateDtoGenerator({
+        includeSwagger: false, // Base contracts don't need Swagger
+        includeComments: true,
+      });
+      const createDtoResult = createDtoGenerator.generate(tableMetadata, columns);
+      const createDtoCode = [...createDtoResult.imports, '', createDtoResult.code].join('\n');
+      this.writeFile(
+        join(contractsSchemaDir, 'dto', moduleName, `create-${moduleName}.dto.ts`),
+        createDtoCode,
+      );
+
+      const updateDtoGenerator = new UpdateDtoGenerator({
+        includeSwagger: false,
+        includeComments: true,
+      });
+      const updateDtoResult = updateDtoGenerator.generate(tableMetadata, columns);
+      const updateDtoCode = [...updateDtoResult.imports, '', updateDtoResult.code].join('\n');
+      this.writeFile(
+        join(contractsSchemaDir, 'dto', moduleName, `update-${moduleName}.dto.ts`),
+        updateDtoCode,
+      );
+
+      const filterDtoGenerator = new FilterDtoGenerator({
+        includeSwagger: false,
+        includeComments: true,
+      });
+      const filterDtoResult = filterDtoGenerator.generate(tableMetadata, columns);
+      const filterDtoCode = [...filterDtoResult.imports, '', filterDtoResult.code].join('\n');
+      this.writeFile(
+        join(contractsSchemaDir, 'dto', moduleName, `${moduleName}-filter.dto.ts`),
+        filterDtoCode,
+      );
+
+      // Generate/Update barrel export for contracts schema
+      this.generateOrUpdateContractsIndex(contractsSchemaDir, schemaName, moduleName);
+
+      Logger.success(`   ✓ Shared contracts generated at: libs/contracts/${schemaName}`);
+    } catch (error) {
+      Logger.error(`   ✗ Failed to generate shared contracts: ${(error as Error).message}`);
+      Logger.warn('   ℹ Falling back to local DTOs');
+    }
+  }
+
+  /**
+   * Generate service DTOs that extend from shared contracts
+   */
+  private generateServiceDtosWithContracts(
+    moduleDir: string,
+    moduleName: string,
+    tableMetadata: TableMetadata,
+    columns: ColumnMetadata[],
+  ): void {
+    const entityName = this.toPascalCase(moduleName);
+    const dtoDir = join(moduleDir, 'dto', moduleName);
+    const schema = tableMetadata.schema_name || 'default';
+    const schemaName = this.toKebabCase(schema);
+
+    // Generate DTOs that extend from contracts (using schema-based path)
+    const createDtoCode = `import { ${entityName}Dto as Create${entityName}Dto } from '@app/contracts/${schemaName}';
+
+/**
+ * Service-specific Create DTO
+ * Extends base contract with internal validation
+ */
+export class Create${entityName}InternalDto extends Create${entityName}Dto {
+  // Add service-specific fields here if needed
+  // Example:
+  // @IsUUID()
+  // tenantId?: string;
+}
+
+// Re-export base contract for compatibility
+export { Create${entityName}Dto };
+`;
+
+    const updateDtoCode = `import { Update${entityName}Dto } from '@app/contracts/${schemaName}';
+
+/**
+ * Service-specific Update DTO
+ * Extends base contract with internal validation
+ */
+export class Update${entityName}InternalDto extends Update${entityName}Dto {
+  // Add service-specific fields here if needed
+}
+
+// Re-export base contract for compatibility
+export { Update${entityName}Dto };
+`;
+
+    const filterDtoCode = `import { ${entityName}FilterDto } from '@app/contracts/${schemaName}';
+
+/**
+ * Service-specific Filter DTO
+ * Extends base contract with internal validation
+ */
+export class ${entityName}FilterInternalDto extends ${entityName}FilterDto {
+  // Add service-specific filters here if needed
+}
+
+// Re-export base contract for compatibility
+export { ${entityName}FilterDto };
+`;
+
+    this.writeFile(join(dtoDir, `create-${moduleName}.dto.ts`), createDtoCode);
+    this.writeFile(join(dtoDir, `update-${moduleName}.dto.ts`), updateDtoCode);
+    this.writeFile(join(dtoDir, `${moduleName}-filter.dto.ts`), filterDtoCode);
+
+    Logger.info('   ✓ Service DTOs generated (extends from contracts)');
+  }
+
+  /**
+   * Generate gateway DTOs that extend from shared contracts with Swagger
+   */
+  private generateGatewayDtosWithContracts(
+    dtoDir: string,
+    moduleName: string,
+    tableMetadata: TableMetadata,
+    columns: ColumnMetadata[],
+    enableSwagger: boolean,
+  ): void {
+    const entityName = this.toPascalCase(moduleName);
+    const schema = tableMetadata.schema_name || 'default';
+    const schemaName = this.toKebabCase(schema);
+    const swaggerImport = enableSwagger
+      ? "import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';\n"
+      : '';
+
+    // Generate Create DTO with Swagger decorators (using schema-based path)
+    const createDtoCode = `${swaggerImport}import { Create${entityName}Dto } from '@app/contracts/${schemaName}';
+import { IsString, IsOptional } from 'class-validator';
+
+/**
+ * Gateway Create DTO
+ * Extends base contract with HTTP-specific validation and Swagger
+ */
+export class Create${entityName}RequestDto extends Create${entityName}Dto {
+  // Override properties to add Swagger decorators if needed
+  // Example:
+  // @ApiProperty({ example: 'Example value' })
+  // @IsString()
+  // name: string;
+}
+
+// Re-export base contract for compatibility
+export { Create${entityName}Dto };
+`;
+
+    const updateDtoCode = `${swaggerImport}import { Update${entityName}Dto } from '@app/contracts/${schemaName}';
+
+/**
+ * Gateway Update DTO
+ * Extends base contract with HTTP-specific validation and Swagger
+ */
+export class Update${entityName}RequestDto extends Update${entityName}Dto {
+  // Override properties to add Swagger decorators if needed
+}
+
+// Re-export base contract for compatibility
+export { Update${entityName}Dto };
+`;
+
+    const filterDtoCode = `${swaggerImport}import { ${entityName}FilterDto } from '@app/contracts/${schemaName}';
+
+/**
+ * Gateway Filter DTO
+ * Extends base contract with HTTP-specific validation and Swagger
+ */
+export class ${entityName}FilterRequestDto extends ${entityName}FilterDto {
+  // Override properties to add Swagger decorators if needed
+}
+
+// Re-export base contract for compatibility
+export { ${entityName}FilterDto };
+`;
+
+    this.writeFile(join(dtoDir, `create-${moduleName}.dto.ts`), createDtoCode);
+    this.writeFile(join(dtoDir, `update-${moduleName}.dto.ts`), updateDtoCode);
+    this.writeFile(join(dtoDir, `${moduleName}-filter.dto.ts`), filterDtoCode);
+
+    Logger.info('   ✓ Gateway DTOs generated (extends from contracts with Swagger)');
   }
 
   /**

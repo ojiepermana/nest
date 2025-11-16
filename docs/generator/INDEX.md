@@ -30,6 +30,7 @@ NestJS metadata-driven CRUD generator with audit, caching, RBAC, and file upload
 - [Database Guide](./DATABASE.md) – PostgreSQL and MySQL configuration
 - [Metadata Schemas](./database/SCHEMAS.md) – `meta.*` schema layout
 - [Recommended Schemas](./RECOMMENDED_SCHEMAS.md) – Table patterns that work best
+- [Schema Structure](./SCHEMA_STRUCTURE.md) – Directory organization by database schema ✨ NEW!
 - [Migration Guide](./MIGRATION.md) – Upgrade steps between releases
 
 ## Quality, Operations, and Examples

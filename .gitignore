@@ -73,3 +73,6 @@ apps/**/src/*/repositories/
 apps/**/src/*/services/
 apps/**/src/*/*.module.ts
 apps/**/src/*/index.ts
+
+# Generated shared contracts (can be regenerated from metadata)
+libs/contracts/

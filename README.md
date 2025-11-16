@@ -465,6 +465,102 @@ export class UsersProfileController {
 }
 ```
 
+### 🔑 Microservices Auto-Generation
+
+When generating for microservices architecture, **one command generates both controllers** with **Contract-First pattern**:
+
+| Aspect             | Shared Contracts                    | Gateway Controller                       | Service Controller                     |
+| ------------------ | ----------------------------------- | ---------------------------------------- | -------------------------------------- |
+| **Di-generate?**   | ✅ YA (base DTOs)                   | ✅ YA (extends contracts)                | ✅ YA (extends contracts)              |
+| **Location**       | `libs/contracts/{module}/dto/`      | `apps/microservices/gateway/src/module/` | `apps/microservices/order/src/module/` |
+| **DTOs**           | Base validation (no Swagger)        | Extends + Swagger decorators             | Extends + internal validation          |
+| **HTTP Endpoints** | ❌ Tidak                            | ✅ Ya (@Get, @Post, dll)                 | ❌ Tidak                               |
+| **Pattern**        | -                                   | ClientProxy.send()                       | @MessagePattern()                      |
+| **Purpose**        | Type-safe contract between services | Menerima HTTP, forward ke service        | Menerima message, jalankan logic       |
+| **Swagger**        | ❌ Tidak                            | ✅ Ya                                    | ❌ Tidak                               |
+| **Public Facing**  | ❌ Tidak                            | ✅ Ya (REST API)                         | ❌ Tidak (internal)                    |
+
+**Example:**
+
+```bash
+# One command:
+nest-generator generate orders.transactions --app=order
+
+# Generates THREE locations:
+# 1. libs/contracts/transactions/dto/ ← Base DTOs (shared contract)
+#    - create-transactions.dto.ts
+#    - update-transactions.dto.ts
+#    - transactions-filter.dto.ts
+#
+# 2. apps/microservices/order/src/transactions/
+#    - Controllers with @MessagePattern()
+#    - DTOs extend from @app/contracts/transactions
+#
+# 3. apps/microservices/gateway/src/transactions/
+#    - Controllers with HTTP REST + ClientProxy
+#    - DTOs extend from @app/contracts/transactions + Swagger
+```
+
+**Contract Structure:**
+
+```typescript
+// libs/contracts/transactions/dto/create-transactions.dto.ts
+export class CreateTransactionsDto {
+  @IsString()
+  orderId: string;
+
+  @IsNumber()
+  amount: number;
+}
+
+// Gateway DTO (extends with Swagger)
+import { CreateTransactionsDto } from '@app/contracts/transactions';
+
+export class CreateTransactionsRequestDto extends CreateTransactionsDto {
+  @ApiProperty({ example: 'ORD-001' })
+  orderId: string; // Override with Swagger
+}
+
+// Service DTO (extends with internal validation)
+import { CreateTransactionsDto } from '@app/contracts/transactions';
+
+export class CreateTransactionsInternalDto extends CreateTransactionsDto {
+  @IsUUID()
+  tenantId: string; // Internal-only field
+}
+```
+
+**Benefits:**
+
+- ✅ **Type Safety** - Shared TypeScript contracts
+- ✅ **No Duplication** - Single source of truth
+- ✅ **Flexibility** - Gateway/Service can add specific validation
+- ✅ **Versioning** - Easy to version contracts (v1, v2)
+- ✅ **Maintainability** - Update once, affects all services
+
+**Configuration (`generator.config.json`):**
+
+```json
+{
+  "architecture": "microservices",
+  "microservices": {
+    "gatewayApp": "apps/microservices/gateway"  ← Gateway location
+  }
+}
+```
+
+**TypeScript Path Mapping (`tsconfig.json`):**
+
+```json
+{
+  "compilerOptions": {
+    "paths": {
+      "@app/contracts/*": ["libs/contracts/*"]
+    }
+  }
+}
+```
+
 ### Architecture Comparison
 
 | Feature                | Standalone     | Monorepo      | Microservices  |
@@ -631,15 +727,17 @@ nest-generator generate users.profile \
 # Initialize microservices architecture
 nest-generator init --architecture=microservices
 
-# Generate in gateway (HTTP endpoints + ClientProxy)
-nest-generator generate orders.transactions --app=gateway
-
-# Generate in service (MessagePattern handlers)
+# Generate in service - AUTO-generates gateway controller too!
 nest-generator generate orders.transactions --app=order
 
-# Auto-detects architecture and generates appropriate code
-# - Gateway: HTTP REST API with ClientProxy to microservices
-# - Service: @MessagePattern handlers for TCP/gRPC communication
+# Single command generates BOTH:
+# 1. Service controller in apps/microservices/order/ (@MessagePattern)
+# 2. Gateway controller in apps/microservices/gateway/ (HTTP + ClientProxy)
+#
+# Gateway path is read from generator.config.json:
+# "microservices": {
+#   "gatewayApp": "apps/microservices/gateway"
+# }
 ```
 
 ## Description

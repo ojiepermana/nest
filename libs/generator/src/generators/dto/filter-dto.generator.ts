@@ -222,16 +222,19 @@ export class FilterDtoGenerator {
     const fields: string[] = [];
 
     // Page field
-    fields.push(`  /**
-   * Page number for pagination (default: 1)
-   */
-  @ApiProperty({
+    const pageSwagger = this.options.includeSwagger
+      ? `  @ApiProperty({
     description: 'Page number (default: 1)',
     required: false,
     type: 'number',
     example: 1,
   })
-  @IsOptional()
+  `
+      : '';
+    fields.push(`  /**
+   * Page number for pagination (default: 1)
+   */
+${pageSwagger}@IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
@@ -239,16 +242,19 @@ export class FilterDtoGenerator {
 `);
 
     // Limit field
-    fields.push(`  /**
-   * Number of items per page (default: 20, max: 100)
-   */
-  @ApiProperty({
+    const limitSwagger = this.options.includeSwagger
+      ? `  @ApiProperty({
     description: 'Items per page (default: 20, max: 100)',
     required: false,
     type: 'number',
     example: 20,
   })
-  @IsOptional()
+  `
+      : '';
+    fields.push(`  /**
+   * Number of items per page (default: 20, max: 100)
+   */
+${limitSwagger}@IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
@@ -257,16 +263,19 @@ export class FilterDtoGenerator {
 `);
 
     // Sort field
-    fields.push(`  /**
-   * Sort field and order (e.g., 'name:ASC' or 'created_at:DESC,name:ASC')
-   */
-  @ApiProperty({
+    const sortSwagger = this.options.includeSwagger
+      ? `  @ApiProperty({
     description: 'Sort field and order (e.g., name:ASC or created_at:DESC,name:ASC)',
     required: false,
     type: 'string',
     example: 'created_at:DESC',
   })
-  @IsOptional()
+  `
+      : '';
+    fields.push(`  /**
+   * Sort field and order (e.g., 'name:ASC' or 'created_at:DESC,name:ASC')
+   */
+${sortSwagger}@IsOptional()
   @IsString()
   sort?: string;
 `);

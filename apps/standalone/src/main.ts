@@ -22,6 +22,8 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('entity', 'Entity CRUD operations')
     .addTag('branch', 'Branch CRUD operations')
+    .addTag('location', 'Location CRUD operations')
+    .addTag('business-entity', 'BusinessEntity CRUD operations')
     .addBearerAuth()
     .build();
 

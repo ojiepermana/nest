@@ -55,9 +55,9 @@ ${endpoints}
       "import { Controller, Get, Post, Put, Delete, Body, Param, Query, Inject } from '@nestjs/common';",
       "import { ClientProxy } from '@nestjs/microservices';",
       "import { firstValueFrom } from 'rxjs';",
-      `import { Create${entityName}Dto } from './dto/create-${this.toKebabCase(entityName)}.dto';`,
-      `import { Update${entityName}Dto } from './dto/update-${this.toKebabCase(entityName)}.dto';`,
-      `import { ${entityName}FilterDto } from './dto/${this.toKebabCase(entityName)}-filter.dto';`,
+      `import { Create${entityName}Dto } from '../dto/create-${this.toKebabCase(entityName)}.dto';`,
+      `import { Update${entityName}Dto } from '../dto/update-${this.toKebabCase(entityName)}.dto';`,
+      `import { ${entityName}FilterDto } from '../dto/${this.toKebabCase(entityName)}-filter.dto';`,
     ];
 
     if (this.options.enableSwagger) {

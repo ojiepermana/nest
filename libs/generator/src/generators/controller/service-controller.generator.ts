@@ -52,11 +52,10 @@ ${eventPatterns}
     const imports = [
       "import { Controller } from '@nestjs/common';",
       "import { MessagePattern, Payload, EventPattern, Ctx, RmqContext } from '@nestjs/microservices';",
-      `import { ${serviceName} } from './services/${this.toKebabCase(entityName)}.service';`,
-      `import { Create${entityName}Dto } from './dto/create-${this.toKebabCase(entityName)}.dto';`,
-      `import { Update${entityName}Dto } from './dto/update-${this.toKebabCase(entityName)}.dto';`,
-      `import { ${entityName}FilterDto } from './dto/${this.toKebabCase(entityName)}-filter.dto';`,
-      `import { ${entityName}RecapDto } from './dto/${this.toKebabCase(entityName)}-recap.dto';`,
+      `import { ${serviceName} } from '../services/${this.toKebabCase(entityName)}.service';`,
+      `import { Create${entityName}Dto } from '../dto/create-${this.toKebabCase(entityName)}.dto';`,
+      `import { Update${entityName}Dto } from '../dto/update-${this.toKebabCase(entityName)}.dto';`,
+      `import { ${entityName}FilterDto } from '../dto/${this.toKebabCase(entityName)}-filter.dto';`,
     ];
 
     return imports.join('\n');
@@ -89,16 +88,9 @@ export class ${controllerName} {`;
   // GENERATED_HANDLER_START: findAll
   @MessagePattern('${serviceName}.findAll')
   async findAll(@Payload() filters: ${entityName}FilterDto) {
-    return this.service.findAll(filters);
+    return this.service.findAll();
   }
   // GENERATED_HANDLER_END: findAll
-
-  // GENERATED_HANDLER_START: getRecap
-  @MessagePattern('${serviceName}.getRecap')
-  async getRecap(@Payload() dto: ${entityName}RecapDto) {
-    return this.service.getYearlyRecap(dto);
-  }
-  // GENERATED_HANDLER_END: getRecap
 
   // GENERATED_HANDLER_START: findOne
   @MessagePattern('${serviceName}.findOne')
@@ -110,7 +102,7 @@ export class ${controllerName} {`;
   // GENERATED_HANDLER_START: create
   @MessagePattern('${serviceName}.create')
   async create(@Payload() dto: Create${entityName}Dto) {
-    return this.service.create(dto, 'system');
+    return this.service.create(dto);
   }
   // GENERATED_HANDLER_END: create
 
@@ -118,14 +110,14 @@ export class ${controllerName} {`;
   @MessagePattern('${serviceName}.update')
   async update(@Payload() data: { id: string } & Update${entityName}Dto) {
     const { id, ...dto } = data;
-    return this.service.update(id, dto, 'system');
+    return this.service.update(id, dto);
   }
   // GENERATED_HANDLER_END: update
 
   // GENERATED_HANDLER_START: remove
   @MessagePattern('${serviceName}.remove')
   async remove(@Payload() data: { id: string }) {
-    return this.service.remove(data.id, 'system');
+    return this.service.remove(data.id);
   }
   // GENERATED_HANDLER_END: remove
 

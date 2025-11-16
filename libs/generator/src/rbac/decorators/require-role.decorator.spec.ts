@@ -34,7 +34,7 @@ describe('Role Decorators', () => {
       const decorator = RequireRole('admin');
       const target = {};
 
-      decorator(target);
+      decorator(target, "method", {} as PropertyDescriptor);
 
       expect(SetMetadata).toHaveBeenCalledWith(ROLES_KEY, {
         roles: ['admin'],
@@ -51,7 +51,7 @@ describe('Role Decorators', () => {
       const decorator = RequireRole(['admin', 'moderator']);
       const target = {};
 
-      decorator(target);
+      decorator(target, "method", {} as PropertyDescriptor);
 
       expect(SetMetadata).toHaveBeenCalledWith(ROLES_KEY, {
         roles: ['admin', 'moderator'],
@@ -68,7 +68,7 @@ describe('Role Decorators', () => {
       const decorator = RequireRole('admin', { errorMessage: 'Custom error' });
       const target = {};
 
-      decorator(target);
+      decorator(target, "method", {} as PropertyDescriptor);
 
       expect(SetMetadata).toHaveBeenCalledWith(ROLES_KEY, {
         roles: ['admin'],
@@ -87,7 +87,7 @@ describe('Role Decorators', () => {
       const decorator = RequireAnyRole(['admin', 'moderator']);
       const target = {};
 
-      decorator(target);
+      decorator(target, "method", {} as PropertyDescriptor);
 
       expect(SetMetadata).toHaveBeenCalledWith(ROLES_KEY, {
         roles: ['admin', 'moderator'],
@@ -106,7 +106,7 @@ describe('Role Decorators', () => {
       const decorator = RequireRole(['admin', 'moderator'], { logic: RoleLogic.AND });
       const target = {};
 
-      decorator(target);
+      decorator(target, "method", {} as PropertyDescriptor);
 
       expect(SetMetadata).toHaveBeenCalledWith(ROLES_KEY, {
         roles: ['admin', 'moderator'],
@@ -125,7 +125,7 @@ describe('Role Decorators', () => {
       const decorator = RequireAdmin();
       const target = {};
 
-      decorator(target);
+      decorator(target, "method", {} as PropertyDescriptor);
 
       expect(SetMetadata).toHaveBeenCalledWith(ROLES_KEY, {
         roles: ['admin'],
@@ -144,7 +144,7 @@ describe('Role Decorators', () => {
       const decorator = RequireSuperAdmin();
       const target = {};
 
-      decorator(target);
+      decorator(target, "method", {} as PropertyDescriptor);
 
       expect(SetMetadata).toHaveBeenCalledWith(ROLES_KEY, {
         roles: ['super_admin'],
@@ -163,7 +163,7 @@ describe('Role Decorators', () => {
       const decorator = RequireModerator();
       const target = {};
 
-      decorator(target);
+      decorator(target, "method", {} as PropertyDescriptor);
 
       expect(SetMetadata).toHaveBeenCalledWith(ROLES_KEY, {
         roles: ['moderator'],
@@ -182,7 +182,7 @@ describe('Role Decorators', () => {
       const decorator = Public();
       const target = {};
 
-      decorator(target);
+      decorator(target, "method", {} as PropertyDescriptor);
 
       expect(SetMetadata).toHaveBeenCalledWith(IS_PUBLIC_KEY, true);
     });
@@ -193,7 +193,7 @@ describe('Role Decorators', () => {
       const decorator = SkipPermission();
       const target = {};
 
-      decorator(target);
+      decorator(target, "method", {} as PropertyDescriptor);
 
       expect(SetMetadata).toHaveBeenCalledWith(SKIP_PERMISSION_KEY, true);
     });

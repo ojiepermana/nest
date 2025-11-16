@@ -28,7 +28,7 @@ describe('RBACRepository', () => {
         },
       ];
 
-      mockPool.query.mockResolvedValue({ rows: mockPermissions } as any);
+      (mockPool.query.mockResolvedValue as any)({ rows: mockPermissions } as any);
 
       const result = await repository.getUserPermissions('user-123');
 
@@ -39,7 +39,7 @@ describe('RBACRepository', () => {
     });
 
     it('should filter inactive permissions', async () => {
-      mockPool.query.mockResolvedValue({ rows: [] } as any);
+      (mockPool.query.mockResolvedValue as any)({ rows: [] } as any);
 
       await repository.getUserPermissions('user-123');
 
@@ -49,7 +49,7 @@ describe('RBACRepository', () => {
     });
 
     it('should check role expiration', async () => {
-      mockPool.query.mockResolvedValue({ rows: [] } as any);
+      (mockPool.query.mockResolvedValue as any)({ rows: [] } as any);
 
       await repository.getUserPermissions('user-123');
 
@@ -73,7 +73,7 @@ describe('RBACRepository', () => {
         },
       ];
 
-      mockPool.query.mockResolvedValue({ rows: mockRoles } as any);
+      (mockPool.query.mockResolvedValue as any)({ rows: mockRoles } as any);
 
       const result = await repository.getUserRoles('user-123');
 
@@ -84,7 +84,7 @@ describe('RBACRepository', () => {
     });
 
     it('should filter by activeOnly when true', async () => {
-      mockPool.query.mockResolvedValue({ rows: [] } as any);
+      (mockPool.query.mockResolvedValue as any)({ rows: [] } as any);
 
       await repository.getUserRoles('user-123', true);
 
@@ -94,7 +94,7 @@ describe('RBACRepository', () => {
     });
 
     it('should not filter activeOnly when false', async () => {
-      mockPool.query.mockResolvedValue({ rows: [] } as any);
+      (mockPool.query.mockResolvedValue as any)({ rows: [] } as any);
 
       await repository.getUserRoles('user-123', false);
 
@@ -103,7 +103,7 @@ describe('RBACRepository', () => {
     });
 
     it('should check expiration when enabled', async () => {
-      mockPool.query.mockResolvedValue({ rows: [] } as any);
+      (mockPool.query.mockResolvedValue as any)({ rows: [] } as any);
 
       await repository.getUserRoles('user-123', true, true);
 
@@ -116,7 +116,7 @@ describe('RBACRepository', () => {
 
   describe('hasPermission', () => {
     it('should return true when user has permission', async () => {
-      mockPool.query.mockResolvedValue({
+      (mockPool.query.mockResolvedValue as any)({
         rows: [{ has_permission: true }],
       } as any);
 
@@ -130,7 +130,7 @@ describe('RBACRepository', () => {
     });
 
     it('should return false when user lacks permission', async () => {
-      mockPool.query.mockResolvedValue({
+      (mockPool.query.mockResolvedValue as any)({
         rows: [{ has_permission: false }],
       } as any);
 
@@ -140,7 +140,7 @@ describe('RBACRepository', () => {
     });
 
     it('should return false when query returns empty', async () => {
-      mockPool.query.mockResolvedValue({ rows: [] } as any);
+      (mockPool.query.mockResolvedValue as any)({ rows: [] } as any);
 
       const result = await repository.hasPermission('user-123', 'users.read');
 
@@ -150,7 +150,7 @@ describe('RBACRepository', () => {
 
   describe('hasRole', () => {
     it('should return true when user has role', async () => {
-      mockPool.query.mockResolvedValue({
+      (mockPool.query.mockResolvedValue as any)({
         rows: [{ has_role: true }],
       } as any);
 
@@ -160,7 +160,7 @@ describe('RBACRepository', () => {
     });
 
     it('should return false when user lacks role', async () => {
-      mockPool.query.mockResolvedValue({
+      (mockPool.query.mockResolvedValue as any)({
         rows: [{ has_role: false }],
       } as any);
 
@@ -182,7 +182,7 @@ describe('RBACRepository', () => {
         updated_at: new Date(),
       };
 
-      mockPool.query.mockResolvedValue({ rows: [mockUserRole] } as any);
+      (mockPool.query.mockResolvedValue as any)({ rows: [mockUserRole] } as any);
 
       const result = await repository.assignRoleToUser('user-123', 'role-1', 'admin-123');
 
@@ -194,7 +194,7 @@ describe('RBACRepository', () => {
     });
 
     it('should handle conflict with ON CONFLICT', async () => {
-      mockPool.query.mockResolvedValue({ rows: [{}] } as any);
+      (mockPool.query.mockResolvedValue as any)({ rows: [{}] } as any);
 
       await repository.assignRoleToUser('user-123', 'role-1');
 
@@ -206,7 +206,7 @@ describe('RBACRepository', () => {
 
     it('should set expiration date when provided', async () => {
       const expiresAt = new Date('2025-12-31');
-      mockPool.query.mockResolvedValue({ rows: [{}] } as any);
+      (mockPool.query.mockResolvedValue as any)({ rows: [{}] } as any);
 
       await repository.assignRoleToUser('user-123', 'role-1', undefined, expiresAt);
 
@@ -221,7 +221,7 @@ describe('RBACRepository', () => {
 
   describe('removeRoleFromUser', () => {
     it('should soft delete role assignment', async () => {
-      mockPool.query.mockResolvedValue({ rowCount: 1 } as any);
+      (mockPool.query.mockResolvedValue as any)({ rowCount: 1 } as any);
 
       await repository.removeRoleFromUser('user-123', 'role-1');
 
@@ -247,7 +247,7 @@ describe('RBACRepository', () => {
         updated_at: new Date(),
       };
 
-      mockPool.query.mockResolvedValue({ rows: [mockRolePermission] } as any);
+      (mockPool.query.mockResolvedValue as any)({ rows: [mockRolePermission] } as any);
 
       const result = await repository.grantPermissionToRole('role-1', 'perm-1', 'admin-123');
 
@@ -261,7 +261,7 @@ describe('RBACRepository', () => {
 
   describe('revokePermissionFromRole', () => {
     it('should delete permission from role', async () => {
-      mockPool.query.mockResolvedValue({ rowCount: 1 } as any);
+      (mockPool.query.mockResolvedValue as any)({ rowCount: 1 } as any);
 
       await repository.revokePermissionFromRole('role-1', 'perm-1');
 
@@ -274,7 +274,7 @@ describe('RBACRepository', () => {
 
   describe('checkOwnership', () => {
     it('should return true when user owns resource', async () => {
-      mockPool.query.mockResolvedValue({
+      (mockPool.query.mockResolvedValue as any)({
         rows: [{ is_owner: true }],
       } as any);
 
@@ -294,7 +294,7 @@ describe('RBACRepository', () => {
     });
 
     it('should return false when user does not own resource', async () => {
-      mockPool.query.mockResolvedValue({
+      (mockPool.query.mockResolvedValue as any)({
         rows: [{ is_owner: false }],
       } as any);
 
@@ -323,7 +323,7 @@ describe('RBACRepository', () => {
         },
       ];
 
-      mockPool.query.mockResolvedValue({ rows: mockRoles } as any);
+      (mockPool.query.mockResolvedValue as any)({ rows: mockRoles } as any);
 
       const result = await repository.getExpiredRoles('user-123');
 
@@ -337,7 +337,7 @@ describe('RBACRepository', () => {
 
   describe('cleanupExpiredRoles', () => {
     it('should return count of cleaned up roles', async () => {
-      mockPool.query.mockResolvedValue({ rowCount: 5 } as any);
+      (mockPool.query.mockResolvedValue as any)({ rowCount: 5 } as any);
 
       const result = await repository.cleanupExpiredRoles();
 
@@ -348,7 +348,7 @@ describe('RBACRepository', () => {
     });
 
     it('should return 0 when no expired roles', async () => {
-      mockPool.query.mockResolvedValue({ rowCount: 0 } as any);
+      (mockPool.query.mockResolvedValue as any)({ rowCount: 0 } as any);
 
       const result = await repository.cleanupExpiredRoles();
 
@@ -369,7 +369,7 @@ describe('RBACRepository', () => {
         updated_at: new Date(),
       };
 
-      mockPool.query.mockResolvedValue({ rows: [mockPermission] } as any);
+      (mockPool.query.mockResolvedValue as any)({ rows: [mockPermission] } as any);
 
       const result = await repository.createPermission(
         'users.create',
@@ -398,7 +398,7 @@ describe('RBACRepository', () => {
         updated_at: new Date(),
       };
 
-      mockPool.query.mockResolvedValue({ rows: [mockRole] } as any);
+      (mockPool.query.mockResolvedValue as any)({ rows: [mockRole] } as any);
 
       const result = await repository.createRole('editor', 'Content editor', false);
 

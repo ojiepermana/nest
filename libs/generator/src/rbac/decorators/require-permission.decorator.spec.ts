@@ -28,7 +28,7 @@ describe('Permission Decorators', () => {
       const decorator = RequirePermission('users.read');
       const target = {};
 
-      decorator(target);
+      decorator(target, 'method', {} as PropertyDescriptor);
 
       expect(SetMetadata).toHaveBeenCalledWith(PERMISSIONS_KEY, {
         permissions: ['users.read'],
@@ -45,7 +45,7 @@ describe('Permission Decorators', () => {
       const decorator = RequirePermission(['users.read', 'users.update']);
       const target = {};
 
-      decorator(target);
+      decorator(target, 'method', {} as PropertyDescriptor);
 
       expect(SetMetadata).toHaveBeenCalledWith(PERMISSIONS_KEY, {
         permissions: ['users.read', 'users.update'],
@@ -67,7 +67,7 @@ describe('Permission Decorators', () => {
       });
       const target = {};
 
-      decorator(target);
+      decorator(target, 'method', {} as PropertyDescriptor);
 
       expect(SetMetadata).toHaveBeenCalledWith(PERMISSIONS_KEY, {
         permissions: ['users.delete'],
@@ -84,7 +84,7 @@ describe('Permission Decorators', () => {
       const decorator = RequirePermission(['users.read', 'users.update']);
       const target = {};
 
-      decorator(target);
+      decorator(target, 'method', {} as PropertyDescriptor);
 
       const metadata = (SetMetadata as jest.Mock).mock.calls[0][1];
       expect(metadata.options.logic).toBe(PermissionLogic.AND);
@@ -96,7 +96,7 @@ describe('Permission Decorators', () => {
       });
       const target = {};
 
-      decorator(target);
+      decorator(target, 'method', {} as PropertyDescriptor);
 
       const metadata = (SetMetadata as jest.Mock).mock.calls[0][1];
       expect(metadata.options.ownershipField).toBe('created_by');
@@ -108,7 +108,7 @@ describe('Permission Decorators', () => {
       const decorator = RequireAnyPermission(['users.read', 'admin.access']);
       const target = {};
 
-      decorator(target);
+      decorator(target, 'method', {} as PropertyDescriptor);
 
       expect(SetMetadata).toHaveBeenCalledWith(PERMISSIONS_KEY, {
         permissions: ['users.read', 'admin.access'],
@@ -122,10 +122,10 @@ describe('Permission Decorators', () => {
     });
 
     it('should accept single permission', () => {
-      const decorator = RequireAnyPermission('users.read');
+      const decorator = RequireAnyPermission(['users.read']);
       const target = {};
 
-      decorator(target);
+      decorator(target, 'method', {} as PropertyDescriptor);
 
       const metadata = (SetMetadata as jest.Mock).mock.calls[0][1];
       expect(metadata.permissions).toEqual(['users.read']);
@@ -138,7 +138,7 @@ describe('Permission Decorators', () => {
       const decorator = RequireAllPermissions(['users.read', 'users.update']);
       const target = {};
 
-      decorator(target);
+      decorator(target, 'method', {} as PropertyDescriptor);
 
       expect(SetMetadata).toHaveBeenCalledWith(PERMISSIONS_KEY, {
         permissions: ['users.read', 'users.update'],
@@ -152,10 +152,10 @@ describe('Permission Decorators', () => {
     });
 
     it('should accept single permission', () => {
-      const decorator = RequireAllPermissions('users.read');
+      const decorator = RequireAllPermissions(['users.read']);
       const target = {};
 
-      decorator(target);
+      decorator(target, 'method', {} as PropertyDescriptor);
 
       const metadata = (SetMetadata as jest.Mock).mock.calls[0][1];
       expect(metadata.permissions).toEqual(['users.read']);
@@ -168,7 +168,7 @@ describe('Permission Decorators', () => {
       const decorator = RequireOwnership('users.update');
       const target = {};
 
-      decorator(target);
+      decorator(target, 'method', {} as PropertyDescriptor);
 
       expect(SetMetadata).toHaveBeenCalledWith(PERMISSIONS_KEY, {
         permissions: ['users.update'],
@@ -185,7 +185,7 @@ describe('Permission Decorators', () => {
       const decorator = RequireOwnership('users.update', 'user_id');
       const target = {};
 
-      decorator(target);
+      decorator(target, 'method', {} as PropertyDescriptor);
 
       const metadata = (SetMetadata as jest.Mock).mock.calls[0][1];
       expect(metadata.options.requireOwnership).toBe(true);

@@ -135,7 +135,7 @@ export class GenerateCommand {
 
     const configContent = readFileSync(configPath, 'utf-8');
     const rawConfig = JSON.parse(configContent) as GeneratorConfig;
-    
+
     // Resolve environment variables in config
     this.config = this.resolveEnvVariables(rawConfig);
     Logger.info('✓ Configuration loaded');
@@ -146,7 +146,7 @@ export class GenerateCommand {
    */
   private resolveEnvVariables(config: GeneratorConfig): GeneratorConfig {
     const resolved = { ...config };
-    
+
     if (config.database) {
       resolved.database = {
         ...config.database,
@@ -163,7 +163,7 @@ export class GenerateCommand {
         },
       };
     }
-    
+
     return resolved;
   }
 
@@ -173,20 +173,20 @@ export class GenerateCommand {
   private resolveEnvValue(value: string): string {
     // Check if value is an environment variable placeholder like ${DB_HOST}
     const envVarMatch = value.match(/^\$\{(.+)\}$/);
-    
+
     if (envVarMatch) {
       const envVarName = envVarMatch[1];
       const envValue = process.env[envVarName];
-      
+
       if (!envValue) {
         Logger.error(`❌ Environment variable ${envVarName} is not set!`);
         Logger.info('💡 Make sure .env file is loaded or set the environment variable.');
         process.exit(1);
       }
-      
+
       return envValue;
     }
-    
+
     // Return as-is if not an env variable placeholder
     return value;
   }
@@ -381,8 +381,11 @@ export class GenerateCommand {
       return providedPath;
     }
 
+    // Determine default output path based on architecture
+    const defaultPath = this.getDefaultOutputPath();
+
     if (skipPrompts) {
-      return join(process.cwd(), 'src');
+      return defaultPath;
     }
 
     const { outputPath } = await inquirer.prompt<{ outputPath: string }>([
@@ -390,11 +393,41 @@ export class GenerateCommand {
         type: 'input',
         name: 'outputPath',
         message: 'Output directory:',
-        default: 'src',
+        default: defaultPath.replace(process.cwd() + '/', ''), // Show relative path
       },
     ]);
 
     return join(process.cwd(), outputPath);
+  }
+
+  /**
+   * Get default output path based on architecture
+   */
+  private getDefaultOutputPath(): string {
+    const architecture = this.config?.architecture || 'standalone';
+
+    switch (architecture) {
+      case 'standalone':
+        // Check if apps/standalone/src exists
+        if (existsSync(join(process.cwd(), 'apps/standalone/src'))) {
+          return join(process.cwd(), 'apps/standalone/src');
+        }
+        // Fallback to src if in a standalone app root
+        return join(process.cwd(), 'src');
+
+      case 'monorepo':
+        // For monorepo, need to determine which app
+        // Default to src (user should be in the app directory)
+        return join(process.cwd(), 'src');
+
+      case 'microservices':
+        // For microservices, need to determine which service
+        // Default to src (user should be in the service directory)
+        return join(process.cwd(), 'src');
+
+      default:
+        return join(process.cwd(), 'src');
+    }
   }
 
   /**

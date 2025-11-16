@@ -42,7 +42,7 @@ Before installing, ensure you have:
 npm install --save-dev @ojiepermana/nest-generator
 ```
 
-**Or using other package managers:**
+**Other package managers:**
 
 ```bash
 # Yarn
@@ -52,7 +52,40 @@ yarn add -D @ojiepermana/nest-generator
 pnpm add -D @ojiepermana/nest-generator
 ```
 
-> **Note**: Installing as a regular dependency (`npm install`) will fail with an error. This package is designed to be used during development only, not in production runtime.
+### Why Dev Dependency Only?
+
+1. **Not needed in production** - Generates code files during development, not runtime
+2. **Reduces bundle size** - Development tools shouldn't bloat production dependencies
+3. **Security** - Limits exposure of development tools in production environments
+4. **Best practices** - Follows npm/Node.js ecosystem conventions for CLI tools
+
+> **Note**: Installing as a regular dependency (`npm install`) will fail with an error. This package is designed to be used during development only.
+
+### Usage After Installation
+
+Once installed, use the CLI via npx:
+
+```bash
+# Initialize configuration
+npx nest-generator init
+
+# Generate modules
+npx nest-generator generate users.profile
+
+# With features
+npx nest-generator generate users.profile \
+  --features.audit=true \
+  --features.rbac=true \
+  --storageProvider=s3
+```
+
+### CI/CD Environments
+
+Dev dependencies are installed automatically in CI/CD:
+
+```bash
+npm ci  # Installs all dependencies including devDependencies
+```
 
 ## Quick Start
 

@@ -13,8 +13,8 @@
  */
 
 import inquirer from 'inquirer';
-import { writeFileSync, existsSync, mkdirSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { writeFileSync, existsSync, mkdirSync, readFileSync, readdirSync } from 'fs';
+import { join, basename, dirname } from 'path';
 import { Logger } from '../../utils/logger.util';
 import { DatabaseConnectionManager } from '../../database/connection.manager';
 import { MetadataRepository } from '../../metadata/metadata.repository';
@@ -95,10 +95,8 @@ export class GenerateCommand {
     // Step 7: Generate all files
     this.generateFiles(tableMetadata, columns, features, outputPath);
 
-    // Step 8: Auto-register module to app.module.ts
+    // Extract module name for post-generation steps
     const moduleName = this.toModuleName(tableName.split('.').pop() || tableName);
-    const moduleClassName = `${this.toPascalCase(moduleName)}Module`;
-    this.registerModuleToApp(outputPath, moduleName, moduleClassName);
 
     // Step 9: Auto-configure Swagger if enabled
     if (features.swagger) {
@@ -775,6 +773,11 @@ export class GenerateCommand {
     Logger.info('   ⏳ Updating barrel exports...');
     this.generateOrUpdateSchemaIndex(schemaDir, schemaName, moduleName);
     Logger.info('   ✓ Index file updated');
+
+    // 8. Register schema module to app module (for service/standalone)
+    if (!isGateway) {
+      this.registerModuleToApp(outputPath, schemaName, architecture);
+    }
   }
 
   /**
@@ -807,27 +810,30 @@ export class GenerateCommand {
         }
       }
 
-      // Add service import
-      const serviceImport = `import { ${pascalTable}Service } from './services/${tableName}.service';`;
-      if (!moduleContent.includes(serviceImport)) {
-        const controllerImportLine = moduleContent.indexOf(controllerImport);
-        if (controllerImportLine !== -1) {
-          moduleContent = moduleContent.replace(
-            controllerImport,
-            `${controllerImport}\n${serviceImport}`,
-          );
+      // Only add service/repository imports for non-gateway
+      if (!isGateway) {
+        // Add service import
+        const serviceImport = `import { ${pascalTable}Service } from './services/${tableName}.service';`;
+        if (!moduleContent.includes(serviceImport)) {
+          const controllerImportLine = moduleContent.indexOf(controllerImport);
+          if (controllerImportLine !== -1) {
+            moduleContent = moduleContent.replace(
+              controllerImport,
+              `${controllerImport}\n${serviceImport}`,
+            );
+          }
         }
-      }
 
-      // Add repository import
-      const repositoryImport = `import { ${pascalTable}Repository } from './repositories/${tableName}.repository';`;
-      if (!moduleContent.includes(repositoryImport)) {
-        const serviceImportLine = moduleContent.indexOf(serviceImport);
-        if (serviceImportLine !== -1) {
-          moduleContent = moduleContent.replace(
-            serviceImport,
-            `${serviceImport}\n${repositoryImport}`,
-          );
+        // Add repository import
+        const repositoryImport = `import { ${pascalTable}Repository } from './repositories/${tableName}.repository';`;
+        if (!moduleContent.includes(repositoryImport)) {
+          const serviceImportLine = moduleContent.indexOf(serviceImport);
+          if (serviceImportLine !== -1) {
+            moduleContent = moduleContent.replace(
+              serviceImport,
+              `${serviceImport}\n${repositoryImport}`,
+            );
+          }
         }
       }
 
@@ -843,30 +849,33 @@ export class GenerateCommand {
         });
       }
 
-      // Add providers
-      const providersMatch = moduleContent.match(/providers:\s*\[([\s\S]*?)\]/);
-      if (providersMatch && !providersMatch[1].includes(`${pascalTable}Service`)) {
-        moduleContent = moduleContent.replace(/providers:\s*\[([\s\S]*?)\]/, (match, p1) => {
-          const providers = p1.trim();
-          const newProviders = `${pascalTable}Service, ${pascalTable}Repository`;
-          if (providers) {
-            return `providers: [${providers}, ${newProviders}]`;
-          }
-          return `providers: [${newProviders}]`;
-        });
-      }
+      // Only add providers/exports for non-gateway
+      if (!isGateway) {
+        // Add providers
+        const providersMatch = moduleContent.match(/providers:\s*\[([\s\S]*?)\]/);
+        if (providersMatch && !providersMatch[1].includes(`${pascalTable}Service`)) {
+          moduleContent = moduleContent.replace(/providers:\s*\[([\s\S]*?)\]/, (match, p1) => {
+            const providers = p1.trim();
+            const newProviders = `${pascalTable}Service, ${pascalTable}Repository`;
+            if (providers) {
+              return `providers: [${providers}, ${newProviders}]`;
+            }
+            return `providers: [${newProviders}]`;
+          });
+        }
 
-      // Add exports
-      const exportsMatch = moduleContent.match(/exports:\s*\[([\s\S]*?)\]/);
-      if (exportsMatch && !exportsMatch[1].includes(`${pascalTable}Service`)) {
-        moduleContent = moduleContent.replace(/exports:\s*\[([\s\S]*?)\]/, (match, p1) => {
-          const exports = p1.trim();
-          const newExports = `${pascalTable}Service, ${pascalTable}Repository`;
-          if (exports) {
-            return `exports: [${exports}, ${newExports}]`;
-          }
-          return `exports: [${newExports}]`;
-        });
+        // Add exports
+        const exportsMatch = moduleContent.match(/exports:\s*\[([\s\S]*?)\]/);
+        if (exportsMatch && !exportsMatch[1].includes(`${pascalTable}Service`)) {
+          moduleContent = moduleContent.replace(/exports:\s*\[([\s\S]*?)\]/, (match, p1) => {
+            const exports = p1.trim();
+            const newExports = `${pascalTable}Service, ${pascalTable}Repository`;
+            if (exports) {
+              return `exports: [${exports}, ${newExports}]`;
+            }
+            return `exports: [${newExports}]`;
+          });
+        }
       }
 
       writeFileSync(moduleFilePath, moduleContent, 'utf-8');
@@ -898,6 +907,19 @@ export class GenerateCommand {
     const pascalSchema = this.toPascalCase(schemaName);
     const pascalTable = this.toPascalCase(tableName);
 
+    // Gateway only needs controllers (proxies to services)
+    if (isGateway) {
+      return `import { Module } from '@nestjs/common';
+import { ${pascalTable}Controller } from './controllers/${tableName}.controller';
+
+@Module({
+  controllers: [${pascalTable}Controller],
+})
+export class ${pascalSchema}Module {}
+`;
+    }
+
+    // Service/standalone needs full stack
     return `import { Module } from '@nestjs/common';
 import { ${pascalTable}Controller } from './controllers/${tableName}.controller';
 import { ${pascalTable}Service } from './services/${tableName}.service';
@@ -1034,9 +1056,123 @@ export * from './controllers/${moduleName}.controller';
   }
 
   /**
-   * Register generated module to app.module.ts
+   * Register schema module to gateway.module.ts
    */
-  private registerModuleToApp(
+  private registerModuleToGateway(gatewayDir: string, schemaName: string): void {
+    const gatewayModulePath = join(gatewayDir, 'src', 'gateway.module.ts');
+
+    if (!existsSync(gatewayModulePath)) {
+      Logger.warn('   ⚠ gateway.module.ts not found, skipping auto-registration');
+      return;
+    }
+
+    let moduleContent = readFileSync(gatewayModulePath, 'utf-8');
+    const pascalSchema = this.toPascalCase(schemaName);
+    const moduleImport = `import { ${pascalSchema}Module } from './${schemaName}/${schemaName}.module';`;
+
+    // Check if already imported
+    if (moduleContent.includes(moduleImport)) {
+      return; // Already registered
+    }
+
+    // Add import after last import statement
+    const lastImportMatch = moduleContent.match(/^import .* from .*$/gm);
+    if (lastImportMatch) {
+      const lastImport = lastImportMatch[lastImportMatch.length - 1];
+      moduleContent = moduleContent.replace(lastImport, `${lastImport}\n${moduleImport}`);
+    }
+
+    // Add to imports array
+    const importsMatch = moduleContent.match(/imports:\s*\[([\s\S]*?)\]/);
+    if (importsMatch && !importsMatch[1].includes(`${pascalSchema}Module`)) {
+      moduleContent = moduleContent.replace(/imports:\s*\[([\s\S]*?)\]/, (match, p1) => {
+        const imports = p1.trim();
+        if (imports) {
+          return `imports: [${imports}, ${pascalSchema}Module]`;
+        }
+        return `imports: [${pascalSchema}Module]`;
+      });
+    }
+
+    writeFileSync(gatewayModulePath, moduleContent, 'utf-8');
+    Logger.info(`   ✓ Registered ${pascalSchema}Module to gateway.module.ts`);
+  }
+
+  /**
+   * Register generated module to app.module.ts (schema-based)
+   */
+  private registerModuleToApp(outputPath: string, schemaName: string, architecture: string): void {
+    try {
+      // Determine app module filename based on architecture
+      let appModuleFilename = 'app.module.ts';
+      if (architecture === 'microservices') {
+        // For microservices, look for service-specific module (e.g., user-service.module.ts)
+        const appDir = basename(dirname(outputPath));
+        appModuleFilename = `${appDir}-service.module.ts`;
+      }
+
+      let appModulePath = join(outputPath, appModuleFilename);
+
+      // If default not found, search for any *.module.ts in the output path (excluding schema modules)
+      if (!existsSync(appModulePath)) {
+        const files = readdirSync(outputPath);
+        const moduleFiles = files.filter(
+          (file) =>
+            file.endsWith('.module.ts') &&
+            file !== 'app.module.ts' &&
+            file !== `${schemaName}.module.ts`,
+        );
+
+        if (moduleFiles.length > 0) {
+          // Use the first module file found (e.g., standalone.module.ts, user.module.ts)
+          appModuleFilename = moduleFiles[0];
+          appModulePath = join(outputPath, appModuleFilename);
+        } else {
+          Logger.warn(`⚠ ${appModuleFilename} not found, skipping auto-registration`);
+          Logger.warn(`⚠ app.module.ts not found, skipping auto-registration`);
+          return;
+        }
+      }
+
+      let appModuleContent = readFileSync(appModulePath, 'utf-8');
+      const pascalSchema = this.toPascalCase(schemaName);
+      const moduleImport = `import { ${pascalSchema}Module } from './${schemaName}/${schemaName}.module';`;
+
+      // Check if already imported
+      if (appModuleContent.includes(moduleImport)) {
+        return; // Already registered
+      }
+
+      // Add import statement after last import
+      const lastImportMatch = appModuleContent.match(/^import .* from .*$/gm);
+      if (lastImportMatch) {
+        const lastImport = lastImportMatch[lastImportMatch.length - 1];
+        appModuleContent = appModuleContent.replace(lastImport, `${lastImport}\n${moduleImport}`);
+      }
+
+      // Add to imports array
+      const importsMatch = appModuleContent.match(/imports:\s*\[([\s\S]*?)\]/);
+      if (importsMatch && !importsMatch[1].includes(`${pascalSchema}Module`)) {
+        appModuleContent = appModuleContent.replace(/imports:\s*\[([\s\S]*?)\]/, (match, p1) => {
+          const imports = p1.trim();
+          if (imports) {
+            return `imports: [${imports}, ${pascalSchema}Module]`;
+          }
+          return `imports: [${pascalSchema}Module]`;
+        });
+      }
+
+      writeFileSync(appModulePath, appModuleContent, 'utf-8');
+      Logger.info(`   ✓ Registered ${pascalSchema}Module to ${appModuleFilename}`);
+    } catch (error) {
+      Logger.warn(`   ⚠ Failed to register module: ${(error as Error).message}`);
+    }
+  }
+
+  /**
+   * Register generated module to app.module.ts (legacy per-table method)
+   */
+  private registerModuleToAppLegacy(
     outputPath: string,
     moduleName: string,
     moduleClassName: string,
@@ -1337,6 +1473,9 @@ export * from './controllers/${moduleName}.controller';
 
       // Generate/Update barrel export for gateway schema
       this.generateOrUpdateSchemaIndex(gatewaySchemaDir, schemaName, moduleName);
+
+      // Register schema module to gateway.module.ts
+      this.registerModuleToGateway(gatewayDir, schemaName);
 
       Logger.success(`   ✓ Gateway controller generated at: ${gatewayAppPath}/src/${schemaName}`);
     } catch (error) {

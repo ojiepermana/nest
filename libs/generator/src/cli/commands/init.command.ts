@@ -236,13 +236,15 @@ export class InitCommand {
 
       if (schemaExists) {
         Logger.info('✓ Metadata schema already exists');
-        
+
         // Check if tables exist
         const tablesExist = await this.checkMetadataTablesExist(connectionManager);
-        
+
         if (tablesExist) {
-          Logger.info('✓ Metadata tables already exist (table_metadata, column_metadata, generated_files)');
-          
+          Logger.info(
+            '✓ Metadata tables already exist (table_metadata, column_metadata, generated_files)',
+          );
+
           const { recreate } = await inquirer.prompt([
             {
               type: 'confirm',
@@ -270,8 +272,8 @@ export class InitCommand {
         {
           type: 'confirm',
           name: 'confirm',
-          message: schemaExists 
-            ? 'Create missing metadata tables?' 
+          message: schemaExists
+            ? 'Create missing metadata tables?'
             : 'Create metadata schema and tables?',
           default: true,
         },
@@ -309,6 +311,7 @@ export class InitCommand {
   ): Promise<boolean> {
     try {
       const dbType = this.config.database!.type;
+      const requiredTables = ['table_metadata', 'column_metadata', 'generated_files'];
 
       if (dbType === 'postgresql') {
         const result = await connectionManager.query<{ count: number }>(
@@ -317,7 +320,8 @@ export class InitCommand {
            WHERE table_schema = 'meta' 
            AND table_name IN ('table_metadata', 'column_metadata', 'generated_files')`,
         );
-        return result.rows[0]?.count === 3;
+        // Check if all 3 required tables exist (there might be additional tables, which is fine)
+        return result.rows[0]?.count >= 3;
       } else {
         const result = await connectionManager.query<{ count: number }>(
           `SELECT COUNT(*) as count 
@@ -325,7 +329,7 @@ export class InitCommand {
            WHERE table_schema = 'meta' 
            AND table_name IN ('table_metadata', 'column_metadata', 'generated_files')`,
         );
-        return (result[0] as unknown as { count: number }).count === 3;
+        return (result[0] as unknown as { count: number }).count >= 3;
       }
     } catch {
       return false;
@@ -389,7 +393,7 @@ export class InitCommand {
 
       // Check if user schema exists
       const schemaExists = await this.checkUserSchemaExists(connectionManager);
-      
+
       // Check if user.users table exists
       const tableExists = await this.checkUserTableExists(connectionManager);
 
@@ -408,8 +412,8 @@ export class InitCommand {
         {
           type: 'confirm',
           name: 'createUserTable',
-          message: tableExists 
-            ? 'User table already exists. Recreate?' 
+          message: tableExists
+            ? 'User table already exists. Recreate?'
             : 'Create basic users table? (Required for created_by/updated_by tracking)',
           default: !tableExists,
         },
@@ -598,10 +602,24 @@ export class InitCommand {
   private async saveConfiguration(): Promise<void> {
     Logger.section('💾 Saving configuration');
 
-    // Ensure we have a complete config
-    const fullConfig: GeneratorConfig = {
+    // Create config WITHOUT sensitive data (password)
+    const safeConfig: GeneratorConfig = {
       architecture: this.config.architecture || 'standalone',
-      database: this.config.database as DatabaseConfig,
+      database: {
+        type: this.config.database!.type,
+        host: '${DB_HOST}',
+        port: '${DB_PORT}' as any, // Will be read from env
+        database: '${DB_DATABASE}',
+        username: '${DB_USERNAME}',
+        password: '${DB_PASSWORD}',
+        ssl: '${DB_SSL}' as any, // Will be read from env
+        pool: {
+          min: '${DB_POOL_MIN}' as any,
+          max: '${DB_POOL_MAX}' as any,
+          idleTimeoutMillis: 30000,
+          connectionTimeoutMillis: 2000,
+        },
+      },
       features: {
         swagger: true,
         caching: false,
@@ -615,12 +633,13 @@ export class InitCommand {
       microservices: this.config.microservices,
     };
 
-    // Save generator.config.json
+    // Save generator.config.json with env variable placeholders
     const configPath = join(process.cwd(), 'generator.config.json');
-    writeFileSync(configPath, JSON.stringify(fullConfig, null, 2), 'utf-8');
+    writeFileSync(configPath, JSON.stringify(safeConfig, null, 2), 'utf-8');
     Logger.success(`Configuration saved: ${configPath}`);
+    Logger.info('💡 Database credentials are stored in .env (not in config file)');
 
-    // Update or create .env file
+    // Update or create .env file with actual values
     await this.updateEnvFile();
   }
 

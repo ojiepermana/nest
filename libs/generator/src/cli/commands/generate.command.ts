@@ -134,8 +134,61 @@ export class GenerateCommand {
     }
 
     const configContent = readFileSync(configPath, 'utf-8');
-    this.config = JSON.parse(configContent) as GeneratorConfig;
+    const rawConfig = JSON.parse(configContent) as GeneratorConfig;
+    
+    // Resolve environment variables in config
+    this.config = this.resolveEnvVariables(rawConfig);
     Logger.info('✓ Configuration loaded');
+  }
+
+  /**
+   * Resolve environment variables in configuration
+   */
+  private resolveEnvVariables(config: GeneratorConfig): GeneratorConfig {
+    const resolved = { ...config };
+    
+    if (config.database) {
+      resolved.database = {
+        ...config.database,
+        host: this.resolveEnvValue(config.database.host as string),
+        port: parseInt(this.resolveEnvValue(config.database.port?.toString() || '5432')),
+        database: this.resolveEnvValue(config.database.database as string),
+        username: this.resolveEnvValue(config.database.username as string),
+        password: this.resolveEnvValue(config.database.password as string),
+        ssl: this.resolveEnvValue(config.database.ssl?.toString() || 'false') === 'true',
+        pool: {
+          ...config.database.pool,
+          min: parseInt(this.resolveEnvValue(config.database.pool?.min?.toString() || '2')),
+          max: parseInt(this.resolveEnvValue(config.database.pool?.max?.toString() || '10')),
+        },
+      };
+    }
+    
+    return resolved;
+  }
+
+  /**
+   * Resolve single environment variable value
+   */
+  private resolveEnvValue(value: string): string {
+    // Check if value is an environment variable placeholder like ${DB_HOST}
+    const envVarMatch = value.match(/^\$\{(.+)\}$/);
+    
+    if (envVarMatch) {
+      const envVarName = envVarMatch[1];
+      const envValue = process.env[envVarName];
+      
+      if (!envValue) {
+        Logger.error(`❌ Environment variable ${envVarName} is not set!`);
+        Logger.info('💡 Make sure .env file is loaded or set the environment variable.');
+        process.exit(1);
+      }
+      
+      return envValue;
+    }
+    
+    // Return as-is if not an env variable placeholder
+    return value;
   }
 
   /**

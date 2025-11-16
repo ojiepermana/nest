@@ -7,11 +7,15 @@
  * Provides commands: init, generate, sync, check, list, remove
  */
 
+import { config as dotenvConfig } from 'dotenv';
 import { Command } from 'commander';
 import { InitCommand } from './commands/init.command';
 import { GenerateCommand } from './commands/generate.command';
 import { DeleteCommand } from './commands/delete.command';
 import { Logger } from '../utils/logger.util';
+
+// Load environment variables from .env file
+dotenvConfig();
 
 const program = new Command();
 

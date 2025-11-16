@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { EntityRepository } from '../repositories/entity.repository';
 import { Entity } from '../entities/entity.entity';
 import { CreateEntityDto } from '../dto/create-entity.dto';
@@ -7,10 +12,7 @@ import { EntityFilterDto } from '../dto/entity-filter.dto';
 
 @Injectable()
 export class EntityService {
-  constructor(
-    private readonly repository: EntityRepository,
-  ) {}
-
+  constructor(private readonly repository: EntityRepository) {}
 
   /**
    * Create a new entity
@@ -20,7 +22,7 @@ export class EntityService {
     await this.validateUniqueConstraints(createDto);
 
     const entity = await this.repository.create(createDto);
-    
+
     return entity;
   }
 
@@ -36,7 +38,7 @@ export class EntityService {
    */
   async findOne(id: string): Promise<Entity> {
     const entity = await this.repository.findOne(id);
-    
+
     return entity;
   }
 
@@ -46,12 +48,12 @@ export class EntityService {
   async update(id: string, updateDto: UpdateEntityDto): Promise<Entity> {
     // Validate exists
     await this.findOne(id);
-    
+
     // Validate unique constraints
     await this.validateUniqueConstraints(updateDto, id);
 
     const entity = await this.repository.update(id, updateDto);
-    
+
     return entity;
   }
 
@@ -65,26 +67,28 @@ export class EntityService {
     await this.repository.delete(id);
   }
 
-
   /**
    * Find entitys with filters
    */
   async findWithFilters(
     filterDto: EntityFilterDto,
-    options?: { page?: number; limit?: number; sort?: Array<{ field: string; order: 'ASC' | 'DESC' }> },
+    options?: {
+      page?: number;
+      limit?: number;
+      sort?: Array<{ field: string; order: 'ASC' | 'DESC' }>;
+    },
   ): Promise<{ data: Entity[]; total: number; page: number; limit: number }> {
     const { data, total } = await this.repository.findWithFilters(filterDto, options);
-    
+
     const result = {
       data,
       total,
       page: options?.page || 1,
       limit: options?.limit || 20,
     };
-    
+
     return result;
   }
-
 
   /**
    * Count entitys
@@ -109,12 +113,11 @@ export class EntityService {
   ): Promise<void> {
     // Add custom validation logic here based on unique columns
     // Example: Check if email already exists
-        if ('id' in data && data.id) {
+    if ('id' in data && data.id) {
       const existing = await this.repository.findOne(data.id as string);
       if (existing && (!excludeId || existing.id !== excludeId)) {
         throw new ConflictException('id already exists');
       }
     }
   }
-
 }

@@ -101,7 +101,12 @@ export class CreateEntityDto {
   /**
    * Record status (active/inactive)
    */
-  @ApiProperty({ description: 'Record status (active/inactive)', example: 'active', type: 'string', required: false })
+  @ApiProperty({
+    description: 'Record status (active/inactive)',
+    example: 'active',
+    type: 'string',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   status?: string;

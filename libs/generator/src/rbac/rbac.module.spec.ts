@@ -14,8 +14,7 @@ describe('RBACModule', () => {
   });
 
   it('should return DynamicModule from register', () => {
-    const result = RBACModule.register({
-    });
+    const result = RBACModule.register({});
     expect(result.module).toBe(RBACModule);
     expect(result.providers).toBeDefined();
     expect(result.exports).toBeDefined();
@@ -23,8 +22,7 @@ describe('RBACModule', () => {
 
   it('should return DynamicModule from registerAsync', () => {
     const result = RBACModule.registerAsync({
-      useFactory: () => ({
-      }),
+      useFactory: () => ({}),
     });
     expect(result.module).toBe(RBACModule);
     expect(result.providers).toBeDefined();

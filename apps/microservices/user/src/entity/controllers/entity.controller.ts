@@ -9,7 +9,6 @@ import { EntityFilterDto } from '../dto/entity-filter.dto';
 export class EntityController {
   constructor(private readonly service: EntityService) {}
 
-
   // GENERATED_HANDLER_START: findAll
   @MessagePattern('entity.findAll')
   async findAll(@Payload() filters: EntityFilterDto) {
@@ -49,6 +48,4 @@ export class EntityController {
   // CUSTOM_HANDLER_START: custom-handlers
   // Add your custom message pattern handlers here
   // CUSTOM_HANDLER_END: custom-handlers
-
-
 }

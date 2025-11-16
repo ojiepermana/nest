@@ -1,6 +1,6 @@
 /**
  * Entity Module
- * 
+ *
  * Auto-generated barrel export
  */
 

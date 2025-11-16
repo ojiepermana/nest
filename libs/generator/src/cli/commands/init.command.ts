@@ -56,7 +56,10 @@ export class InitCommand {
     this.showSummary();
   }
 
-  private async promptArchitecture(options?: { architecture?: string; skipPrompts?: boolean }): Promise<void> {
+  private async promptArchitecture(options?: {
+    architecture?: string;
+    skipPrompts?: boolean;
+  }): Promise<void> {
     // If architecture is provided via CLI flag, use it
     if (options?.architecture) {
       const validArchitectures = ['standalone', 'monorepo', 'microservices'];
@@ -232,23 +235,34 @@ export class InitCommand {
       const schemaExists = await this.checkMetadataSchemaExists(connectionManager);
 
       if (schemaExists) {
-        const { recreate } = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'recreate',
-            message: '⚠️  Metadata schema already exists. Recreate? (This will drop existing data)',
-            default: false,
-          },
-        ]);
+        Logger.info('✓ Metadata schema already exists');
+        
+        // Check if tables exist
+        const tablesExist = await this.checkMetadataTablesExist(connectionManager);
+        
+        if (tablesExist) {
+          Logger.info('✓ Metadata tables already exist (table_metadata, column_metadata, generated_files)');
+          
+          const { recreate } = await inquirer.prompt([
+            {
+              type: 'confirm',
+              name: 'recreate',
+              message: '⚠️  Recreate metadata schema? (This will drop existing data)',
+              default: false,
+            },
+          ]);
 
-        if (!recreate) {
-          Logger.info('Using existing metadata schema');
-          await connectionManager.disconnect();
-          return;
+          if (!recreate) {
+            Logger.success('Using existing metadata schema and tables');
+            await connectionManager.disconnect();
+            return;
+          }
+
+          // Drop existing schema
+          await this.dropMetadataSchema(connectionManager);
+        } else {
+          Logger.warn('Metadata schema exists but tables are missing. Creating tables...');
         }
-
-        // Drop existing schema
-        await this.dropMetadataSchema(connectionManager);
       }
 
       // Create metadata schema and tables
@@ -256,7 +270,9 @@ export class InitCommand {
         {
           type: 'confirm',
           name: 'confirm',
-          message: 'Create metadata schema and tables?',
+          message: schemaExists 
+            ? 'Create missing metadata tables?' 
+            : 'Create metadata schema and tables?',
           default: true,
         },
       ]);
@@ -285,6 +301,34 @@ export class InitCommand {
     } catch (error) {
       Logger.error('Failed to setup metadata schema', error);
       throw error;
+    }
+  }
+
+  private async checkMetadataTablesExist(
+    connectionManager: DatabaseConnectionManager,
+  ): Promise<boolean> {
+    try {
+      const dbType = this.config.database!.type;
+
+      if (dbType === 'postgresql') {
+        const result = await connectionManager.query<{ count: number }>(
+          `SELECT COUNT(*) as count 
+           FROM information_schema.tables 
+           WHERE table_schema = 'meta' 
+           AND table_name IN ('table_metadata', 'column_metadata', 'generated_files')`,
+        );
+        return result.rows[0]?.count === 3;
+      } else {
+        const result = await connectionManager.query<{ count: number }>(
+          `SELECT COUNT(*) as count 
+           FROM information_schema.tables 
+           WHERE table_schema = 'meta' 
+           AND table_name IN ('table_metadata', 'column_metadata', 'generated_files')`,
+        );
+        return (result[0] as unknown as { count: number }).count === 3;
+      }
+    } catch {
+      return false;
     }
   }
 
@@ -323,6 +367,18 @@ export class InitCommand {
     Logger.warn('Existing metadata schema dropped');
   }
 
+  private async dropUserTable(connectionManager: DatabaseConnectionManager): Promise<void> {
+    const dbType = this.config.database!.type;
+
+    if (dbType === 'postgresql') {
+      await connectionManager.query('DROP TABLE IF EXISTS "user"."users" CASCADE');
+    } else {
+      await connectionManager.query('DROP TABLE IF EXISTS `user`.`users`');
+    }
+
+    Logger.warn('Existing user table dropped');
+  }
+
   private async setupUserTable(): Promise<void> {
     Logger.section('👤 Setting up user table');
 
@@ -331,29 +387,46 @@ export class InitCommand {
     try {
       await connectionManager.connect();
 
+      // Check if user schema exists
+      const schemaExists = await this.checkUserSchemaExists(connectionManager);
+      
       // Check if user.users table exists
       const tableExists = await this.checkUserTableExists(connectionManager);
 
-      if (tableExists) {
-        Logger.info('User table already exists');
+      if (schemaExists && tableExists) {
+        Logger.success('✓ User schema and table already exist');
         await connectionManager.disconnect();
         return;
+      }
+
+      if (schemaExists && !tableExists) {
+        Logger.info('✓ User schema exists');
+        Logger.warn('User table does not exist. Creating table...');
       }
 
       const { createUserTable } = await inquirer.prompt([
         {
           type: 'confirm',
           name: 'createUserTable',
-          message: 'Create basic users table? (Required for created_by/updated_by tracking)',
-          default: true,
+          message: tableExists 
+            ? 'User table already exists. Recreate?' 
+            : 'Create basic users table? (Required for created_by/updated_by tracking)',
+          default: !tableExists,
         },
       ]);
 
       if (!createUserTable) {
         Logger.warn('Skipping user table creation');
-        Logger.warn('You will need to create user.users table manually for audit tracking');
+        if (!tableExists) {
+          Logger.warn('You will need to create user.users table manually for audit tracking');
+        }
         await connectionManager.disconnect();
         return;
+      }
+
+      if (tableExists) {
+        Logger.step('Dropping existing user table...');
+        await this.dropUserTable(connectionManager);
       }
 
       await this.createUserTable(connectionManager);
@@ -367,6 +440,28 @@ export class InitCommand {
       Logger.error('Failed to setup user table', error);
       // Don't throw - user table is optional
       Logger.warn('Continuing without user table. You can create it manually later.');
+    }
+  }
+
+  private async checkUserSchemaExists(
+    connectionManager: DatabaseConnectionManager,
+  ): Promise<boolean> {
+    try {
+      const dbType = this.config.database!.type;
+
+      if (dbType === 'postgresql') {
+        const result = await connectionManager.query<{ exists: boolean }>(
+          "SELECT EXISTS(SELECT 1 FROM information_schema.schemata WHERE schema_name = 'user') as exists",
+        );
+        return result.rows[0]?.exists || false;
+      } else {
+        const result = await connectionManager.query<{ count: number }>(
+          "SELECT COUNT(*) as count FROM information_schema.schemata WHERE schema_name = 'user'",
+        );
+        return (result[0] as unknown as { count: number }).count > 0;
+      }
+    } catch {
+      return false;
     }
   }
 

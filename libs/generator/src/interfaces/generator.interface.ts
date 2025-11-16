@@ -68,6 +68,7 @@ export interface GeneratorConfig {
   };
   microservices?: {
     gatewayApp?: string;
+    servicesPath?: string; // Base path for microservices (default: 'apps/microservices')
     services: MicroserviceConfig[];
   };
 }

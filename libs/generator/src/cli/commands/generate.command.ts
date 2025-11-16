@@ -504,27 +504,30 @@ export class GenerateCommand {
       case 'microservices':
         // If app name is provided via --app flag, use it
         if (appName) {
-          const servicePath = join(projectRoot, 'apps/microservices', appName, 'src');
-          if (existsSync(join(projectRoot, 'apps/microservices', appName))) {
+          const servicesPath = this.config?.microservices?.servicesPath || 'apps/microservices';
+          const servicePath = join(projectRoot, servicesPath, appName, 'src');
+          if (existsSync(join(projectRoot, servicesPath, appName))) {
             return servicePath;
           }
-          Logger.error(`❌ Service '${appName}' not found in apps/microservices/`);
+          Logger.error(`❌ Service '${appName}' not found in ${servicesPath}/`);
           process.exit(1);
         }
 
         // Same logic as monorepo
         const microservicePath = cwd.replace(projectRoot, '');
+        const servicesPath = this.config?.microservices?.servicesPath || 'apps/microservices';
 
-        if (microservicePath.includes('apps/microservices/')) {
+        if (microservicePath.includes(`${servicesPath}/`)) {
           return join(cwd, 'src');
         }
 
         if (cwd === projectRoot) {
+          const servicesPath = this.config?.microservices?.servicesPath || 'apps/microservices';
           Logger.warn(
             '⚠️  Running from project root. Please use --app flag or cd into the service directory.',
           );
           Logger.info('   Example: nest-generator generate table --app=user');
-          Logger.info('   Or:      cd apps/microservices/user && nest-generator generate table');
+          Logger.info(`   Or:      cd ${servicesPath}/user && nest-generator generate table`);
           process.exit(1);
         }
 
@@ -561,7 +564,8 @@ export class GenerateCommand {
 
     // Check if current directory is in gateway app
     const relativePath = cwd.replace(projectRoot, '');
-    if (relativePath.includes('apps/microservices/gateway')) {
+    const servicesPath = this.config?.microservices?.servicesPath || 'apps/microservices';
+    if (relativePath.includes(`${servicesPath}/gateway`)) {
       return true;
     }
 

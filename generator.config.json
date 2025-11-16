@@ -26,7 +26,8 @@
     "notifications": false
   },
   "microservices": {
-    "services": [],
-    "gatewayApp": "apps/microservices/gateway"
+    "servicesPath": "apps/microservices",
+    "gatewayApp": "apps/microservices/gateway",
+    "services": []
   }
 }

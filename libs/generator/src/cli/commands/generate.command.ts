@@ -597,6 +597,7 @@ export class GenerateCommand {
     this.ensureDirectory(moduleDir);
     this.ensureDirectory(join(moduleDir, 'entities'));
     this.ensureDirectory(join(moduleDir, 'dto'));
+    this.ensureDirectory(join(moduleDir, 'dto', moduleName)); // DTO subdirectory per table
     this.ensureDirectory(join(moduleDir, 'repositories'));
     this.ensureDirectory(join(moduleDir, 'services'));
     this.ensureDirectory(join(moduleDir, 'controllers'));
@@ -622,7 +623,10 @@ export class GenerateCommand {
     });
     const createDtoResult = createDtoGenerator.generate(tableMetadata, columns);
     const createDtoCode = [...createDtoResult.imports, '', createDtoResult.code].join('\n');
-    this.writeFile(join(moduleDir, 'dto', `create-${moduleName}.dto.ts`), createDtoCode);
+    this.writeFile(
+      join(moduleDir, 'dto', moduleName, `create-${moduleName}.dto.ts`),
+      createDtoCode,
+    );
 
     const updateDtoGenerator = new UpdateDtoGenerator({
       includeSwagger: features.swagger,
@@ -630,7 +634,10 @@ export class GenerateCommand {
     });
     const updateDtoResult = updateDtoGenerator.generate(tableMetadata, columns);
     const updateDtoCode = [...updateDtoResult.imports, '', updateDtoResult.code].join('\n');
-    this.writeFile(join(moduleDir, 'dto', `update-${moduleName}.dto.ts`), updateDtoCode);
+    this.writeFile(
+      join(moduleDir, 'dto', moduleName, `update-${moduleName}.dto.ts`),
+      updateDtoCode,
+    );
 
     const filterDtoGenerator = new FilterDtoGenerator({
       includeSwagger: features.swagger,
@@ -638,7 +645,10 @@ export class GenerateCommand {
     });
     const filterDtoResult = filterDtoGenerator.generate(tableMetadata, columns);
     const filterDtoCode = [...filterDtoResult.imports, '', filterDtoResult.code].join('\n');
-    this.writeFile(join(moduleDir, 'dto', `${moduleName}-filter.dto.ts`), filterDtoCode);
+    this.writeFile(
+      join(moduleDir, 'dto', moduleName, `${moduleName}-filter.dto.ts`),
+      filterDtoCode,
+    );
     Logger.info('   ✓ DTOs generated (Create, Update, Filter)');
 
     // 3. Generate Repository
@@ -754,9 +764,9 @@ export class GenerateCommand {
 
 export * from './${moduleName}.module';
 export * from './entities/${moduleName}.entity';
-export * from './dto/create-${moduleName}.dto';
-export * from './dto/update-${moduleName}.dto';
-export * from './dto/${moduleName}-filter.dto';
+export * from './dto/${moduleName}/create-${moduleName}.dto';
+export * from './dto/${moduleName}/update-${moduleName}.dto';
+export * from './dto/${moduleName}/${moduleName}-filter.dto';
 export * from './repositories/${moduleName}.repository';
 export * from './services/${moduleName}.service';
 export * from './controllers/${moduleName}.controller';

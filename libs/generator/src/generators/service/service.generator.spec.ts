@@ -94,9 +94,9 @@ describe('ServiceGenerator', () => {
         "import { UsersRepository } from '../repositories/users.repository'",
       );
       expect(result).toContain("import { Users } from '../entities/users.entity'");
-      expect(result).toContain("import { CreateUsersDto } from '../dto/create-users.dto'");
-      expect(result).toContain("import { UpdateUsersDto } from '../dto/update-users.dto'");
-      expect(result).toContain("import { UsersFilterDto } from '../dto/users-filter.dto'");
+      expect(result).toContain("import { CreateUsersDto } from '../dto/users/create-users.dto'");
+      expect(result).toContain("import { UpdateUsersDto } from '../dto/users/update-users.dto'");
+      expect(result).toContain("import { UsersFilterDto } from '../dto/users/users-filter.dto'");
     });
 
     it('should include caching imports when enabled', () => {
@@ -109,7 +109,7 @@ describe('ServiceGenerator', () => {
 
       expect(result).toContain("import { CACHE_MANAGER } from '@nestjs/cache-manager'");
       expect(result).toContain("import { Inject } from '@nestjs/common'");
-      expect(result).toContain("import { Cache } from 'cache-manager'");
+      expect(result).toContain("import type { Cache } from 'cache-manager'");
     });
 
     it('should include transaction imports when enabled', () => {
@@ -131,7 +131,9 @@ describe('ServiceGenerator', () => {
 
       const result = generator.generate();
 
-      expect(result).toContain("import { AuditLogService } from '../audit/audit-log.service'");
+      expect(result).toContain(
+        "import { AuditLogService } from '@ojiepermana/nest-generator/audit'",
+      );
     });
   });
 
@@ -190,7 +192,7 @@ describe('ServiceGenerator', () => {
       const result = generator.generate();
 
       expect(result).toContain('async remove(id: number): Promise<void>');
-      expect(result).toContain('await this.repository.remove(id)');
+      expect(result).toContain('await this.repository.delete(id)');
     });
   });
 
@@ -281,7 +283,7 @@ describe('ServiceGenerator', () => {
       const result = generator.generate();
 
       expect(result).toContain('private async invalidateCache()');
-      expect(result).toContain("key.startsWith('users:')");
+      expect(result).toContain("await this.cacheManager.del('users:all')");
     });
 
     it('should not include cache logic when disabled', () => {

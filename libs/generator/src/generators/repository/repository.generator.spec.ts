@@ -102,9 +102,9 @@ describe('RepositoryGenerator', () => {
         "import { Repository, FindOptionsWhere, FindManyOptions, DeepPartial } from 'typeorm'",
       );
       expect(result).toContain("import { Users } from '../entities/users.entity'");
-      expect(result).toContain("import { UsersFilterDto } from '../dto/users-filter.dto'");
-      expect(result).toContain("import { CreateUsersDto } from '../dto/create-users.dto'");
-      expect(result).toContain("import { UpdateUsersDto } from '../dto/update-users.dto'");
+      expect(result).toContain("import { UsersFilterDto } from '../dto/users/users-filter.dto'");
+      expect(result).toContain("import { CreateUsersDto } from '../dto/users/create-users.dto'");
+      expect(result).toContain("import { UpdateUsersDto } from '../dto/users/update-users.dto'");
     });
 
     it('should include FilterCompiler import when customMethods enabled', () => {

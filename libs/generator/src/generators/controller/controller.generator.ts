@@ -94,9 +94,9 @@ ${crudEndpoints}${fileUploadEndpoints}
       `import { ${commonImports.join(', ')} } from '@nestjs/common';`,
       `import { ${serviceName} } from '../services/${this.toKebabCase(entityName)}.service';`,
       `import { ${entityName} } from '../entities/${this.toKebabCase(entityName)}.entity';`,
-      `import { Create${entityName}Dto } from '../dto/create-${this.toKebabCase(entityName)}.dto';`,
-      `import { Update${entityName}Dto } from '../dto/update-${this.toKebabCase(entityName)}.dto';`,
-      `import { ${entityName}FilterDto } from '../dto/${this.toKebabCase(entityName)}-filter.dto';`,
+      `import { Create${entityName}Dto } from '../dto/${this.toKebabCase(entityName)}/create-${this.toKebabCase(entityName)}.dto';`,
+      `import { Update${entityName}Dto } from '../dto/${this.toKebabCase(entityName)}/update-${this.toKebabCase(entityName)}.dto';`,
+      `import { ${entityName}FilterDto } from '../dto/${this.toKebabCase(entityName)}/${this.toKebabCase(entityName)}-filter.dto';`,
     ];
 
     // Add file upload imports

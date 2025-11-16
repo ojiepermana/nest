@@ -80,9 +80,9 @@ ${transactionMethods}
       "import { InjectRepository } from '@nestjs/typeorm';",
       "import { Repository, FindOptionsWhere, FindManyOptions, DeepPartial } from 'typeorm';",
       `import { ${entityName} } from '../entities/${this.toKebabCase(entityName)}.entity';`,
-      `import { ${filterDtoName} } from '../dto/${this.toKebabCase(entityName)}-filter.dto';`,
-      `import { Create${entityName}Dto } from '../dto/create-${this.toKebabCase(entityName)}.dto';`,
-      `import { Update${entityName}Dto } from '../dto/update-${this.toKebabCase(entityName)}.dto';`,
+      `import { ${filterDtoName} } from '../dto/${this.toKebabCase(entityName)}/${this.toKebabCase(entityName)}-filter.dto';`,
+      `import { Create${entityName}Dto } from '../dto/${this.toKebabCase(entityName)}/create-${this.toKebabCase(entityName)}.dto';`,
+      `import { Update${entityName}Dto } from '../dto/${this.toKebabCase(entityName)}/update-${this.toKebabCase(entityName)}.dto';`,
     ];
 
     if (this.options.customMethods) {
@@ -893,9 +893,9 @@ export const auditConfig = {
 
     return `import { Injectable, Inject } from '@nestjs/common';
 import { Pool } from 'pg';
-import { Create${entityName}Dto } from '../dto/create-${this.toKebabCase(entityName)}.dto';
-import { Update${entityName}Dto } from '../dto/update-${this.toKebabCase(entityName)}.dto';
-import { ${entityName}FilterDto } from '../dto/${this.toKebabCase(entityName)}-filter.dto';
+import { Create${entityName}Dto } from '../dto/${this.toKebabCase(entityName)}/create-${this.toKebabCase(entityName)}.dto';
+import { Update${entityName}Dto } from '../dto/${this.toKebabCase(entityName)}/update-${this.toKebabCase(entityName)}.dto';
+import { ${entityName}FilterDto } from '../dto/${this.toKebabCase(entityName)}/${this.toKebabCase(entityName)}-filter.dto';
 
 @Injectable()
 export class ${repositoryName} {

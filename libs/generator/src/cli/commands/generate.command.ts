@@ -26,6 +26,8 @@ import { FilterDtoGenerator } from '../../generators/dto/filter-dto.generator';
 import { RepositoryGenerator } from '../../generators/repository/repository.generator';
 import { ServiceGenerator } from '../../generators/service/service.generator';
 import { ControllerGenerator } from '../../generators/controller/controller.generator';
+import { GatewayControllerGenerator } from '../../generators/controller/gateway-controller.generator';
+import { ServiceControllerGenerator } from '../../generators/controller/service-controller.generator';
 import { ModuleGenerator } from '../../generators/module/module.generator';
 import { toPascalCase } from '../../utils/string.util';
 import type {
@@ -533,7 +535,42 @@ export class GenerateCommand {
       default:
         return join(cwd, 'src');
     }
-  } /**
+  }
+
+  /**
+   * Detect if current app is a gateway in microservices architecture
+   */
+  private detectIsGateway(outputPath: string, appName?: string): boolean {
+    const architecture = this.config?.architecture || 'standalone';
+    
+    // Only relevant for microservices architecture
+    if (architecture !== 'microservices') {
+      return false;
+    }
+
+    const projectRoot = this.findProjectRoot();
+    const cwd = process.cwd();
+    
+    // Check if app name contains 'gateway'
+    if (appName && appName.toLowerCase().includes('gateway')) {
+      return true;
+    }
+
+    // Check if output path contains 'gateway'
+    if (outputPath.toLowerCase().includes('gateway')) {
+      return true;
+    }
+
+    // Check if current directory is in gateway app
+    const relativePath = cwd.replace(projectRoot, '');
+    if (relativePath.includes('apps/microservices/gateway')) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
    * Generate all files
    */
   private generateFiles(
@@ -631,20 +668,53 @@ export class GenerateCommand {
 
     // 5. Generate Controller
     Logger.info('   ⏳ Generating controller...');
-    const controllerGenerator = new ControllerGenerator(tableMetadata, columns, {
-      tableName,
-      entityName,
-      basePath, // Use schema/table format for standalone apps
-      enableSwagger: features.swagger,
-      enableValidation: features.validation,
-      enablePagination: features.pagination,
-      enableFileUpload: features.fileUpload,
-      enableRbac: features.rbac,
-      rbacResourceName: moduleName, // Use module name as resource (e.g., 'entity', 'location')
-      storageProvider:
-        (process.env.STORAGE_PROVIDER as 'local' | 's3' | 'gcs' | 'azure') || 'local',
-    });
-    const controllerCode = controllerGenerator.generate();
+    
+    const architecture = this.config?.architecture || 'standalone';
+    const isGateway = this.detectIsGateway(outputPath);
+    
+    let controllerCode: string;
+    
+    if (architecture === 'microservices' && isGateway) {
+      // Generate Gateway Controller (uses ClientProxy)
+      Logger.info('   🌐 Detected gateway app - generating gateway controller');
+      const gatewayGenerator = new GatewayControllerGenerator(tableMetadata, columns, {
+        tableName,
+        serviceName: moduleName,
+        serviceHost: process.env.SERVICE_HOST || 'localhost',
+        servicePort: parseInt(process.env.SERVICE_PORT || '3001'),
+        transport: (process.env.TRANSPORT_TYPE as 'TCP' | 'REDIS' | 'NATS' | 'MQTT' | 'RMQ') || 'TCP',
+        enableSwagger: features.swagger,
+        enableRateLimit: false,
+      });
+      controllerCode = gatewayGenerator.generate();
+    } else if (architecture === 'microservices' && !isGateway) {
+      // Generate Service Controller (uses @MessagePattern)
+      Logger.info('   🔧 Detected service app - generating service controller');
+      const serviceControllerGenerator = new ServiceControllerGenerator(tableMetadata, columns, {
+        tableName,
+        serviceName: moduleName,
+        enableEvents: false,
+      });
+      controllerCode = serviceControllerGenerator.generate();
+    } else {
+      // Generate standard REST Controller
+      Logger.info('   🎯 Generating standard REST controller');
+      const controllerGenerator = new ControllerGenerator(tableMetadata, columns, {
+        tableName,
+        entityName,
+        basePath, // Use schema/table format for standalone apps
+        enableSwagger: features.swagger,
+        enableValidation: features.validation,
+        enablePagination: features.pagination,
+        enableFileUpload: features.fileUpload,
+        enableRbac: features.rbac,
+        rbacResourceName: moduleName, // Use module name as resource (e.g., 'entity', 'location')
+        storageProvider:
+          (process.env.STORAGE_PROVIDER as 'local' | 's3' | 'gcs' | 'azure') || 'local',
+      });
+      controllerCode = controllerGenerator.generate();
+    }
+    
     this.writeFile(join(moduleDir, 'controllers', `${moduleName}.controller.ts`), controllerCode);
     Logger.info('   ✓ Controller generated');
 
@@ -656,6 +726,9 @@ export class GenerateCommand {
       enableCaching: features.caching,
       enableAuditLog: features.auditLog,
       useTypeORM: false,
+      architecture,
+      isGateway,
+      serviceName: moduleName,
     });
     const moduleCode = moduleGenerator.generate();
     this.writeFile(join(moduleDir, `${moduleName}.module.ts`), moduleCode);

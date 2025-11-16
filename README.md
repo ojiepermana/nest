@@ -90,9 +90,40 @@ nest-generator generate users.profile \
   --features.rbac=true \
   --storageProvider=s3
 
+# For monorepo/microservices: specify target app
+nest-generator generate users.profile --app=user
+
 # Interactive mode
 nest-generator generate users.profile
 # Follow the prompts to select features
+```
+
+### 📌 CLI Options
+
+**Generate Command:**
+
+```bash
+nest-generator generate <schema.table> [options]
+
+Options:
+  --app=<name>              Target app in monorepo/microservices (e.g., --app=user)
+  --features.audit=<bool>   Enable audit trail (default: auto-detect)
+  --features.rbac=<bool>    Enable role-based access control
+  --features.upload=<bool>  Enable file upload
+  --features.cache=<bool>   Enable caching
+  --storageProvider=<type>  File storage: local|s3|gcs|azure
+  --skip-prompts            Skip interactive prompts (use defaults)
+  --help                    Show help
+```
+
+**Init Command:**
+
+```bash
+nest-generator init [options]
+
+Options:
+  --architecture=<type>     Architecture type: standalone|monorepo|microservices
+  --help                    Show help
 ```
 
 **4. Generated structure:**
@@ -188,13 +219,14 @@ export class AppModule {}
 **Setup:**
 
 ```bash
-# Navigate to monorepo app (e.g., user service)
-cd apps/monorepo/user
-
-# Initialize generator
+# Option 1: From project root with --app flag (recommended for automation)
 npx @ojiepermana/nest-generator init --architecture=monorepo
+npx @ojiepermana/nest-generator generate users.profile --app=user
+npx @ojiepermana/nest-generator generate orders.order --app=order
 
-# Generate module
+# Option 2: From app directory
+cd apps/monorepo/user
+npx @ojiepermana/nest-generator init --architecture=monorepo
 npx @ojiepermana/nest-generator generate users.profile
 ```
 
@@ -250,13 +282,14 @@ export class UserModule {}
 **Setup:**
 
 ```bash
-# Navigate to specific microservice
-cd apps/microservices/user
-
-# Initialize generator
+# Option 1: From project root with --app flag (recommended for automation)
 npx @ojiepermana/nest-generator init --architecture=microservices
+npx @ojiepermana/nest-generator generate users.profile --app=user
+npx @ojiepermana/nest-generator generate orders.order --app=gateway
 
-# Generate module
+# Option 2: From microservice directory
+cd apps/microservices/user
+npx @ojiepermana/nest-generator init --architecture=microservices
 npx @ojiepermana/nest-generator generate users.profile
 ```
 

@@ -3,7 +3,6 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CacheModule } from '@nestjs/cache-manager';
 import { EntityController } from './controllers/entity.controller';
 import { AuditModule } from '@ojiepermana/nest-generator/audit';
-import { LocationController } from './controllers/location.controller';
 
 @Module({
   imports: [
@@ -15,8 +14,7 @@ import { LocationController } from './controllers/location.controller';
           host: process.env.ENTITY_SERVICE_HOST || 'localhost',
           port: parseInt(process.env.ENTITY_SERVICE_PORT || '3004'),
         },
-      },
-    ]), CacheModule.register(), AuditModule],
-  controllers: [EntityController, LocationController]
+      }]), CacheModule.register(), AuditModule],
+  controllers: [EntityController]
 })
 export class EntityModule {}

@@ -12,6 +12,7 @@ import { Command } from 'commander';
 import { InitCommand } from './commands/init.command';
 import { GenerateCommand } from './commands/generate.command';
 import { DeleteCommand } from './commands/delete.command';
+import { RemoveCommand } from './commands/remove.command';
 import { Logger } from '../utils/logger.util';
 import { join } from 'path';
 import { existsSync } from 'fs';
@@ -157,6 +158,25 @@ program
       });
     } catch (error) {
       Logger.error('Delete command failed', error as Error);
+      process.exit(1);
+    }
+  });
+
+// Remove command (schema-based)
+program
+  .command('remove <table>')
+  .description('Remove generated CRUD files from schema-based structure (format: schema.table)')
+  .option('--app <name>', 'App name for monorepo/microservices')
+  .option('--force', 'Skip confirmation prompt')
+  .action(async (table: string, options: any) => {
+    try {
+      const removeCommand = new RemoveCommand();
+      await removeCommand.execute(table, {
+        app: options.app,
+        force: options.force,
+      });
+    } catch (error) {
+      Logger.error('Remove command failed', error as Error);
       process.exit(1);
     }
   });

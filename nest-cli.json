@@ -8,15 +8,6 @@
     "tsConfigPath": "apps/standalone/tsconfig.app.json"
   },
   "projects": {
-    "entity": {
-      "type": "application",
-      "root": "apps/entity",
-      "entryFile": "main",
-      "sourceRoot": "apps/entity/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/entity/tsconfig.app.json"
-      }
-    },
     "generator": {
       "type": "library",
       "root": "libs/generator",
@@ -31,6 +22,15 @@
             "outDir": "dist/libs/generator"
           }
         ]
+      }
+    },
+    "microservices-entity": {
+      "type": "application",
+      "root": "apps/microservices/entity",
+      "entryFile": "main",
+      "sourceRoot": "apps/microservices/entity/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/microservices/entity/tsconfig.app.json"
       }
     },
     "microservices-gateway": {

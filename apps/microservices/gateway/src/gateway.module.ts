@@ -16,6 +16,14 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
           port: parseInt(process.env.USER_SERVICE_PORT || '3001'),
         },
       },
+      {
+        name: 'ENTITY_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: process.env.ENTITY_SERVICE_HOST || 'localhost',
+          port: parseInt(process.env.ENTITY_SERVICE_PORT || '3004'),
+        },
+      },
     ]),
   ],
   controllers: [GatewayController],

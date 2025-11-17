@@ -22,21 +22,11 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@app/contracts/*": [
-        "libs/contracts/*"
-      ],
-      "@ojiepermana/nest": [
-        "libs/nest/src"
-      ],
-      "@ojiepermana/nest-generator": [
-        "libs/generator/src"
-      ],
-      "@ojiepermana/nest-generator/*": [
-        "libs/generator/src/*"
-      ],
-      "@ojiepermana/nest/*": [
-        "libs/nest/src/*"
-      ]
+      "@app/contracts/*": ["libs/contracts/*"],
+      "@ojiepermana/nest": ["libs/nest/src"],
+      "@ojiepermana/nest-generator": ["libs/generator/src"],
+      "@ojiepermana/nest-generator/*": ["libs/generator/src/*"],
+      "@ojiepermana/nest/*": ["libs/nest/src/*"]
     }
   }
 }

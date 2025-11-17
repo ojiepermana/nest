@@ -7,14 +7,11 @@ import { AuditModule } from '@ojiepermana/nest-generator/audit';
 import { LocationController } from './controllers/location.controller';
 import { LocationService } from './services/location.service';
 import { LocationRepository } from './repositories/location.repository';
-import { BusinessEntityController } from './controllers/business-entity.controller';
-import { BusinessEntityService } from './services/business-entity.service';
-import { BusinessEntityRepository } from './repositories/business-entity.repository';
 
 @Module({
   imports: [CacheModule.register(), AuditModule],
-  controllers: [EntityController, LocationController, BusinessEntityController],
-  providers: [EntityService, EntityRepository, LocationService, LocationRepository, BusinessEntityService, BusinessEntityRepository],
-  exports: [EntityService, EntityRepository, LocationService, LocationRepository, BusinessEntityService, BusinessEntityRepository]
+  controllers: [EntityController, LocationController],
+  providers: [EntityService, EntityRepository, LocationService, LocationRepository],
+  exports: [EntityService, EntityRepository, LocationService, LocationRepository]
 })
 export class EntityModule {}

@@ -4,7 +4,6 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { EntityController } from './controllers/entity.controller';
 import { AuditModule } from '@ojiepermana/nest-generator/audit';
 import { LocationController } from './controllers/location.controller';
-import { BusinessEntityController } from './controllers/business-entity.controller';
 
 @Module({
   imports: [
@@ -18,6 +17,6 @@ import { BusinessEntityController } from './controllers/business-entity.controll
         },
       },
     ]), CacheModule.register(), AuditModule],
-  controllers: [EntityController, LocationController, BusinessEntityController]
+  controllers: [EntityController, LocationController]
 })
 export class EntityModule {}

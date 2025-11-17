@@ -1580,11 +1580,21 @@ export * from './controllers/${moduleName}.controller';
    */
   private registerRbacModule(outputPath: string): void {
     try {
-      const appModulePath = join(outputPath, 'app.module.ts');
+      // Try to find root module file (app.module.ts or *-service.module.ts)
+      let appModulePath = join(outputPath, 'app.module.ts');
 
       if (!existsSync(appModulePath)) {
-        Logger.warn('⚠ app.module.ts not found, skipping RBAC registration');
-        return;
+        // For microservices, look for *-service.module.ts or *-app.module.ts
+        const files = readdirSync(outputPath).filter(
+          (f) => f.endsWith('-service.module.ts') || f.endsWith('-app.module.ts'),
+        );
+
+        if (files.length > 0) {
+          appModulePath = join(outputPath, files[0]);
+        } else {
+          // Silently skip if no root module found (RBAC is optional feature)
+          return;
+        }
       }
 
       let appModuleContent = readFileSync(appModulePath, 'utf-8');

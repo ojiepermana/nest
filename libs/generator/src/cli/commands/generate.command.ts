@@ -100,7 +100,15 @@ export class GenerateCommand {
 
     // Step 9: Auto-configure Swagger if enabled
     if (features.swagger) {
-      this.configureSwagger(outputPath, tableName, moduleName);
+      // Skip Swagger for microservices (except gateway)
+      const isGateway = options.appName === this.config?.microservices?.gatewayApp;
+      const isMicroservice = this.config?.architecture === 'microservices';
+      
+      if (!isMicroservice || isGateway) {
+        this.configureSwagger(outputPath, tableName, moduleName);
+      } else {
+        Logger.info('   ℹ Skipping Swagger (microservice uses MessagePattern, not HTTP)');
+      }
     }
 
     // Step 10: Auto-register RbacModule if RBAC is enabled
@@ -1796,7 +1804,7 @@ export * from './${moduleName}.module';
     const schemaName = this.toKebabCase(schema);
 
     // Generate DTOs that extend from contracts (using schema-based path)
-    const createDtoCode = `import { ${entityName}Dto as Create${entityName}Dto } from '@app/contracts/${schemaName}';
+    const createDtoCode = `import { Create${entityName}Dto } from '@app/contracts/${schemaName}';
 
 /**
  * Service-specific Create DTO

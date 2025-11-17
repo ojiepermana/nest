@@ -1,4 +1,4 @@
-import { EntityDto as CreateEntityDto } from '@app/contracts/entity';
+import { CreateEntityDto } from '@app/contracts/entity';
 
 /**
  * Service-specific Create DTO

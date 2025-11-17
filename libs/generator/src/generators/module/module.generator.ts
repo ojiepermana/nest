@@ -111,11 +111,10 @@ ${classDeclaration}
       );
     }
 
-    // Audit module import - commented out as audit module needs to be implemented
-    // TODO: Uncomment when AuditModule is available
-    // if (this.options.enableAuditLog) {
-    //   imports.push("import { AuditModule } from '@ojiepermana/nest-generator/audit';");
-    // }
+    // Audit module import
+    if (this.options.enableAuditLog) {
+      imports.push("import { AuditModule } from '@ojiepermana/nest-generator/audit';");
+    }
 
     return imports.join('\n');
   }
@@ -192,11 +191,10 @@ ${moduleConfig.join(',\n')}
       imports.push('CacheModule.register()');
     }
 
-    // AuditModule if audit logging enabled - commented out as not implemented yet
-    // TODO: Uncomment when AuditModule is available
-    // if (this.options.enableAuditLog) {
-    //   imports.push('AuditModule');
-    // }
+    // AuditModule if audit logging enabled
+    if (this.options.enableAuditLog) {
+      imports.push('AuditModule');
+    }
 
     // Custom imports
     if (this.options.customImports) {

@@ -1,4 +1,4 @@
-import { LocationDto as CreateLocationDto } from '@app/contracts/entity';
+import { CreateLocationDto } from '@app/contracts/entity';
 
 /**
  * Service-specific Create DTO

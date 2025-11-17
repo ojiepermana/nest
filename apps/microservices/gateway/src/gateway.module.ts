@@ -28,5 +28,6 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
   ],
   controllers: [GatewayController],
   providers: [GatewayService],
+  exports: [ClientsModule], // Export to make available to child modules
 })
 export class GatewayModule {}

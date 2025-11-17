@@ -68,16 +68,31 @@ bump_version() {
     # Get current version
     CURRENT_VERSION=$(node -p "require('./package.json').version")
     
-    # Calculate new version
+    # Calculate new version preview
     if [ "$VERSION_TYPE" = "custom" ]; then
         NEW_VERSION="$CUSTOM_VERSION"
-        echo -e "Current: ${CURRENT_VERSION}"
-        echo -e "New:     ${NEW_VERSION}"
     else
-        # Show what will happen
-        echo -e "Current: ${CURRENT_VERSION}"
-        echo -e "Type:    ${VERSION_TYPE}"
+        # Calculate what the new version will be
+        NEW_VERSION=$(node -p "
+            const semver = require('./package.json').version.split('.');
+            const major = parseInt(semver[0]);
+            const minor = parseInt(semver[1]);
+            const patch = parseInt(semver[2]);
+            
+            if ('$VERSION_TYPE' === 'major') {
+                console.log(\`\${major + 1}.0.0\`);
+            } else if ('$VERSION_TYPE' === 'minor') {
+                console.log(\`\${major}.\${minor + 1}.0\`);
+            } else if ('$VERSION_TYPE' === 'patch') {
+                console.log(\`\${major}.\${minor}.\${patch + 1}\`);
+            }
+        ")
     fi
+    
+    # Show preview
+    echo -e "Current: ${CURRENT_VERSION}"
+    echo -e "New:     ${NEW_VERSION}"
+    echo -e "Type:    ${VERSION_TYPE}"
     
     # Confirm
     read -p "Proceed with version bump? (y/N): " confirm
@@ -94,12 +109,12 @@ bump_version() {
         npm version "$VERSION_TYPE" --no-git-tag-version
     fi
     
-    # Get new version
-    NEW_VERSION=$(node -p "require('./package.json').version")
+    # Get actual new version (verify)
+    ACTUAL_NEW_VERSION=$(node -p "require('./package.json').version")
     
     cd ../..
     
-    echo -e "${GREEN}✓ ${lib_name}: ${CURRENT_VERSION} -> ${NEW_VERSION}${NC}"
+    echo -e "${GREEN}✓ ${lib_name}: ${CURRENT_VERSION} -> ${ACTUAL_NEW_VERSION}${NC}"
 }
 
 case $lib_choice in

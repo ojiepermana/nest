@@ -3,25 +3,39 @@ import { DatabaseConnectionManager } from '@ojiepermana/nest-generator/database'
 
 export const DATABASE_POOL = 'DATABASE_POOL';
 
+interface DatabaseConfig {
+  type: 'postgresql' | 'mysql';
+  host: string;
+  port: number;
+  database: string;
+  username: string;
+  password: string;
+  ssl?: boolean;
+  pool?: {
+    min?: number;
+    max?: number;
+  };
+}
+
 @Global()
 @Module({})
 export class DatabaseModule {
   static forRootAsync(options: {
-    useFactory: (...args: any[]) => Promise<any> | any;
-    inject?: any[];
+    useFactory: (...args: never[]) => Promise<DatabaseConfig> | DatabaseConfig;
+    inject?: unknown[];
   }): DynamicModule {
     return {
       module: DatabaseModule,
       providers: [
         {
           provide: DATABASE_POOL,
-          useFactory: async (...args: any[]) => {
+          useFactory: async (...args: never[]) => {
             const config = await options.useFactory(...args);
             const manager = new DatabaseConnectionManager(config);
             await manager.connect();
             return manager; // Return the manager itself
           },
-          inject: options.inject || [],
+          inject: (options.inject || []) as never[],
         },
       ],
       exports: [DATABASE_POOL],

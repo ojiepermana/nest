@@ -83,7 +83,6 @@ program
   .description('Generate CRUD module from metadata (format: schema.table)')
   .option('--output <path>', 'Output directory path')
   .option('--app <name>', 'App name for monorepo/microservices (e.g., user, order)')
-  .option('--prefix <path>', 'Custom prefix for output folder and URL (e.g., entity/location)')
   .option('--skip-prompts', 'Skip interactive prompts')
   .option(
     '--all',
@@ -102,7 +101,6 @@ program
         tableName: table,
         outputPath: options.output,
         appName: options.app,
-        prefix: options.prefix,
         skipPrompts: options.skipPrompts,
         all: options.all,
         features: {

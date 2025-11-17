@@ -144,44 +144,6 @@ nest-generator remove users.profile --app=user
 nest-generator delete users
 ```
 
-## Custom Prefix Flag (NEW!)
-
-Control the **output folder structure** and **URL paths** with the `--prefix` flag:
-
-```bash
-# Default behavior (schema.table -> schema/table)
-nest-generator generate entity.location
-# Creates: src/entity/location/
-# URL: /entity/location
-
-# Custom prefix for output and URL
-nest-generator generate entity.location --prefix=custom/test
-# Creates: src/custom/test/
-# URL: /custom/test
-
-# API versioning
-nest-generator generate users.profile --prefix=api/v1/users
-# Creates: src/api/v1/users/
-# URL: /api/v1/users
-
-# Single table (no schema) - uses table name as prefix
-nest-generator generate users
-# Creates: src/users/
-# URL: /users
-```
-
-**What it controls:**
-
-1. **Output Folder**: Files are generated in `src/{prefix}/`
-2. **Controller Route**: `@Controller('{prefix}')`
-3. **Module Name**: Based on prefix (e.g., `custom-test.module.ts` for `custom/test`)
-
-**Use cases:**
-
-- API versioning: `--prefix=api/v2/products`
-- Nested resources: `--prefix=admin/users`
-- Custom organization: `--prefix=features/authentication`
-
 ## Remove Command (NEW!)
 
 The `remove` command deletes all generated files and updates modules:

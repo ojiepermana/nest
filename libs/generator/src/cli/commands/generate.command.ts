@@ -40,7 +40,6 @@ export interface GenerateCommandOptions {
   tableName?: string;
   outputPath?: string;
   appName?: string;
-  prefix?: string; // Custom prefix for output folder and URL (e.g., 'entity/location')
   features?: {
     swagger?: boolean;
     caching?: boolean;
@@ -93,11 +92,8 @@ export class GenerateCommand {
       options.appName,
     );
 
-    // Step 7: Determine prefix (for output folder and URL)
-    const prefix = this.determinePrefix(tableName, options.prefix);
-
-    // Step 8: Generate all files
-    this.generateFiles(tableMetadata, columns, features, outputPath, options.appName, prefix);
+    // Step 7: Generate all files
+    this.generateFiles(tableMetadata, columns, features, outputPath, options.appName);
 
     // Extract module name for post-generation steps
     const moduleName = this.toModuleName(tableName.split('.').pop() || tableName);
@@ -494,27 +490,6 @@ export class GenerateCommand {
   }
 
   /**
-   * Determine prefix from table name or custom prefix
-   * Default: schema/table (e.g., entity.location -> entity/location)
-   * Custom: --prefix=custom/path
-   */
-  private determinePrefix(tableName: string, customPrefix?: string): string {
-    if (customPrefix) {
-      return customPrefix;
-    }
-
-    // Parse schema.table format
-    const parts = tableName.split('.');
-    if (parts.length === 2) {
-      // entity.location -> entity/location
-      return `${this.toKebabCase(parts[0])}/${this.toKebabCase(parts[1])}`;
-    }
-
-    // Single table name -> use as-is
-    return this.toKebabCase(tableName);
-  }
-
-  /**
    * Get default output path based on architecture
    */
   private getDefaultOutputPath(appName?: string): string {
@@ -643,17 +618,17 @@ export class GenerateCommand {
     features: Required<NonNullable<GenerateCommandOptions['features']>>,
     outputPath: string,
     appName?: string,
-    prefix?: string, // Custom prefix for output folder and URL
   ): void {
     const tableName = tableMetadata.table_name;
     const schema = tableMetadata.schema_name;
     const entityName = toPascalCase(tableName);
     const moduleName = this.toKebabCase(tableName);
 
-    // Use prefix if provided, otherwise use schema/table format
+    // Determine basePath for controller based on architecture
+    // For standalone: use schema/table (e.g., /entity/location)
+    // For monorepo/microservices: use just table name
     const basePath =
-      prefix ||
-      (schema && schema !== 'public' ? `${this.toKebabCase(schema)}/${moduleName}` : moduleName);
+      schema && schema !== 'public' ? `${this.toKebabCase(schema)}/${moduleName}` : moduleName;
 
     Logger.info('\n🔨 Generating files...');
 
@@ -665,18 +640,18 @@ export class GenerateCommand {
       this.generateSharedContracts(tableMetadata, columns, moduleName, features);
     }
 
-    // Create directory structure based on PREFIX
-    // Structure: src/{prefix}/controllers/{table}.controller.ts
-    // Example: src/entity/location/controllers/location.controller.ts
-    const prefixDir = join(outputPath, basePath);
+    // Create directory structure based on SCHEMA
+    // Structure: src/{schema}/controllers/{table}.controller.ts
+    const schemaName = this.toKebabCase(schema || 'default');
+    const schemaDir = join(outputPath, schemaName);
 
-    this.ensureDirectory(prefixDir);
-    this.ensureDirectory(join(prefixDir, 'controllers'));
-    this.ensureDirectory(join(prefixDir, 'entities'));
-    this.ensureDirectory(join(prefixDir, 'dto'));
-    this.ensureDirectory(join(prefixDir, 'dto', moduleName)); // DTO subdirectory per table
-    this.ensureDirectory(join(prefixDir, 'repositories'));
-    this.ensureDirectory(join(prefixDir, 'services'));
+    this.ensureDirectory(schemaDir);
+    this.ensureDirectory(join(schemaDir, 'controllers'));
+    this.ensureDirectory(join(schemaDir, 'entities'));
+    this.ensureDirectory(join(schemaDir, 'dto'));
+    this.ensureDirectory(join(schemaDir, 'dto', moduleName)); // DTO subdirectory per table
+    this.ensureDirectory(join(schemaDir, 'repositories'));
+    this.ensureDirectory(join(schemaDir, 'services'));
 
     // 1. Generate Entity
     Logger.info('   ⏳ Generating entity...');
@@ -688,7 +663,7 @@ export class GenerateCommand {
       useTypeORM: false, // Use plain TypeScript classes instead of TypeORM
     });
     const entityCode = entityGenerator.generate();
-    this.writeFile(join(prefixDir, 'entities', `${moduleName}.entity.ts`), entityCode);
+    this.writeFile(join(schemaDir, 'entities', `${moduleName}.entity.ts`), entityCode);
     Logger.info('   ✓ Entity generated');
 
     // 2. Generate DTOs
@@ -696,7 +671,7 @@ export class GenerateCommand {
 
     // For microservices service apps: Import from contracts instead of generating
     if (architecture === 'microservices' && !isGateway) {
-      this.generateServiceDtosWithContracts(prefixDir, moduleName, tableMetadata, columns);
+      this.generateServiceDtosWithContracts(schemaDir, moduleName, tableMetadata, columns);
     } else {
       // Standalone, Monorepo, or Gateway: Generate DTOs directly
       const createDtoGenerator = new CreateDtoGenerator({
@@ -706,7 +681,7 @@ export class GenerateCommand {
       const createDtoResult = createDtoGenerator.generate(tableMetadata, columns);
       const createDtoCode = [...createDtoResult.imports, '', createDtoResult.code].join('\n');
       this.writeFile(
-        join(prefixDir, 'dto', moduleName, `create-${moduleName}.dto.ts`),
+        join(schemaDir, 'dto', moduleName, `create-${moduleName}.dto.ts`),
         createDtoCode,
       );
 
@@ -717,7 +692,7 @@ export class GenerateCommand {
       const updateDtoResult = updateDtoGenerator.generate(tableMetadata, columns);
       const updateDtoCode = [...updateDtoResult.imports, '', updateDtoResult.code].join('\n');
       this.writeFile(
-        join(prefixDir, 'dto', moduleName, `update-${moduleName}.dto.ts`),
+        join(schemaDir, 'dto', moduleName, `update-${moduleName}.dto.ts`),
         updateDtoCode,
       );
 
@@ -728,7 +703,7 @@ export class GenerateCommand {
       const filterDtoResult = filterDtoGenerator.generate(tableMetadata, columns);
       const filterDtoCode = [...filterDtoResult.imports, '', filterDtoResult.code].join('\n');
       this.writeFile(
-        join(prefixDir, 'dto', moduleName, `${moduleName}-filter.dto.ts`),
+        join(schemaDir, 'dto', moduleName, `${moduleName}-filter.dto.ts`),
         filterDtoCode,
       );
     }
@@ -743,7 +718,7 @@ export class GenerateCommand {
       useTypeORM: false,
     });
     const repositoryCode = repositoryGenerator.generate();
-    this.writeFile(join(prefixDir, 'repositories', `${moduleName}.repository.ts`), repositoryCode);
+    this.writeFile(join(schemaDir, 'repositories', `${moduleName}.repository.ts`), repositoryCode);
     Logger.info('   ✓ Repository generated');
 
     // 4. Generate Service
@@ -757,7 +732,7 @@ export class GenerateCommand {
       enableTransactions: false, // Disable for plain SQL (no TypeORM DataSource)
     });
     const serviceCode = serviceGenerator.generate();
-    this.writeFile(join(prefixDir, 'services', `${moduleName}.service.ts`), serviceCode);
+    this.writeFile(join(schemaDir, 'services', `${moduleName}.service.ts`), serviceCode);
     Logger.info('   ✓ Service generated');
 
     // 5. Generate Controller
@@ -822,31 +797,30 @@ export class GenerateCommand {
       controllerCode = controllerGenerator.generate();
     }
 
-    this.writeFile(join(prefixDir, 'controllers', `${moduleName}.controller.ts`), controllerCode);
+    this.writeFile(join(schemaDir, 'controllers', `${moduleName}.controller.ts`), controllerCode);
     Logger.info('   ✓ Controller generated');
 
-    // 6. Update Module (aggregates all files in prefix directory)
-    Logger.info('   ⏳ Updating module...');
-    const moduleFolderName = basePath.replace(/\//g, '-'); // entity/location -> entity-location
+    // 6. Update Schema Module (aggregates all tables in schema)
+    Logger.info('   ⏳ Updating schema module...');
     this.generateOrUpdateSchemaModule(
-      prefixDir,
-      moduleFolderName,
+      schemaDir,
+      schemaName,
       moduleName,
       features,
       architecture,
       isGateway,
       appName, // Pass appName for gateway service config
     );
-    Logger.info('   ✓ Module updated');
+    Logger.info('   ✓ Schema module updated');
 
-    // 7. Update barrel export (index.ts) at prefix level
+    // 7. Update barrel export (index.ts) at schema level
     Logger.info('   ⏳ Updating barrel exports...');
-    this.generateOrUpdateSchemaIndex(prefixDir, moduleFolderName, moduleName, isGateway);
+    this.generateOrUpdateSchemaIndex(schemaDir, schemaName, moduleName, isGateway);
     Logger.info('   ✓ Index file updated');
 
-    // 8. Register module to app module (for service/standalone)
+    // 8. Register schema module to app module (for service/standalone)
     if (!isGateway) {
-      this.registerModuleToApp(outputPath, moduleFolderName, architecture);
+      this.registerModuleToApp(outputPath, schemaName, architecture);
     }
   }
 
@@ -854,7 +828,7 @@ export class GenerateCommand {
    * Generate or update schema-level module that aggregates all tables
    */
   private generateOrUpdateSchemaModule(
-    prefixDir: string,
+    schemaDir: string,
     schemaName: string,
     tableName: string,
     features: any,
@@ -862,7 +836,7 @@ export class GenerateCommand {
     isGateway: boolean,
     appName?: string,
   ): void {
-    const moduleFilePath = join(prefixDir, `${schemaName}.module.ts`);
+    const moduleFilePath = join(schemaDir, `${schemaName}.module.ts`);
     const pascalSchema = this.toPascalCase(schemaName);
     const pascalTable = this.toPascalCase(tableName);
 
@@ -1023,12 +997,12 @@ export class GenerateCommand {
    * Generate or update schema-level index.ts
    */
   private generateOrUpdateSchemaIndex(
-    prefixDir: string,
+    schemaDir: string,
     schemaName: string,
     tableName: string,
     isGateway: boolean = false,
   ): void {
-    const indexFilePath = join(prefixDir, 'index.ts');
+    const indexFilePath = join(schemaDir, 'index.ts');
     const pascalTable = this.toPascalCase(tableName);
 
     // Gateway only exports DTOs and controllers (no entities/services/repositories)

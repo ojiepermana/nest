@@ -130,19 +130,48 @@ export class GenerateCommand {
    * Load generator configuration
    */
   private loadConfig(): void {
-    // Try to find config in current directory first, then walk up to project root
-    let configPath = join(process.cwd(), 'generator.config.json');
+    const projectRoot = this.findProjectRoot();
+    const configDir = join(projectRoot, 'config', 'generator');
 
-    if (!existsSync(configPath)) {
-      // Try to find project root
-      const projectRoot = this.findProjectRoot();
-      configPath = join(projectRoot, 'generator.config.json');
+    // Try to detect which architecture config to use
+    let configPath: string | undefined;
+    const architectures = ['microservices', 'monorepo', 'standalone']; // Check microservices first
 
-      if (!existsSync(configPath)) {
-        Logger.error('❌ generator.config.json not found!');
-        Logger.info('💡 Run `npx nest-generator init` first to initialize.');
-        process.exit(1);
+    // Check if any architecture-specific config exists
+    for (const arch of architectures) {
+      const archConfigPath = join(configDir, `${arch}.config.json`);
+      if (existsSync(archConfigPath)) {
+        // Verify the config matches the architecture by reading it
+        try {
+          const content = readFileSync(archConfigPath, 'utf-8');
+          const config = JSON.parse(content);
+          if (config.architecture === arch) {
+            configPath = archConfigPath;
+            break;
+          }
+        } catch {
+          // If read/parse fails, skip this file
+          continue;
+        }
       }
+    }
+
+    // Fallback to old generator.config.json for backward compatibility
+    if (!configPath) {
+      const legacyConfigPath = join(projectRoot, 'generator.config.json');
+      if (existsSync(legacyConfigPath)) {
+        configPath = legacyConfigPath;
+        Logger.warn(
+          '⚠️  Using legacy generator.config.json. Consider running `npx nest-generator init` to migrate to new config structure.',
+        );
+      }
+    }
+
+    if (!configPath) {
+      Logger.error('❌ No generator configuration found!');
+      Logger.info('💡 Run `npx nest-generator init` first to initialize.');
+      Logger.info(`   Expected config location: ${configDir}/{architecture}.config.json`);
+      process.exit(1);
     }
 
     const configContent = readFileSync(configPath, 'utf-8');
@@ -150,7 +179,7 @@ export class GenerateCommand {
 
     // Resolve environment variables in config
     this.config = this.resolveEnvVariables(rawConfig);
-    Logger.info('✓ Configuration loaded');
+    Logger.info(`✓ Configuration loaded: ${basename(configPath)}`);
   }
 
   /**

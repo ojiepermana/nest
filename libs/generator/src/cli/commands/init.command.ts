@@ -6,12 +6,12 @@
  * 2. Tests database connection
  * 3. Creates metadata schema and tables
  * 4. Creates user.users table for audit tracking
- * 5. Generates generator.config.json
+ * 5. Generates config/generator/{architecture}.config.json
  * 6. Updates .env file
  */
 
 import inquirer from 'inquirer';
-import { writeFileSync, existsSync, readFileSync } from 'fs';
+import { writeFileSync, existsSync, readFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { Logger } from '../../utils/logger.util';
 import { DatabaseConnectionManager } from '../../database/connection.manager';
@@ -635,7 +635,15 @@ export class InitCommand {
 
     // Always save config at project root (find root by looking for package.json with workspace)
     const projectRoot = this.findProjectRoot();
-    const configPath = join(projectRoot, 'generator.config.json');
+    const architecture = this.config.architecture || 'standalone';
+    const configDir = join(projectRoot, 'config', 'generator');
+    const configPath = join(configDir, `${architecture}.config.json`);
+
+    // Create config/generator directory if it doesn't exist
+    if (!existsSync(configDir)) {
+      mkdirSync(configDir, { recursive: true });
+      Logger.info(`Created directory: ${configDir}`);
+    }
 
     writeFileSync(configPath, JSON.stringify(safeConfig, null, 2), 'utf-8');
     Logger.success(`Configuration saved: ${configPath}`);

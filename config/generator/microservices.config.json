@@ -1,0 +1,46 @@
+{
+  "architecture": "microservices",
+  "database": {
+    "type": "postgresql",
+    "host": "${DB_HOST}",
+    "port": "${DB_PORT}",
+    "database": "${DB_DATABASE}",
+    "username": "${DB_USERNAME}",
+    "password": "${DB_PASSWORD}",
+    "ssl": "${DB_SSL}",
+    "pool": {
+      "min": "${DB_POOL_MIN}",
+      "max": "${DB_POOL_MAX}",
+      "idleTimeoutMillis": 30000,
+      "connectionTimeoutMillis": 2000
+    }
+  },
+  "features": {
+    "swagger": true,
+    "caching": false,
+    "fileUpload": false,
+    "export": true,
+    "search": false,
+    "audit": true,
+    "rbac": false,
+    "notifications": false
+  },
+  "microservices": {
+    "servicesPath": "apps/microservices",
+    "gatewayApp": "apps/microservices/gateway",
+    "services": [
+      {
+        "name": "entity",
+        "transport": "TCP",
+        "host": "localhost",
+        "port": 3004
+      },
+      {
+        "name": "user",
+        "transport": "TCP",
+        "host": "localhost",
+        "port": 3001
+      }
+    ]
+  }
+}

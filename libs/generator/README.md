@@ -2,10 +2,11 @@
 
 A powerful code generator library for NestJS applications that creates production-ready CRUD modules from database metadata.
 
-## 🎉 What's New in v3.0.1
+## 🎉 What's New in v3.0.2
 
-- 🐛 **Bug Fixes** - Version synchronization and documentation updates
-- 📚 **Documentation** - Added version check rules for publishing
+- 🔧 **Remove Command Improvements** - Complete cleanup logic for gateway modules and barrel exports
+- 🧹 **Better Module Cleanup** - Properly removes imports, controllers, and updates index.ts
+- ✨ **Auto Schema Cleanup** - Deletes empty schema directories and updates app module
 - ✅ **Remove Command** - Delete generated files with `nest-generator remove`
 - ✅ **Schema-Based Structure** - Organized by database schema (e.g., `src/entity/`, `src/user/`)
 - ✅ **Contract-First Pattern** - Shared DTOs between microservices to avoid duplication
@@ -430,6 +431,16 @@ Full microservices architecture with:
 - ✅ Dynamic root module detection (`*-service.module.ts`)
 
 ## Recent Changes
+
+### v3.0.2 (November 2025)
+
+**Bug Fixes:**
+
+- 🔧 Fixed remove command cleanup logic for gateway modules
+- 🧹 Properly removes imports and updates controllers array
+- ✨ New updateBarrelExports method for index.ts cleanup
+- 📦 removeFromArray helper for clean array item removal
+- 🗑️ Auto-cleanup empty schemas and update app module
 
 ### v3.0.1 (November 2025)
 

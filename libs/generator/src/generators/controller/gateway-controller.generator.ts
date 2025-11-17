@@ -10,9 +10,9 @@ import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.i
 
 export interface GatewayControllerGeneratorOptions {
   tableName: string;
+  schemaName: string; // Schema name for routing (e.g., 'entity', 'user')
   serviceName: string; // For @Inject - app name (e.g., 'entity', 'user')
   resourceName?: string; // For message patterns - table name (e.g., 'location', 'business-entity')
-  basePath?: string; // Custom base path for controller (e.g., 'entity/location')
   serviceHost: string;
   servicePort: number;
   transport: 'TCP' | 'REDIS' | 'NATS' | 'MQTT' | 'RMQ';
@@ -33,7 +33,8 @@ export class GatewayControllerGenerator {
   generate(): string {
     const entityName = toPascalCase(this.options.tableName);
     const controllerName = `${entityName}Controller`;
-    const basePath = this.options.basePath || this.toKebabCase(entityName);
+    // basePath uses schema/table format for all controller types (REST, Gateway, Service)
+    const basePath = `${this.toKebabCase(this.options.schemaName)}/${this.toKebabCase(entityName)}`;
 
     const imports = this.generateImports(entityName);
     const classDeclaration = this.generateClassDeclaration(controllerName, basePath);

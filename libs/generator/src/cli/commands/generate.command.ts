@@ -624,9 +624,9 @@ export class GenerateCommand {
     const entityName = toPascalCase(tableName);
     const moduleName = this.toKebabCase(tableName);
 
-    // Determine basePath for controller based on schema
-    // Uses schema/table format for URL routing (e.g., entity.location -> /entity/location)
-    // This applies to all controller types: REST, Gateway, and Service
+    // Determine basePath for controller based on architecture
+    // For standalone: use schema/table (e.g., /entity/location)
+    // For monorepo/microservices: use just table name
     const basePath =
       schema && schema !== 'public' ? `${this.toKebabCase(schema)}/${moduleName}` : moduleName;
 
@@ -745,8 +745,8 @@ export class GenerateCommand {
       Logger.info('   🌐 Detected gateway app - generating gateway controller');
       const gatewayGenerator = new GatewayControllerGenerator(tableMetadata, columns, {
         tableName,
+        schemaName,
         serviceName: moduleName,
-        basePath, // Use schema/table format (e.g., 'entity/location')
         serviceHost: process.env.SERVICE_HOST || 'localhost',
         servicePort: parseInt(process.env.SERVICE_PORT || '3001'),
         transport:
@@ -1709,6 +1709,7 @@ export * from './controllers/${moduleName}.controller';
 
       const gatewayGenerator = new GatewayControllerGenerator(tableMetadata, columns, {
         tableName,
+        schemaName,
         serviceName: serviceNameForInjection, // For @Inject('ENTITY_SERVICE')
         resourceName: moduleName, // For message patterns (location, business-entity, etc.)
         serviceHost,

@@ -1,6 +1,6 @@
 {
   "name": "@ojiepermana/nest-generator",
-  "version": "3.0.2",
+  "version": "2.1.5",
   "description": "NestJS Code Generator Library - Generate CRUD modules from database metadata",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -56,38 +56,15 @@
   "peerDependencies": {
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
-    "@nestjs/platform-express": "^11.0.0",
-    "@nestjs/config": "^4.0.0",
-    "@nestjs/swagger": "^11.0.0",
-    "@nestjs/microservices": "^11.0.0",
-    "@nestjs/cache-manager": "^3.0.0",
-    "cache-manager": "^7.0.0",
-    "class-transformer": "^0.5.0",
-    "class-validator": "^0.14.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.0.0",
     "pg": "^8.13.0",
     "mysql2": "^3.11.0",
-    "handlebars": "^4.7.0",
     "commander": "^12.1.0",
     "inquirer": "^8.2.0",
     "chalk": "^4.1.0",
     "ora": "^5.4.0",
     "dotenv": "^16.4.0"
-  },
-  "peerDependenciesMeta": {
-    "pg": {
-      "optional": true
-    },
-    "mysql2": {
-      "optional": true
-    },
-    "@nestjs/microservices": {
-      "optional": true
-    },
-    "@nestjs/swagger": {
-      "optional": true
-    }
   },
   "devDependencies": {},
   "publishConfig": {

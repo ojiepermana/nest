@@ -28,6 +28,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(process.env.port ?? 3000);
+  const port = process.env.PORT ?? 3000;
+  console.log(`🚀 Starting Gateway on port ${port}...`);
+  await app.listen(port);
+  console.log(`✅ Gateway is running on http://localhost:${port}`);
+  console.log(`📚 Swagger docs: http://localhost:${port}/api`);
 }
 bootstrap();

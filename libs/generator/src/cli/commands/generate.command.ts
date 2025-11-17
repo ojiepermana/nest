@@ -624,9 +624,9 @@ export class GenerateCommand {
     const entityName = toPascalCase(tableName);
     const moduleName = this.toKebabCase(tableName);
 
-    // Determine basePath for controller based on architecture
-    // For standalone: use schema/table (e.g., /entity/location)
-    // For monorepo/microservices: use just table name
+    // Determine basePath for controller based on schema
+    // Uses schema/table format for URL routing (e.g., entity.location -> /entity/location)
+    // This applies to all controller types: REST, Gateway, and Service
     const basePath =
       schema && schema !== 'public' ? `${this.toKebabCase(schema)}/${moduleName}` : moduleName;
 

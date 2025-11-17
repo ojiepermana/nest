@@ -746,6 +746,7 @@ export class GenerateCommand {
       const gatewayGenerator = new GatewayControllerGenerator(tableMetadata, columns, {
         tableName,
         serviceName: moduleName,
+        basePath, // Use schema/table format (e.g., 'entity/location')
         serviceHost: process.env.SERVICE_HOST || 'localhost',
         servicePort: parseInt(process.env.SERVICE_PORT || '3001'),
         transport:

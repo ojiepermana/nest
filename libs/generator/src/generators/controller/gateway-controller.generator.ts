@@ -12,6 +12,7 @@ export interface GatewayControllerGeneratorOptions {
   tableName: string;
   serviceName: string; // For @Inject - app name (e.g., 'entity', 'user')
   resourceName?: string; // For message patterns - table name (e.g., 'location', 'business-entity')
+  basePath?: string; // Custom base path for controller (e.g., 'entity/location')
   serviceHost: string;
   servicePort: number;
   transport: 'TCP' | 'REDIS' | 'NATS' | 'MQTT' | 'RMQ';
@@ -32,7 +33,7 @@ export class GatewayControllerGenerator {
   generate(): string {
     const entityName = toPascalCase(this.options.tableName);
     const controllerName = `${entityName}Controller`;
-    const basePath = this.toKebabCase(entityName);
+    const basePath = this.options.basePath || this.toKebabCase(entityName);
 
     const imports = this.generateImports(entityName);
     const classDeclaration = this.generateClassDeclaration(controllerName, basePath);

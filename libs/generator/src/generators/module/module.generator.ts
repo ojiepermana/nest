@@ -22,6 +22,8 @@ export interface ModuleGeneratorOptions {
   architecture?: 'standalone' | 'monorepo' | 'microservices';
   isGateway?: boolean;
   serviceName?: string;
+  serviceHost?: string; // Service host for gateway ClientsModule
+  servicePort?: number; // Service port for gateway ClientsModule
 }
 
 export class ModuleGenerator {
@@ -164,14 +166,16 @@ ${moduleConfig.join(',\n')}
     if (this.options.architecture === 'microservices' && this.options.isGateway) {
       const serviceName = this.options.serviceName || this.toKebabCase(entityName);
       const serviceNameUpper = serviceName.toUpperCase().replace(/-/g, '_');
+      const serviceHost = this.options.serviceHost || 'localhost';
+      const servicePort = this.options.servicePort || 3001;
       imports.push(`
     ClientsModule.register([
       {
         name: '${serviceNameUpper}_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.${serviceNameUpper}_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.${serviceNameUpper}_SERVICE_PORT || '3001'),
+          host: process.env.${serviceNameUpper}_SERVICE_HOST || '${serviceHost}',
+          port: parseInt(process.env.${serviceNameUpper}_SERVICE_PORT || '${servicePort}'),
         },
       },
     ])`);

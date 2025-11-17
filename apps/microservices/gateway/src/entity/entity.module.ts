@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { CacheModule } from '@nestjs/cache-manager';
 import { EntityController } from './controllers/entity.controller';
+import { AuditModule } from '@ojiepermana/nest-generator/audit';
 import { LocationController } from './controllers/location.controller';
 import { BusinessEntityController } from './controllers/business-entity.controller';
 
@@ -15,8 +17,7 @@ import { BusinessEntityController } from './controllers/business-entity.controll
           port: parseInt(process.env.ENTITY_SERVICE_PORT || '3004'),
         },
       },
-    ]),
-  ],
-  controllers: [EntityController, LocationController, BusinessEntityController],
+    ]), CacheModule.register(), AuditModule],
+  controllers: [EntityController, LocationController, BusinessEntityController]
 })
 export class EntityModule {}

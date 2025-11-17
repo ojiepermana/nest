@@ -103,7 +103,7 @@ export class GenerateCommand {
       // Skip Swagger for microservices (except gateway)
       const isGateway = options.appName === this.config?.microservices?.gatewayApp;
       const isMicroservice = this.config?.architecture === 'microservices';
-      
+
       if (!isMicroservice || isGateway) {
         this.configureSwagger(outputPath, tableName, moduleName);
       } else {
@@ -809,12 +809,13 @@ export class GenerateCommand {
       features,
       architecture,
       isGateway,
+      appName, // Pass appName for gateway service config
     );
     Logger.info('   ✓ Schema module updated');
 
     // 7. Update barrel export (index.ts) at schema level
     Logger.info('   ⏳ Updating barrel exports...');
-    this.generateOrUpdateSchemaIndex(schemaDir, schemaName, moduleName);
+    this.generateOrUpdateSchemaIndex(schemaDir, schemaName, moduleName, isGateway);
     Logger.info('   ✓ Index file updated');
 
     // 8. Register schema module to app module (for service/standalone)
@@ -833,6 +834,7 @@ export class GenerateCommand {
     features: any,
     architecture: string,
     isGateway: boolean,
+    appName?: string,
   ): void {
     const moduleFilePath = join(schemaDir, `${schemaName}.module.ts`);
     const pascalSchema = this.toPascalCase(schemaName);
@@ -931,6 +933,7 @@ export class GenerateCommand {
         features,
         architecture,
         isGateway,
+        appName,
       );
       this.writeFile(moduleFilePath, moduleCode);
       Logger.info(`   ✓ Created new ${schemaName}.module.ts`);
@@ -946,35 +949,48 @@ export class GenerateCommand {
     features: any,
     architecture: string,
     isGateway: boolean,
+    appName?: string,
   ): string {
     const pascalSchema = this.toPascalCase(schemaName);
     const pascalTable = this.toPascalCase(tableName);
 
-    // Gateway only needs controllers (proxies to services)
-    if (isGateway) {
-      return `import { Module } from '@nestjs/common';
-import { ${pascalTable}Controller } from './controllers/${tableName}.controller';
+    // Get service config for gateway
+    let serviceHost = 'localhost';
+    let servicePort = 3001;
+    let serviceName = schemaName;
 
-@Module({
-  controllers: [${pascalTable}Controller],
-})
-export class ${pascalSchema}Module {}
-`;
+    if (isGateway && appName) {
+      serviceName = appName;
+      const serviceConfig = this.config?.microservices?.services?.find(
+        (s: any) => s.name === appName,
+      );
+      serviceHost = serviceConfig?.host || 'localhost';
+      servicePort = serviceConfig?.port || 3001;
     }
 
-    // Service/standalone needs full stack
-    return `import { Module } from '@nestjs/common';
-import { ${pascalTable}Controller } from './controllers/${tableName}.controller';
-import { ${pascalTable}Service } from './services/${tableName}.service';
-import { ${pascalTable}Repository } from './repositories/${tableName}.repository';
+    // Use ModuleGenerator to generate module code with features
+    const moduleGenerator = new ModuleGenerator(
+      { table_name: `${schemaName}.${tableName}` } as any,
+      [],
+      {
+        tableName: `${schemaName}.${tableName}`,
+        entityName: pascalSchema, // Use schema name as entity (e.g., "Entity" for entity schema)
+        includeController: true,
+        includeService: !isGateway,
+        includeRepository: !isGateway,
+        enableCaching: features.caching,
+        enableAuditLog: features.auditLog,
+        useTypeORM: false,
+        architecture: architecture as 'standalone' | 'monorepo' | 'microservices',
+        isGateway,
+        serviceName,
+        serviceHost,
+        servicePort,
+        customImports: [],
+      },
+    );
 
-@Module({
-  controllers: [${pascalTable}Controller],
-  providers: [${pascalTable}Service, ${pascalTable}Repository],
-  exports: [${pascalTable}Service, ${pascalTable}Repository],
-})
-export class ${pascalSchema}Module {}
-`;
+    return moduleGenerator.generate();
   }
 
   /**
@@ -984,19 +1000,27 @@ export class ${pascalSchema}Module {}
     schemaDir: string,
     schemaName: string,
     tableName: string,
+    isGateway: boolean = false,
   ): void {
     const indexFilePath = join(schemaDir, 'index.ts');
     const pascalTable = this.toPascalCase(tableName);
 
+    // Gateway only exports DTOs and controllers (no entities/services/repositories)
     const exports = [
       `export * from './dto/${tableName}/create-${tableName}.dto';`,
       `export * from './dto/${tableName}/update-${tableName}.dto';`,
       `export * from './dto/${tableName}/${tableName}-filter.dto';`,
-      `export * from './entities/${tableName}.entity';`,
       `export * from './controllers/${tableName}.controller';`,
-      `export * from './services/${tableName}.service';`,
-      `export * from './repositories/${tableName}.repository';`,
     ];
+
+    // Service/standalone exports full stack
+    if (!isGateway) {
+      exports.push(
+        `export * from './entities/${tableName}.entity';`,
+        `export * from './services/${tableName}.service';`,
+        `export * from './repositories/${tableName}.repository';`,
+      );
+    }
 
     if (existsSync(indexFilePath)) {
       // Update existing index
@@ -1217,8 +1241,12 @@ export * from './controllers/${moduleName}.controller';
         }
       }
 
-      // Get service port from config or use default based on service name
-      const servicePort = process.env[`${serviceConstant}_PORT`] || '3001';
+      // Get service config from microservices.services
+      const serviceConfig = this.config?.microservices?.services?.find(
+        (s: any) => s.name === serviceName,
+      );
+      const serviceHost = serviceConfig?.host || 'localhost';
+      const servicePort = serviceConfig?.port || 3001;
 
       // Build service client registration
       const clientConfig = `    ClientsModule.register([
@@ -1226,7 +1254,7 @@ export * from './controllers/${moduleName}.controller';
         name: '${serviceConstant}',
         transport: Transport.TCP,
         options: {
-          host: process.env.${serviceConstant}_HOST || 'localhost',
+          host: process.env.${serviceConstant}_HOST || '${serviceHost}',
           port: parseInt(process.env.${serviceConstant}_PORT || '${servicePort}'),
         },
       },
@@ -1655,14 +1683,26 @@ export * from './controllers/${moduleName}.controller';
       // If no appName, extract from schema (e.g., 'entity.location' -> 'entity')
       const serviceNameForInjection = appName || schema.split('.')[0] || moduleName;
 
+      // Get service config from microservices.services
+      const serviceConfig = this.config?.microservices?.services?.find(
+        (s: any) => s.name === serviceNameForInjection,
+      );
+      const serviceHost = serviceConfig?.host || 'localhost';
+      const servicePort = serviceConfig?.port || 3001;
+      const serviceTransport = (serviceConfig?.transport || 'TCP') as
+        | 'TCP'
+        | 'REDIS'
+        | 'NATS'
+        | 'MQTT'
+        | 'RMQ';
+
       const gatewayGenerator = new GatewayControllerGenerator(tableMetadata, columns, {
         tableName,
         serviceName: serviceNameForInjection, // For @Inject('ENTITY_SERVICE')
         resourceName: moduleName, // For message patterns (location, business-entity, etc.)
-        serviceHost: process.env.SERVICE_HOST || 'localhost',
-        servicePort: parseInt(process.env.SERVICE_PORT || '3001'),
-        transport:
-          (process.env.TRANSPORT_TYPE as 'TCP' | 'REDIS' | 'NATS' | 'MQTT' | 'RMQ') || 'TCP',
+        serviceHost,
+        servicePort,
+        transport: serviceTransport,
         enableSwagger: features.swagger,
         enableRateLimit: false,
       });
@@ -1690,10 +1730,11 @@ export * from './controllers/${moduleName}.controller';
         features,
         'microservices',
         true,
+        serviceNameForInjection, // Pass appName for service config
       );
 
       // Generate/Update barrel export for gateway schema
-      this.generateOrUpdateSchemaIndex(gatewaySchemaDir, schemaName, moduleName);
+      this.generateOrUpdateSchemaIndex(gatewaySchemaDir, schemaName, moduleName, true);
 
       // Register schema module to gateway.module.ts
       this.registerModuleToGateway(gatewayDir, schemaName);

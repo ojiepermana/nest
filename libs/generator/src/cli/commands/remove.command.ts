@@ -234,77 +234,66 @@ export class RemoveCommand {
     });
 
     // Remove from controllers array
-    content = content.replace(
-      new RegExp(`[,\\s]*${pascalTable}Controller[,\\s]*`, 'g'),
-      (match) => {
-        // Keep comma if it's between items
-        if (
-          match.trim() === `${pascalTable}Controller,` ||
-          match.trim() === `,${pascalTable}Controller`
-        ) {
-          return '';
-        }
-        return match.includes(',') ? ', ' : '';
-      },
-    );
+    content = this.removeFromArray(content, 'controllers', `${pascalTable}Controller`);
 
     // Remove from providers array (service/standalone only)
     if (!isGateway) {
-      content = content.replace(new RegExp(`[,\\s]*${pascalTable}Service[,\\s]*`, 'g'), (match) =>
-        match.includes(',') ? ', ' : '',
-      );
-      content = content.replace(
-        new RegExp(`[,\\s]*${pascalTable}Repository[,\\s]*`, 'g'),
-        (match) => (match.includes(',') ? ', ' : ''),
-      );
-
-      // Remove from exports array
-      content = content.replace(new RegExp(`[,\\s]*${pascalTable}Service[,\\s]*`, 'g'), (match) =>
-        match.includes(',') ? ', ' : '',
-      );
-      content = content.replace(
-        new RegExp(`[,\\s]*${pascalTable}Repository[,\\s]*`, 'g'),
-        (match) => (match.includes(',') ? ', ' : ''),
-      );
+      content = this.removeFromArray(content, 'providers', `${pascalTable}Service`);
+      content = this.removeFromArray(content, 'providers', `${pascalTable}Repository`);
+      content = this.removeFromArray(content, 'exports', `${pascalTable}Service`);
+      content = this.removeFromArray(content, 'exports', `${pascalTable}Repository`);
     }
-
-    // Clean up empty arrays and trailing commas
-    content = content.replace(/controllers:\s*\[\s*,?\s*\]/g, 'controllers: []');
-    content = content.replace(/providers:\s*\[\s*,?\s*\]/g, 'providers: []');
-    content = content.replace(/exports:\s*\[\s*,?\s*\]/g, 'exports: []');
-    content = content.replace(/,\s*,/g, ',');
-    content = content.replace(/\[\s*,/g, '[');
-    content = content.replace(/,\s*\]/g, ']');
 
     writeFileSync(moduleFile, content, 'utf-8');
     Logger.info(`   ✓ Updated ${schemaName}.module.ts`);
 
-    // Update index.ts
+    // Update index.ts barrel exports
+    this.updateBarrelExports(schemaPath, moduleName, isGateway);
+  }
+
+  /**
+   * Update barrel exports (index.ts) to remove table references
+   */
+  private updateBarrelExports(schemaPath: string, moduleName: string, isGateway: boolean): void {
     const indexPath = join(schemaPath, 'index.ts');
-    if (existsSync(indexPath)) {
-      let indexContent = readFileSync(indexPath, 'utf-8');
-      const exportsToRemove = [
+    if (!existsSync(indexPath)) {
+      return;
+    }
+
+    let indexContent = readFileSync(indexPath, 'utf-8');
+    const exportsToRemove: string[] = [];
+
+    // Gateway only exports controllers and DTOs
+    if (isGateway) {
+      exportsToRemove.push(
         `export * from './dto/${moduleName}/create-${moduleName}.dto';`,
         `export * from './dto/${moduleName}/update-${moduleName}.dto';`,
         `export * from './dto/${moduleName}/${moduleName}-filter.dto';`,
         `export * from './controllers/${moduleName}.controller';`,
-      ];
-
-      if (!isGateway) {
-        exportsToRemove.push(
-          `export * from './entities/${moduleName}.entity';`,
-          `export * from './services/${moduleName}.service';`,
-          `export * from './repositories/${moduleName}.repository';`,
-        );
-      }
-
-      exportsToRemove.forEach((exp) => {
-        indexContent = indexContent.replace(new RegExp(`${exp}\\n?`, 'g'), '');
-      });
-
-      writeFileSync(indexPath, indexContent, 'utf-8');
-      Logger.info(`   ✓ Updated index.ts`);
+      );
+    } else {
+      // Service/standalone exports everything
+      exportsToRemove.push(
+        `export * from './dto/${moduleName}/create-${moduleName}.dto';`,
+        `export * from './dto/${moduleName}/update-${moduleName}.dto';`,
+        `export * from './dto/${moduleName}/${moduleName}-filter.dto';`,
+        `export * from './entities/${moduleName}.entity';`,
+        `export * from './controllers/${moduleName}.controller';`,
+        `export * from './services/${moduleName}.service';`,
+        `export * from './repositories/${moduleName}.repository';`,
+      );
     }
+
+    exportsToRemove.forEach((exp) => {
+      const escaped = exp.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      indexContent = indexContent.replace(new RegExp(`${escaped}\\s*\\n?`, 'g'), '');
+    });
+
+    // Clean up multiple empty lines
+    indexContent = indexContent.replace(/\n{3,}/g, '\n\n');
+
+    writeFileSync(indexPath, indexContent, 'utf-8');
+    Logger.info(`   ✓ Updated index.ts`);
   }
 
   /**
@@ -315,11 +304,15 @@ export class RemoveCommand {
       return;
     }
 
-    // Check if schema module is empty (no controllers)
+    // Check if schema module is empty (no controllers and no providers)
     const moduleFile = join(schemaPath, `${schemaName}.module.ts`);
     if (existsSync(moduleFile)) {
       const content = readFileSync(moduleFile, 'utf-8');
-      if (content.includes('controllers: []')) {
+      const hasControllers = !content.match(/controllers:\s*\[\s*\]/);
+      const hasProviders = !content.match(/providers:\s*\[\s*\]/);
+
+      // Schema is empty if both arrays are empty
+      if (!hasControllers && !hasProviders) {
         // Schema is empty, remove entire schema directory
         Logger.info(`🧹 Removing empty schema directory: ${schemaName}`);
         rmSync(schemaPath, { recursive: true, force: true });
@@ -388,17 +381,11 @@ export class RemoveCommand {
 
     // Remove import
     const importLine = `import { ${pascalSchema}Module } from './${schemaName}/${schemaName}.module';`;
-    content = content.replace(new RegExp(`${importLine}\\n?`, 'g'), '');
+    const escaped = importLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    content = content.replace(new RegExp(`${escaped}\\s*\\n?`, 'g'), '');
 
     // Remove from imports array
-    content = content.replace(new RegExp(`[,\\s]*${pascalSchema}Module[,\\s]*`, 'g'), (match) =>
-      match.includes(',') ? ', ' : '',
-    );
-
-    // Clean up
-    content = content.replace(/,\s*,/g, ',');
-    content = content.replace(/\[\s*,/g, '[');
-    content = content.replace(/,\s*\]/g, ']');
+    content = this.removeFromArray(content, 'imports', `${pascalSchema}Module`);
 
     writeFileSync(appModulePath, content, 'utf-8');
     Logger.info(`   ✓ Removed ${pascalSchema}Module from ${appModulePath.split('/').pop()}`);
@@ -442,5 +429,34 @@ export class RemoveCommand {
       .split(/[-_\s]/)
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join('');
+  }
+
+  /**
+   * Escape special regex characters
+   */
+  private escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  /**
+   * Remove item from array in code (controllers, providers, exports)
+   */
+  private removeFromArray(content: string, arrayName: string, itemName: string): string {
+    // Match: arrayName: [item1, item2, itemToRemove, item3]
+    const arrayPattern = new RegExp(`(${arrayName}\\s*:\\s*\\[)([^\\]]*)(\\])`, 'gs');
+
+    return content.replace(arrayPattern, (match, before, items, after) => {
+      // Split items by comma, trim, and filter
+      const itemList = items
+        .split(',')
+        .map((i: string) => i.trim())
+        .filter((i: string) => i && i !== itemName);
+
+      // Reconstruct array
+      if (itemList.length === 0) {
+        return `${before}${after}`;
+      }
+      return `${before}\n    ${itemList.join(',\n    ')},\n  ${after}`;
+    });
   }
 }

@@ -242,7 +242,7 @@ export class InitCommand {
 
         if (tablesExist) {
           Logger.info(
-            '✓ Metadata tables already exist (table_metadata, column_metadata, generated_files)',
+            '✓ Metadata tables already exist (meta.table, meta.column, meta.generated_files)',
           );
 
           const { recreate } = await inquirer.prompt([
@@ -291,9 +291,7 @@ export class InitCommand {
       await connectionManager.query(schemaSQL);
 
       Logger.success('Metadata schema created successfully');
-      Logger.info(
-        'Created tables: meta.table_metadata, meta.column_metadata, meta.generated_files',
-      );
+      Logger.info('Created tables: meta.table, meta.column, meta.generated_files');
 
       if (this.config.database!.type === 'postgresql') {
         Logger.info('Created function: meta.uuid_generate_v7()');
@@ -311,7 +309,7 @@ export class InitCommand {
   ): Promise<boolean> {
     try {
       const dbType = this.config.database!.type;
-      const requiredTables = ['table_metadata', 'column_metadata', 'generated_files'];
+      const requiredTables = ['table', 'column', 'generated_files'];
 
       if (dbType === 'postgresql') {
         const result = await connectionManager.query<{ count: number }>(
@@ -751,7 +749,7 @@ DB_POOL_MAX=${db.pool?.max || 10}
       '',
       '1. Populate metadata tables:',
       '   INSERT INTO meta.table_metadata (schema_name, table_name, ...) VALUES (...);',
-      '   INSERT INTO meta.column_metadata (table_metadata_id, column_name, ...) VALUES (...);',
+      '   INSERT INTO meta.column (table_id, column_name, ...) VALUES (...);',
       '',
       '2. Generate your first module:',
       '   nest-generator generate <schema>.<table>',

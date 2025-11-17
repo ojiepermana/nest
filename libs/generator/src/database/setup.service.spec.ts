@@ -164,7 +164,7 @@ describe('DatabaseSetupService', () => {
         .mockResolvedValueOnce({
           rows: [
             { column_name: 'id' },
-            { column_name: 'table_metadata_id' },
+            { column_name: 'table_id' },
             { column_name: 'column_name' },
             { column_name: 'data_type' },
           ],

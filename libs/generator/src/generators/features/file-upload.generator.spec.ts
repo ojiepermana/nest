@@ -38,7 +38,7 @@ describe('FileUploadGenerator', () => {
     columns = [
       {
         id: '1',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'id',
         data_type: 'uuid',
         is_nullable: false,
@@ -63,7 +63,7 @@ describe('FileUploadGenerator', () => {
     beforeEach(() => {
       columns.push({
         id: '2',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'avatar',
         data_type: 'varchar',
         is_nullable: true,
@@ -170,7 +170,7 @@ describe('FileUploadGenerator', () => {
     beforeEach(() => {
       columns.push({
         id: '3',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'documents',
         data_type: 'jsonb',
         is_nullable: true,
@@ -228,7 +228,7 @@ describe('FileUploadGenerator', () => {
     it('should generate required imports', () => {
       columns.push({
         id: '2',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'avatar',
         data_type: 'varchar',
         is_nullable: true,
@@ -264,7 +264,7 @@ describe('FileUploadGenerator', () => {
     it('should generate Swagger imports when enabled', () => {
       columns.push({
         id: '2',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'avatar',
         data_type: 'varchar',
         is_nullable: true,
@@ -302,7 +302,7 @@ describe('FileUploadGenerator', () => {
     it('should generate storage service injection', () => {
       columns.push({
         id: '2',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'avatar',
         data_type: 'varchar',
         is_nullable: true,

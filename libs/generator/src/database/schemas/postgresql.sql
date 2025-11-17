@@ -2,7 +2,7 @@
 -- NestJS Generator Metadata Schema - PostgreSQL
 -- ==============================================================================
 -- This schema stores metadata for automatic CRUD module generation.
--- Tables: meta.table_metadata, meta.column_metadata, meta.generated_files
+-- Tables: meta.table, meta.column, meta.generated_files, meta.static_data_log
 -- Requires: PostgreSQL 12+ for generated columns and advanced JSON features
 -- ==============================================================================
 
@@ -10,253 +10,223 @@
 CREATE SCHEMA IF NOT EXISTS meta;
 
 -- ==============================================================================
--- UUID v7 Function (Time-ordered UUIDs)
+-- PostgreSQL 18 Native UUID v7 Support
 -- ==============================================================================
--- Generates UUID v7 which is time-ordered and more efficient for indexing
+-- PostgreSQL 18+ provides native UUID v7 generation via uuidv7() function
+-- UUID v7 is time-ordered and more efficient for indexing than UUID v4
 -- Format: timestamp (48 bits) + version (4 bits) + random (12 bits) + variant (2 bits) + random (62 bits)
-
-CREATE OR REPLACE FUNCTION meta.uuid_generate_v7()
-RETURNS uuid
-AS $$
-DECLARE
-  unix_ts_ms BIGINT;
-  uuid_bytes BYTEA;
-BEGIN
-  -- Get current Unix timestamp in milliseconds
-  unix_ts_ms := (EXTRACT(EPOCH FROM clock_timestamp()) * 1000)::BIGINT;
-  
-  -- Generate random bytes
-  uuid_bytes := gen_random_bytes(16);
-  
-  -- Set timestamp (48 bits)
-  uuid_bytes := set_byte(uuid_bytes, 0, (unix_ts_ms >> 40)::INT);
-  uuid_bytes := set_byte(uuid_bytes, 1, (unix_ts_ms >> 32)::INT);
-  uuid_bytes := set_byte(uuid_bytes, 2, (unix_ts_ms >> 24)::INT);
-  uuid_bytes := set_byte(uuid_bytes, 3, (unix_ts_ms >> 16)::INT);
-  uuid_bytes := set_byte(uuid_bytes, 4, (unix_ts_ms >> 8)::INT);
-  uuid_bytes := set_byte(uuid_bytes, 5, unix_ts_ms::INT);
-  
-  -- Set version to 7 (0111) in bits 48-51
-  uuid_bytes := set_byte(uuid_bytes, 6, (get_byte(uuid_bytes, 6) & 15) | 112);
-  
-  -- Set variant to RFC 4122 (10) in bits 64-65
-  uuid_bytes := set_byte(uuid_bytes, 8, (get_byte(uuid_bytes, 8) & 63) | 128);
-  
-  RETURN encode(uuid_bytes, 'hex')::uuid;
-END
-$$ LANGUAGE plpgsql VOLATILE;
-
-COMMENT ON FUNCTION meta.uuid_generate_v7() IS 'Generate time-ordered UUID v7 for better indexing performance';
+-- No custom function needed - using built-in uuidv7()
+-- ==============================================================================
 
 -- ==============================================================================
--- Table: meta.table_metadata
+-- Table: meta.table
 -- ==============================================================================
 -- Stores metadata configuration for each table to be generated as CRUD module
 
-CREATE TABLE IF NOT EXISTS meta.table_metadata (
-  id UUID PRIMARY KEY DEFAULT meta.uuid_generate_v7(),
-  
+CREATE TABLE IF NOT EXISTS meta.table (
+  id UUID PRIMARY KEY DEFAULT uuidv7(),
+
   -- Table identification
-  schema_name VARCHAR(63) NOT NULL,
-  table_name VARCHAR(63) NOT NULL,
+  schema_name VARCHAR(50) NOT NULL,
+  table_name VARCHAR(100) NOT NULL,
   display_name VARCHAR(255) NOT NULL,
   description TEXT,
-  
+
   -- Module configuration
   module_name VARCHAR(100) NOT NULL,
   entity_name VARCHAR(100) NOT NULL,
   icon VARCHAR(50),
-  color VARCHAR(20),
-  
+  color VARCHAR(50),
+
   -- Table type and behavior
-  table_type VARCHAR(20) NOT NULL DEFAULT 'master',
+  table_type VARCHAR(50) NOT NULL DEFAULT 'master',
   has_soft_delete BOOLEAN NOT NULL DEFAULT false,
   has_created_by BOOLEAN NOT NULL DEFAULT true,
   has_updated_by BOOLEAN NOT NULL DEFAULT true,
-  
+
   -- Pagination
   default_page_size INT NOT NULL DEFAULT 20,
   max_page_size INT NOT NULL DEFAULT 100,
-  
+
   -- Performance
   cache_enabled BOOLEAN NOT NULL DEFAULT false,
   cache_ttl INT DEFAULT 300,
-  
+
   -- Rate limiting
   throttle_enabled BOOLEAN NOT NULL DEFAULT true,
   throttle_limit INT DEFAULT 100,
   throttle_ttl INT DEFAULT 60,
-  
+
   -- Advanced features
   enable_export BOOLEAN NOT NULL DEFAULT true,
   enable_import BOOLEAN NOT NULL DEFAULT false,
   enable_recap BOOLEAN NOT NULL DEFAULT false,
   enable_search BOOLEAN NOT NULL DEFAULT false,
-  
+
   -- Database partitioning
   is_partitioned BOOLEAN NOT NULL DEFAULT false,
-  partition_type VARCHAR(20),
-  partition_key VARCHAR(63),
-  
+  partition_type VARCHAR(50),
+  partition_key VARCHAR(50),
+
   -- Permissions
   permission_config JSONB,
-  
+
   -- Metadata tracking
   is_active BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  
+
   -- Constraints
-  CONSTRAINT table_metadata_schema_table_uk UNIQUE (schema_name, table_name),
-  CONSTRAINT table_metadata_module_uk UNIQUE (module_name),
-  CONSTRAINT table_metadata_table_type_ck CHECK (table_type IN ('master', 'transaction', 'reference', 'junction')),
-  CONSTRAINT table_metadata_partition_type_ck CHECK (
-    partition_type IS NULL OR 
+  CONSTRAINT table_schema_table_uk UNIQUE (schema_name, table_name),
+  CONSTRAINT table_module_uk UNIQUE (module_name),
+  CONSTRAINT table_table_type_ck CHECK (table_type IN ('master', 'transaction', 'reference', 'junction')),
+  CONSTRAINT table_partition_type_ck CHECK (
+    partition_type IS NULL OR
     partition_type IN ('range', 'list', 'hash')
   ),
-  CONSTRAINT table_metadata_partition_key_ck CHECK (
+  CONSTRAINT table_partition_key_ck CHECK (
     (is_partitioned = false AND partition_type IS NULL AND partition_key IS NULL) OR
     (is_partitioned = true AND partition_type IS NOT NULL AND partition_key IS NOT NULL)
   ),
-  CONSTRAINT table_metadata_cache_ttl_ck CHECK (
+  CONSTRAINT table_cache_ttl_ck CHECK (
     (cache_enabled = false AND cache_ttl IS NULL) OR
     (cache_enabled = true AND cache_ttl > 0)
   ),
-  CONSTRAINT table_metadata_throttle_ck CHECK (
+  CONSTRAINT table_throttle_ck CHECK (
     (throttle_enabled = false) OR
     (throttle_enabled = true AND throttle_limit > 0 AND throttle_ttl > 0)
   ),
-  CONSTRAINT table_metadata_page_size_ck CHECK (
-    default_page_size > 0 AND 
+  CONSTRAINT table_page_size_ck CHECK (
+    default_page_size > 0 AND
     max_page_size >= default_page_size
   )
 );
 
--- Indexes for table_metadata
-CREATE INDEX IF NOT EXISTS idx_table_metadata_schema_table ON meta.table_metadata(schema_name, table_name);
-CREATE INDEX IF NOT EXISTS idx_table_metadata_module ON meta.table_metadata(module_name) WHERE is_active = true;
-CREATE INDEX IF NOT EXISTS idx_table_metadata_is_active ON meta.table_metadata(is_active);
-CREATE INDEX IF NOT EXISTS idx_table_metadata_created_at ON meta.table_metadata(created_at);
+-- Indexes for table
+CREATE INDEX IF NOT EXISTS idx_table_schema_table ON meta.table(schema_name, table_name);
+CREATE INDEX IF NOT EXISTS idx_table_module ON meta.table(module_name) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_table_is_active ON meta.table(is_active);
+CREATE INDEX IF NOT EXISTS idx_table_created_at ON meta.table(created_at);
 
 -- Comments
-COMMENT ON TABLE meta.table_metadata IS 'Configuration metadata for automatic CRUD module generation';
-COMMENT ON COLUMN meta.table_metadata.table_type IS 'master=main entities, transaction=event records, reference=lookup data, junction=many-to-many';
-COMMENT ON COLUMN meta.table_metadata.permission_config IS 'RBAC configuration: roles, permissions, field-level access';
-COMMENT ON COLUMN meta.table_metadata.partition_type IS 'PostgreSQL partitioning: range (date/numeric), list (enum), hash (UUID)';
+COMMENT ON TABLE meta.table IS 'Configuration metadata for automatic CRUD module generation';
+COMMENT ON COLUMN meta.table.table_type IS 'master=main entities, transaction=event records, reference=lookup data, junction=many-to-many';
+COMMENT ON COLUMN meta.table.permission_config IS 'RBAC configuration: roles, permissions, field-level access';
+COMMENT ON COLUMN meta.table.partition_type IS 'PostgreSQL partitioning: range (date/numeric), list (enum), hash (UUID)';
 
 -- ==============================================================================
--- Table: meta.column_metadata
+-- Table: meta.column
 -- ==============================================================================
 -- Stores metadata for each column including validation, display, and behavior
 
-CREATE TABLE IF NOT EXISTS meta.column_metadata (
-  id UUID PRIMARY KEY DEFAULT meta.uuid_generate_v7(),
-  
+CREATE TABLE IF NOT EXISTS meta.column (
+  id UUID PRIMARY KEY DEFAULT uuidv7(),
+
   -- Column identification
-  table_id UUID NOT NULL REFERENCES meta.table_metadata(id) ON DELETE CASCADE,
-  column_name VARCHAR(63) NOT NULL,
+  table_id UUID NOT NULL REFERENCES meta.table(id) ON DELETE CASCADE,
+  column_name VARCHAR(100) NOT NULL,
   data_type VARCHAR(50) NOT NULL,
-  
+
   -- Display configuration
   display_name VARCHAR(255) NOT NULL,
   description TEXT,
   placeholder VARCHAR(255),
   help_text TEXT,
-  
+
   -- Visibility flags
   display_in_list BOOLEAN NOT NULL DEFAULT true,
   display_in_form BOOLEAN NOT NULL DEFAULT true,
   display_in_detail BOOLEAN NOT NULL DEFAULT true,
   display_in_filter BOOLEAN NOT NULL DEFAULT false,
-  
+
   -- Column behavior
   is_primary_key BOOLEAN NOT NULL DEFAULT false,
   is_nullable BOOLEAN NOT NULL DEFAULT true,
   is_unique BOOLEAN NOT NULL DEFAULT false,
   is_indexed BOOLEAN NOT NULL DEFAULT false,
-  
+
   -- Validation
   is_required BOOLEAN NOT NULL DEFAULT false,
   default_value TEXT,
   validation_rules JSONB,
-  
+
   -- Filtering
   is_filterable BOOLEAN NOT NULL DEFAULT false,
   filter_operators TEXT[],
-  
+
   -- Foreign key relationship
   is_foreign_key BOOLEAN NOT NULL DEFAULT false,
-  ref_schema VARCHAR(63),
-  ref_table VARCHAR(63),
-  ref_column VARCHAR(63),
-  ref_display_column VARCHAR(63),
-  on_delete VARCHAR(20),
-  on_update VARCHAR(20),
-  
+  ref_schema VARCHAR(50),
+  ref_table VARCHAR(100),
+  ref_column VARCHAR(100),
+  ref_display_column VARCHAR(100),
+  on_delete VARCHAR(50),
+  on_update VARCHAR(50),
+
   -- UI rendering
   input_type VARCHAR(50) DEFAULT 'text',
   select_options JSONB,
   conditional_rules JSONB,
-  
+
   -- Advanced features
   is_searchable BOOLEAN NOT NULL DEFAULT false,
   is_sortable BOOLEAN NOT NULL DEFAULT true,
   is_file_upload BOOLEAN NOT NULL DEFAULT false,
   file_upload_config JSONB,
-  
+
   -- Swagger documentation
   swagger_example TEXT,
   swagger_hidden BOOLEAN NOT NULL DEFAULT false,
-  
+
   -- Column ordering and grouping
   display_order INT NOT NULL DEFAULT 0,
   form_group VARCHAR(100),
-  
+
   -- Metadata tracking
   is_active BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  
+
   -- Constraints
-  CONSTRAINT column_metadata_table_column_uk UNIQUE (table_id, column_name),
-  CONSTRAINT column_metadata_fk_ck CHECK (
+  CONSTRAINT column_table_column_uk UNIQUE (table_id, column_name),
+  CONSTRAINT column_fk_ck CHECK (
     (is_foreign_key = false AND ref_schema IS NULL AND ref_table IS NULL AND ref_column IS NULL) OR
     (is_foreign_key = true AND ref_schema IS NOT NULL AND ref_table IS NOT NULL AND ref_column IS NOT NULL)
   ),
-  CONSTRAINT column_metadata_on_delete_ck CHECK (
-    on_delete IS NULL OR 
+  CONSTRAINT column_on_delete_ck CHECK (
+    on_delete IS NULL OR
     on_delete IN ('CASCADE', 'SET NULL', 'SET DEFAULT', 'RESTRICT', 'NO ACTION')
   ),
-  CONSTRAINT column_metadata_on_update_ck CHECK (
-    on_update IS NULL OR 
+  CONSTRAINT column_on_update_ck CHECK (
+    on_update IS NULL OR
     on_update IN ('CASCADE', 'SET NULL', 'SET DEFAULT', 'RESTRICT', 'NO ACTION')
   ),
-  CONSTRAINT column_metadata_input_type_ck CHECK (
+  CONSTRAINT column_input_type_ck CHECK (
     input_type IN (
       'text', 'textarea', 'number', 'email', 'password', 'url', 'tel',
       'date', 'datetime', 'time', 'select', 'multiselect', 'radio', 'checkbox',
       'file', 'image', 'color', 'range', 'json', 'wysiwyg'
     )
   ),
-  CONSTRAINT column_metadata_file_upload_ck CHECK (
+  CONSTRAINT column_file_upload_ck CHECK (
     (is_file_upload = false AND file_upload_config IS NULL) OR
     (is_file_upload = true AND file_upload_config IS NOT NULL)
   )
 );
 
--- Indexes for column_metadata
-CREATE INDEX IF NOT EXISTS idx_column_metadata_table_id ON meta.column_metadata(table_id);
-CREATE INDEX IF NOT EXISTS idx_column_metadata_column_name ON meta.column_metadata(table_id, column_name);
-CREATE INDEX IF NOT EXISTS idx_column_metadata_is_active ON meta.column_metadata(is_active);
-CREATE INDEX IF NOT EXISTS idx_column_metadata_display_order ON meta.column_metadata(table_id, display_order);
-CREATE INDEX IF NOT EXISTS idx_column_metadata_foreign_key ON meta.column_metadata(is_foreign_key, ref_schema, ref_table);
+-- Indexes for column
+CREATE INDEX IF NOT EXISTS idx_column_table_id ON meta.column(table_id);
+CREATE INDEX IF NOT EXISTS idx_column_column_name ON meta.column(table_id, column_name);
+CREATE INDEX IF NOT EXISTS idx_column_is_active ON meta.column(is_active);
+CREATE INDEX IF NOT EXISTS idx_column_display_order ON meta.column(table_id, display_order);
+CREATE INDEX IF NOT EXISTS idx_column_foreign_key ON meta.column(is_foreign_key, ref_schema, ref_table);
 
 -- Comments
-COMMENT ON TABLE meta.column_metadata IS 'Column-level metadata for validation, display, and behavior configuration';
-COMMENT ON COLUMN meta.column_metadata.validation_rules IS 'JSON with class-validator rules: minLength, maxLength, pattern, min, max, etc.';
-COMMENT ON COLUMN meta.column_metadata.filter_operators IS 'Allowed operators: _eq, _ne, _gt, _lt, _gte, _lte, _like, _in, _nin, _between, _null, _nnull';
-COMMENT ON COLUMN meta.column_metadata.file_upload_config IS 'File upload settings: maxSize, allowedTypes, storage (s3/gcs/azure), path';
-COMMENT ON COLUMN meta.column_metadata.conditional_rules IS 'UI conditional logic: show/hide based on other field values';
+COMMENT ON TABLE meta.column IS 'Column-level metadata for validation, display, and behavior configuration';
+COMMENT ON COLUMN meta.column.validation_rules IS 'JSON with class-validator rules: minLength, maxLength, pattern, min, max, etc.';
+COMMENT ON COLUMN meta.column.filter_operators IS 'Allowed operators: _eq, _ne, _gt, _lt, _gte, _lte, _like, _in, _nin, _between, _null, _nnull';
+COMMENT ON COLUMN meta.column.file_upload_config IS 'File upload settings: maxSize, allowedTypes, storage (s3/gcs/azure), path';
+COMMENT ON COLUMN meta.column.conditional_rules IS 'UI conditional logic: show/hide based on other field values';
 
 -- ==============================================================================
 -- Table: meta.generated_files
@@ -264,31 +234,31 @@ COMMENT ON COLUMN meta.column_metadata.conditional_rules IS 'UI conditional logi
 -- Tracks generated files for regeneration and custom code preservation
 
 CREATE TABLE IF NOT EXISTS meta.generated_files (
-  id UUID PRIMARY KEY DEFAULT meta.uuid_generate_v7(),
-  
+  id UUID PRIMARY KEY DEFAULT uuidv7(),
+
   -- File identification
-  table_id UUID NOT NULL REFERENCES meta.table_metadata(id) ON DELETE CASCADE,
+  table_id UUID NOT NULL REFERENCES meta.table(id) ON DELETE CASCADE,
   file_path VARCHAR(500) NOT NULL,
   file_type VARCHAR(50) NOT NULL,
-  
+
   -- Change detection
   checksum VARCHAR(64) NOT NULL,
   metadata_checksum VARCHAR(64) NOT NULL,
-  
+
   -- Status tracking
   has_custom_code BOOLEAN NOT NULL DEFAULT false,
   last_generated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   last_modified_at TIMESTAMPTZ,
-  
+
   -- Metadata
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  
+
   -- Constraints
   CONSTRAINT generated_files_file_path_uk UNIQUE (file_path),
   CONSTRAINT generated_files_file_type_ck CHECK (
     file_type IN (
-      'dto', 'entity', 'repository', 'service', 'controller', 
+      'dto', 'entity', 'repository', 'service', 'controller',
       'module', 'query', 'filter', 'guard', 'decorator', 'interface'
     )
   )
@@ -308,6 +278,46 @@ COMMENT ON COLUMN meta.generated_files.metadata_checksum IS 'SHA-256 hash of met
 COMMENT ON COLUMN meta.generated_files.has_custom_code IS 'True if file contains custom code blocks (CUSTOM_CODE_START markers)';
 
 -- ==============================================================================
+-- Table: meta.static_data_log
+-- ==============================================================================
+-- Tracks static data seeder operations for idempotent execution
+
+CREATE TABLE IF NOT EXISTS meta.static_data_log (
+  id UUID PRIMARY KEY DEFAULT uuidv7(),
+
+  -- Table identification
+  schema_name VARCHAR(50) NOT NULL,
+  table_name VARCHAR(100) NOT NULL,
+  description TEXT,
+
+  -- SQL tracking
+  sql_statement TEXT NOT NULL,
+  sql_checksum VARCHAR(64) NOT NULL,
+
+  -- Execution tracking
+  record_count INT NOT NULL DEFAULT 0,
+  execution_count INT NOT NULL DEFAULT 1,
+  last_executed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  -- Metadata
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  -- Constraints
+  CONSTRAINT static_data_log_schema_table_checksum_uk UNIQUE (schema_name, table_name, sql_checksum)
+);
+
+-- Indexes for static_data_log
+CREATE INDEX IF NOT EXISTS idx_static_data_log_schema ON meta.static_data_log(schema_name);
+CREATE INDEX IF NOT EXISTS idx_static_data_log_table ON meta.static_data_log(schema_name, table_name);
+CREATE INDEX IF NOT EXISTS idx_static_data_log_checksum ON meta.static_data_log(sql_checksum);
+
+-- Comments
+COMMENT ON TABLE meta.static_data_log IS 'Tracks static data seeder operations for idempotent execution and change detection';
+COMMENT ON COLUMN meta.static_data_log.sql_checksum IS 'SHA-256 hash of SQL statement for detecting changes';
+COMMENT ON COLUMN meta.static_data_log.execution_count IS 'Number of times this exact SQL has been executed';
+
+-- ==============================================================================
 -- Update Triggers
 -- ==============================================================================
 
@@ -321,18 +331,23 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Triggers for updated_at
-CREATE TRIGGER trigger_table_metadata_updated_at
-  BEFORE UPDATE ON meta.table_metadata
+CREATE TRIGGER trigger_table_updated_at
+  BEFORE UPDATE ON meta.table
   FOR EACH ROW
   EXECUTE FUNCTION meta.update_updated_at_column();
 
-CREATE TRIGGER trigger_column_metadata_updated_at
-  BEFORE UPDATE ON meta.column_metadata
+CREATE TRIGGER trigger_column_updated_at
+  BEFORE UPDATE ON meta.column
   FOR EACH ROW
   EXECUTE FUNCTION meta.update_updated_at_column();
 
 CREATE TRIGGER trigger_generated_files_updated_at
   BEFORE UPDATE ON meta.generated_files
+  FOR EACH ROW
+  EXECUTE FUNCTION meta.update_updated_at_column();
+
+CREATE TRIGGER trigger_static_data_log_updated_at
+  BEFORE UPDATE ON meta.static_data_log
   FOR EACH ROW
   EXECUTE FUNCTION meta.update_updated_at_column();
 
@@ -343,7 +358,7 @@ CREATE TRIGGER trigger_generated_files_updated_at
 -- Example: users table metadata
 -- Uncomment to insert sample metadata
 
--- INSERT INTO meta.table_metadata (
+-- INSERT INTO meta.table (
 --   schema_name, table_name, display_name, description,
 --   module_name, entity_name, icon, color,
 --   table_type, has_soft_delete, enable_export, enable_recap

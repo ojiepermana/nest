@@ -109,7 +109,7 @@ export class DatabaseSetupService {
       await this.executeSetupSQL(sqlFile, schemaName, result);
 
       // Verify required tables
-      const requiredTables = ['table_metadata', 'column_metadata', 'generated_files'];
+      const requiredTables = ['table', 'column', 'generated_files'];
       for (const table of requiredTables) {
         const exists = await this.checkTableExists(schemaName, table);
         if (exists) {
@@ -286,15 +286,15 @@ export class DatabaseSetupService {
 
       // Check table structure (basic column check)
       if (errors.length === 0) {
-        await this.validateTableStructure(schemaName, 'table_metadata', [
+        await this.validateTableStructure(schemaName, 'table', [
           'id',
           'schema_name',
           'table_name',
           'has_soft_delete',
         ]);
-        await this.validateTableStructure(schemaName, 'column_metadata', [
+        await this.validateTableStructure(schemaName, 'column', [
           'id',
-          'table_metadata_id',
+          'table_id',
           'column_name',
           'data_type',
         ]);

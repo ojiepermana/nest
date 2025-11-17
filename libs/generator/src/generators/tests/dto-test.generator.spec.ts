@@ -27,7 +27,7 @@ describe('DtoTestGenerator', () => {
     columns = [
       {
         id: '1',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'id',
         data_type: 'uuid',
         is_primary_key: true,
@@ -37,7 +37,7 @@ describe('DtoTestGenerator', () => {
       },
       {
         id: '2',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'username',
         data_type: 'varchar',
         is_primary_key: false,
@@ -48,7 +48,7 @@ describe('DtoTestGenerator', () => {
       },
       {
         id: '3',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'email',
         data_type: 'varchar',
         is_primary_key: false,
@@ -60,7 +60,7 @@ describe('DtoTestGenerator', () => {
       },
       {
         id: '4',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'age',
         data_type: 'integer',
         is_primary_key: false,
@@ -72,7 +72,7 @@ describe('DtoTestGenerator', () => {
       },
       {
         id: '5',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'created_at',
         data_type: 'timestamp',
         is_primary_key: false,
@@ -205,7 +205,7 @@ describe('DtoTestGenerator', () => {
     it('should generate email for email fields', () => {
       const emailColumn: ColumnMetadata = {
         id: '1',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'email',
         data_type: 'varchar',
         validation_rules: { email: true },
@@ -223,7 +223,7 @@ describe('DtoTestGenerator', () => {
     it('should generate enum value for enum fields', () => {
       const enumColumn: ColumnMetadata = {
         id: '1',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'status',
         data_type: 'varchar',
         enum_values: ['active', 'inactive', 'pending'],
@@ -241,7 +241,7 @@ describe('DtoTestGenerator', () => {
     it('should generate numeric value within range', () => {
       const numericColumn: ColumnMetadata = {
         id: '1',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'quantity',
         data_type: 'integer',
         min_value: 1,

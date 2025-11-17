@@ -3,7 +3,7 @@
  *
  * These SQL scripts create the required metadata tables for the NestJS generator:
  * - meta.table_metadata (PostgreSQL) / meta_table_metadata (MySQL)
- * - meta.column_metadata (PostgreSQL) / meta_column_metadata (MySQL)
+ * - meta.column (PostgreSQL) / meta_column (MySQL)
  * - meta.generated_files (PostgreSQL) / meta_generated_files (MySQL)
  */
 

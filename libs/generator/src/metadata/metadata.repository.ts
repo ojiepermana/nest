@@ -26,9 +26,10 @@ export class MetadataRepository {
   async getTableMetadata(schema: string, tableName: string): Promise<TableMetadata | null> {
     const query = `
       SELECT *
-      FROM ${this.dialect.quoteIdentifier('meta.table_metadata')}
+      FROM ${this.dialect.quoteIdentifier('meta.table')}
       WHERE schema_name = ${this.dialect.getParameterPlaceholder(1)}
         AND table_name = ${this.dialect.getParameterPlaceholder(2)}
+      LIMIT 1
     `;
 
     const result = await this.connection.query<TableMetadata>(query, [schema, tableName]);
@@ -42,7 +43,7 @@ export class MetadataRepository {
   async getAllTableMetadata(): Promise<TableMetadata[]> {
     const query = `
       SELECT *
-      FROM ${this.dialect.quoteIdentifier('meta.table_metadata')}
+      FROM ${this.dialect.quoteIdentifier('meta.table')}
       ORDER BY schema_name, table_name
     `;
 
@@ -56,9 +57,9 @@ export class MetadataRepository {
   async getColumnsByTableId(tableMetadataId: string): Promise<ColumnMetadata[]> {
     const query = `
       SELECT *
-      FROM ${this.dialect.quoteIdentifier('meta.column_metadata')}
+      FROM ${this.dialect.quoteIdentifier('meta.column')}
       WHERE table_id = ${this.dialect.getParameterPlaceholder(1)}
-      ORDER BY column_name
+      ORDER BY display_order, column_name
     `;
 
     const result = await this.connection.query<ColumnMetadata>(query, [tableMetadataId]);

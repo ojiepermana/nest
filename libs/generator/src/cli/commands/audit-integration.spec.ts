@@ -40,7 +40,7 @@ describe('Audit Trail CLI Integration', () => {
     columns = [
       {
         id: '1',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'id',
         data_type: 'uuid',
         is_nullable: false,
@@ -60,7 +60,7 @@ describe('Audit Trail CLI Integration', () => {
       },
       {
         id: '2',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'username',
         data_type: 'varchar',
         is_nullable: false,

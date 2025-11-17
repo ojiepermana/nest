@@ -27,7 +27,7 @@ describe('ControllerTestGenerator', () => {
     columns = [
       {
         id: '1',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'id',
         data_type: 'uuid',
         is_primary_key: true,
@@ -37,7 +37,7 @@ describe('ControllerTestGenerator', () => {
       },
       {
         id: '2',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'username',
         data_type: 'varchar',
         is_primary_key: false,
@@ -48,7 +48,7 @@ describe('ControllerTestGenerator', () => {
       },
       {
         id: '3',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'email',
         data_type: 'varchar',
         is_primary_key: false,

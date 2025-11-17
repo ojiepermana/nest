@@ -27,7 +27,7 @@ describe('RepositoryTestGenerator', () => {
     columns = [
       {
         id: '1',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'id',
         data_type: 'uuid',
         is_primary_key: true,
@@ -38,7 +38,7 @@ describe('RepositoryTestGenerator', () => {
       },
       {
         id: '2',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'username',
         data_type: 'varchar',
         is_primary_key: false,
@@ -50,7 +50,7 @@ describe('RepositoryTestGenerator', () => {
       },
       {
         id: '3',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'email',
         data_type: 'varchar',
         is_primary_key: false,
@@ -62,7 +62,7 @@ describe('RepositoryTestGenerator', () => {
       },
       {
         id: '4',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'age',
         data_type: 'integer',
         is_primary_key: false,
@@ -73,7 +73,7 @@ describe('RepositoryTestGenerator', () => {
       },
       {
         id: '5',
-        table_metadata_id: '123',
+        table_id: '123',
         column_name: 'created_at',
         data_type: 'timestamp',
         is_primary_key: false,

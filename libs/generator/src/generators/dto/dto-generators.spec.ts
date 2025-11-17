@@ -33,7 +33,7 @@ describe('DTO Generators', () => {
   const mockColumns: ColumnMetadata[] = [
     {
       id: '1',
-      table_metadata_id: '1',
+      table_id: '1',
       column_name: 'id',
       data_type: 'uuid',
       is_nullable: false,
@@ -56,7 +56,7 @@ describe('DTO Generators', () => {
     },
     {
       id: '2',
-      table_metadata_id: '1',
+      table_id: '1',
       column_name: 'email',
       data_type: 'varchar',
       is_nullable: false,
@@ -79,7 +79,7 @@ describe('DTO Generators', () => {
     },
     {
       id: '3',
-      table_metadata_id: '1',
+      table_id: '1',
       column_name: 'name',
       data_type: 'varchar',
       is_nullable: false,
@@ -102,7 +102,7 @@ describe('DTO Generators', () => {
     },
     {
       id: '4',
-      table_metadata_id: '1',
+      table_id: '1',
       column_name: 'age',
       data_type: 'integer',
       is_nullable: true,
@@ -124,7 +124,7 @@ describe('DTO Generators', () => {
     },
     {
       id: '5',
-      table_metadata_id: '1',
+      table_id: '1',
       column_name: 'status',
       data_type: 'varchar',
       is_nullable: false,
@@ -147,7 +147,7 @@ describe('DTO Generators', () => {
     },
     {
       id: '6',
-      table_metadata_id: '1',
+      table_id: '1',
       column_name: 'created_at',
       data_type: 'timestamp',
       is_nullable: false,
@@ -170,7 +170,7 @@ describe('DTO Generators', () => {
     },
     {
       id: '7',
-      table_metadata_id: '1',
+      table_id: '1',
       column_name: 'updated_at',
       data_type: 'timestamp',
       is_nullable: false,

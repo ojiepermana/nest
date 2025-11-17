@@ -124,7 +124,7 @@ describe('MetadataRepository', () => {
       const mockColumns: ColumnMetadata[] = [
         {
           id: '1',
-          table_metadata_id: '123',
+          table_id: '123',
           column_name: 'id',
           data_type: 'uuid',
           is_nullable: false,
@@ -143,7 +143,7 @@ describe('MetadataRepository', () => {
         },
         {
           id: '2',
-          table_metadata_id: '123',
+          table_id: '123',
           column_name: 'email',
           data_type: 'varchar',
           is_nullable: false,
@@ -178,7 +178,7 @@ describe('MetadataRepository', () => {
       const mockColumns: ColumnMetadata[] = [
         {
           id: '1',
-          table_metadata_id: '123',
+          table_id: '123',
           column_name: 'id',
           data_type: 'uuid',
           is_nullable: false,
@@ -197,7 +197,7 @@ describe('MetadataRepository', () => {
         },
         {
           id: '2',
-          table_metadata_id: '123',
+          table_id: '123',
           column_name: 'user_id',
           data_type: 'uuid',
           is_nullable: false,
@@ -268,7 +268,7 @@ describe('MetadataRepository', () => {
       const mockColumns: ColumnMetadata[] = [
         {
           id: '1',
-          table_metadata_id: '123',
+          table_id: '123',
           column_name: 'id',
           data_type: 'uuid',
           is_nullable: false,
@@ -287,7 +287,7 @@ describe('MetadataRepository', () => {
         },
         {
           id: '2',
-          table_metadata_id: '123',
+          table_id: '123',
           column_name: 'email',
           data_type: 'varchar',
           is_nullable: false,
@@ -403,7 +403,7 @@ describe('MetadataService', () => {
       const mockColumns: ColumnMetadata[] = [
         {
           id: '1',
-          table_metadata_id: '123',
+          table_id: '123',
           column_name: 'id',
           data_type: 'uuid',
           is_nullable: false,

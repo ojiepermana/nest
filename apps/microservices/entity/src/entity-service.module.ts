@@ -24,7 +24,15 @@ import { EntityModule } from './entity/entity.module';
       }),
       inject: [ConfigService],
     }),
-    RBACModule,
+    RBACModule.register({
+      adminRoles: ['admin', 'super_admin'],
+      superAdminRole: 'super_admin',
+      useGlobalGuards: true, // Enable guards for all endpoints
+      cache: {
+        enabled: true,
+        ttl: 300, // 5 minutes
+      },
+    }),
     EntityModule,
   ],
   controllers: [],

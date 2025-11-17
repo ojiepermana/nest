@@ -111,7 +111,7 @@ export interface TableMetadata {
  */
 export interface ColumnMetadata {
   id: string;
-  table_metadata_id: string;
+  table_id: string;
   column_name: string;
   data_type: string;
   is_nullable: boolean;

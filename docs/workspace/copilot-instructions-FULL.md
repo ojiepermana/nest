@@ -1082,6 +1082,35 @@ npm run build:all-libs
 
 ### Publishing to npm
 
+**⚠️ CRITICAL: Version Synchronization Check**
+
+Before publishing, **ALWAYS verify version numbers match** between:
+
+1. `libs/generator/package.json` → `"version": "X.Y.Z"`
+2. `libs/generator/README.md` → `## 🎉 What's New in vX.Y.Z`
+3. `libs/generator/README.md` → `### vX.Y.Z (Month Year)` in Recent Changes
+
+**Publishing Checklist:**
+
+```bash
+# 1. Check version consistency
+grep '"version"' libs/generator/package.json
+grep "What's New in v" libs/generator/README.md
+grep "^### v" libs/generator/README.md
+
+# 2. If versions don't match, update README first
+# Then rebuild to copy updated README to dist/
+npm run build:generator
+
+# 3. Commit version changes
+git add -A
+git commit -m "chore: sync version to X.Y.Z in README"
+git push
+
+# 4. Now publish
+./scripts/publish-libs.sh
+```
+
 **Interactive (recommended):**
 
 ```bash
@@ -1101,6 +1130,15 @@ npm run publish:all-libs  # builds then publishes both libraries
 ```bash
 ./scripts/version-bump.sh  # Interactive version bump (patch/minor/major)
 ```
+
+**After version bump:**
+
+1. ✅ Update `libs/generator/README.md` header (`What's New in vX.Y.Z`)
+2. ✅ Update `libs/generator/README.md` recent changes section (`### vX.Y.Z`)
+3. ✅ Rebuild: `npm run build:generator`
+4. ✅ Commit: `git commit -m "chore: bump version to X.Y.Z"`
+5. ✅ Push: `git push`
+6. ✅ Publish: `./scripts/publish-libs.sh`
 
 Bump versions in library `package.json` files only (not root). Then commit, push, and publish.
 

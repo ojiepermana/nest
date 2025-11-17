@@ -2,6 +2,15 @@
 
 A powerful code generator library for NestJS applications that creates production-ready CRUD modules from database metadata.
 
+## 🎉 What's New in v2.1.5
+
+- ✅ **Remove Command** - Delete generated files with `nest-generator remove`
+- ✅ **Schema-Based Structure** - Organized by database schema (e.g., `src/entity/`, `src/user/`)
+- ✅ **Contract-First Pattern** - Shared DTOs between microservices to avoid duplication
+- ✅ **6 Critical Bug Fixes** - DTO imports, Swagger, AuditModule, service ports, and more
+- ✅ **Auto-detection** - Dynamically detects root module files (`*-service.module.ts`)
+- ✅ **Config from File** - Service ports and hosts from `config/generator/*.config.json`
+
 ## Requirements
 
 Before installing, ensure you have:
@@ -106,20 +115,57 @@ export class AppModule {}
 nest-generator init
 nest-generator init --architecture=microservices
 
-# Generate module from metadata
-nest-generator generate users.profile
+# Generate module from metadata (schema.table format)
+nest-generator generate entity.entity
+nest-generator generate entity.location
 
-# With features
-nest-generator generate users.profile \
+# With all features enabled
+nest-generator generate entity.entity --all
+
+# With specific features
+nest-generator generate entity.location \
   --features.audit=true \
   --features.rbac=true \
   --features.fileUpload=true \
   --storageProvider=s3
 
 # For monorepo/microservices: specify target app
-nest-generator generate users.profile --app=user
+nest-generator generate entity.location --app=entity
 nest-generator generate orders.order --app=gateway
+
+# Remove generated files (NEW in v2.1.5!)
+nest-generator remove entity.location --app=entity
+nest-generator remove users.profile --app=user
+
+# Delete module (legacy - for old single-app structure)
+nest-generator delete users
 ```
+
+## Remove Command (NEW!)
+
+The `remove` command deletes all generated files and updates modules:
+
+```bash
+# Remove a table from microservices
+nest-generator remove entity.location --app=entity
+```
+
+**What it does:**
+
+- ✅ Deletes controllers, services, repositories, entities, DTOs
+- ✅ Removes from service app (`apps/microservices/entity/src/entity/`)
+- ✅ Removes from gateway app (`apps/microservices/gateway/src/entity/`)
+- ✅ Removes contracts (`libs/contracts/entity/`)
+- ✅ Updates schema modules (removes imports, providers, controllers)
+- ✅ Updates `index.ts` barrel exports
+- ✅ Auto-cleans empty schema directories
+- ✅ Removes schema module from app module if empty
+
+**Supported architectures:**
+
+- Standalone: `nest-generator remove entity.product`
+- Monorepo: `nest-generator remove entity.user --app=user`
+- Microservices: `nest-generator remove entity.location --app=entity`
 
 ## Documentation
 
@@ -168,34 +214,88 @@ Distributed services with API gateway pattern:
 
 ## Generated Files
 
-For each table in metadata, generates an organized directory structure:
+For each table in metadata, generates an organized **schema-based directory structure**:
 
 ```
-{module-name}/
+{schema-name}/                         # Organized by database schema
 ├── controllers/
-│   └── {table}.controller.ts      # REST or @MessagePattern handlers
+│   ├── {table1}.controller.ts         # REST or @MessagePattern handlers
+│   └── {table2}.controller.ts
 ├── dto/
-│   └── {table}/
-│       ├── create-{table}.dto.ts  # Create DTO with validation
-│       ├── update-{table}.dto.ts  # Update DTO (partial)
-│       └── {table}-filter.dto.ts  # Query filters (12+ operators)
+│   ├── {table1}/
+│   │   ├── create-{table1}.dto.ts     # Create DTO with validation
+│   │   ├── update-{table1}.dto.ts     # Update DTO (partial)
+│   │   └── {table1}-filter.dto.ts     # Query filters (12+ operators)
+│   └── {table2}/
+│       └── ...
 ├── entities/
-│   └── {table}.entity.ts          # Plain TypeScript entity
+│   ├── {table1}.entity.ts             # Plain TypeScript entity
+│   └── {table2}.entity.ts
 ├── repositories/
-│   └── {table}.repository.ts      # Database operations (raw SQL)
+│   ├── {table1}.repository.ts         # Database operations (raw SQL)
+│   └── {table2}.repository.ts
 ├── services/
-│   └── {table}.service.ts         # Business logic + audit
-├── {module-name}.module.ts        # NestJS module wiring
-└── index.ts                       # Barrel exports
+│   ├── {table1}.service.ts            # Business logic + audit
+│   └── {table2}.service.ts
+├── {schema-name}.module.ts            # Schema module (aggregates all tables)
+└── index.ts                           # Barrel exports
 ```
 
-**Example for `users.profile` schema:**
+**Example for `entity` schema with tables `entity`, `location`, `business_entity`:**
 
-- `controllers/users.controller.ts` and `controllers/profile.controller.ts`
-- `dto/users/` and `dto/profile/` subdirectories
-- `entities/users.entity.ts` and `entities/profile.entity.ts`
-- `repositories/users.repository.ts` and `repositories/profile.repository.ts`
-- `services/users.service.ts` and `services/profile.service.ts`
+```
+apps/microservices/entity/src/entity/
+├── controllers/
+│   ├── entity.controller.ts
+│   ├── location.controller.ts
+│   └── business-entity.controller.ts
+├── dto/
+│   ├── entity/
+│   ├── location/
+│   └── business-entity/
+├── entities/
+│   ├── entity.entity.ts
+│   ├── location.entity.ts
+│   └── business-entity.entity.ts
+├── repositories/
+│   ├── entity.repository.ts
+│   ├── location.repository.ts
+│   └── business-entity.repository.ts
+├── services/
+│   ├── entity.service.ts
+│   ├── location.service.ts
+│   └── business-entity.service.ts
+├── entity.module.ts                   # ONE module for entire schema
+└── index.ts
+```
+
+**Microservices Architecture (NEW!):**
+
+Gateway and service apps are separated with **shared contracts**:
+
+```
+# Service app (entity)
+apps/microservices/entity/src/entity/
+├── controllers/                       # @MessagePattern handlers
+├── services/                          # Business logic
+├── repositories/                      # Database access
+└── dto/                               # Service-specific DTOs (extends contracts)
+
+# Gateway app
+apps/microservices/gateway/src/entity/
+├── controllers/                       # HTTP REST controllers
+└── dto/                               # Gateway DTOs with Swagger (extends contracts)
+
+# Shared contracts (NO DUPLICATION!)
+libs/contracts/entity/
+└── dto/
+    ├── entity/
+    │   ├── create-entity.dto.ts       # Base DTOs shared by service & gateway
+    │   ├── update-entity.dto.ts
+    │   └── entity-filter.dto.ts
+    ├── location/
+    └── business-entity/
+```
 
 **Architecture-specific:**
 
@@ -309,12 +409,45 @@ Auto-track CREATE, UPDATE, DELETE operations with:
 
 Full microservices architecture with:
 
-- Auto-detect gateway vs service
-- Generate appropriate controllers
-- TCP/gRPC transport configuration
-- Message pattern handlers
-- ClientProxy integration
+- **Schema-based structure**: Organized by database schema (e.g., `entity/`, `user/`)
+- **Contract-First pattern**: Shared DTOs in `libs/contracts/` to avoid duplication
+- **Auto-detect gateway vs service**: Generates appropriate controllers
+- **TCP/gRPC transport**: Message pattern handlers for microservices
+- **ClientProxy integration**: Gateway uses ClientProxy to communicate with services
+- **Service port from config**: Reads host/port from `config/generator/microservices.config.json`
+- **Remove command**: Clean deletion of generated files with module updates
 - [Quickstart Guide](https://github.com/ojiepermana/nest/blob/main/docs/generator/quickstart/MICROSERVICES_QUICKSTART.md)
+
+**Recent Bug Fixes (v2.1.5):**
+
+- ✅ Fixed DTO import aliases (no more `EntityDto as CreateEntityDto`)
+- ✅ Swagger only for gateway (not generated for TCP microservices)
+- ✅ AuditModule auto-imports when audit enabled
+- ✅ Service ports from config (no more hardcoded 3001)
+- ✅ Gateway `index.ts` only exports controllers and DTOs (not entities/services)
+- ✅ Dynamic root module detection (`*-service.module.ts`)
+
+## Recent Changes
+
+### v2.1.5 (November 2025)
+
+**New Features:**
+
+- 🎉 `remove` command for deleting generated files
+- 📁 Schema-based directory structure
+- 🤝 Contract-First pattern for microservices
+- ⚙️ Service config from `config/generator/*.config.json`
+
+**Bug Fixes:**
+
+- Fixed DTO import aliases in service DTOs
+- Swagger generation only for gateway apps
+- AuditModule auto-import when audit feature enabled
+- Service ports read from config instead of hardcoded
+- Gateway barrel exports (index.ts) exclude non-existent files
+- Warning removal for missing `app.module.ts`
+
+**Test Coverage:** 579/585 passing (99%) | **Feature Score:** 119/100
 
 ## License
 

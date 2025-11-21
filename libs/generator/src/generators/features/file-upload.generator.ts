@@ -70,6 +70,7 @@ export class FileUploadGenerator {
   ): string {
     const fieldName = column.column_name;
     const camelFieldName = toCamelCase(fieldName);
+    const pascalFieldName = toPascalCase(fieldName);
 
     const swaggerDecorators = this.options.enableSwagger
       ? this.generateSwaggerDecorators('single', camelFieldName)
@@ -79,7 +80,7 @@ export class FileUploadGenerator {
 
     return `  ${swaggerDecorators}@Post('upload/${camelFieldName}')
   @UseInterceptors(FileInterceptor('file', ${multerOptions}))
-  async upload${toPascalCase(camelFieldName)}(
+  async upload${pascalFieldName}(
     @UploadedFile() file: Express.Multer.File,
     @Body('entityId') entityId: string,
   ): Promise<{ url: string; filename: string; size: number }> {
@@ -115,6 +116,7 @@ export class FileUploadGenerator {
   ): string {
     const fieldName = column.column_name;
     const camelFieldName = toCamelCase(fieldName);
+    const pascalFieldName = toPascalCase(fieldName);
     const maxFiles = config.maxFiles || 10;
 
     const swaggerDecorators = this.options.enableSwagger
@@ -125,7 +127,7 @@ export class FileUploadGenerator {
 
     return `  ${swaggerDecorators}@Post('upload/${camelFieldName}')
   @UseInterceptors(FilesInterceptor('files', ${maxFiles}, ${multerOptions}))
-  async upload${toPascalCase(camelFieldName)}(
+  async upload${pascalFieldName}(
     @UploadedFiles() files: Express.Multer.File[],
     @Body('entityId') entityId: string,
   ): Promise<{ urls: string[]; count: number }> {
@@ -161,6 +163,7 @@ export class FileUploadGenerator {
   private generateFileDeleteEndpoint(column: ColumnMetadata): string {
     const fieldName = column.column_name;
     const camelFieldName = toCamelCase(fieldName);
+    const pascalFieldName = toPascalCase(fieldName);
 
     const swaggerDecorators = this.options.enableSwagger
       ? `  @ApiOperation({ summary: 'Delete ${camelFieldName} file' })
@@ -170,7 +173,7 @@ export class FileUploadGenerator {
       : '';
 
     return `  ${swaggerDecorators}@Delete(':id/${camelFieldName}')
-  async delete${toPascalCase(camelFieldName)}(
+  async delete${pascalFieldName}(
     @Param('id') id: string,
   ): Promise<{ message: string }> {
     const entity = await this.service.findOne(id);
@@ -318,9 +321,47 @@ export class FileUploadGenerator {
 
   /**
    * Get columns that have file upload enabled
+   * Auto-detects based on column naming patterns or explicit metadata flag
    */
   private getFileUploadColumns(): ColumnMetadata[] {
-    return this.columns.filter((col) => col.is_file_upload === true);
+    return this.columns.filter((col) => this.isFileUploadColumn(col));
+  }
+
+  /**
+   * Check if a column is a file upload column
+   * Detection rules:
+   * 1. Explicit metadata: is_file_upload === true
+   * 2. Column name patterns: *_file, *_files, file_*, *_path, *_url, *_attachment*, *_image*, *_photo*, *_document*, avatar, logo
+   */
+  private isFileUploadColumn(column: ColumnMetadata): boolean {
+    // 1. Check explicit metadata flag
+    if (column.is_file_upload === true) {
+      return true;
+    }
+
+    // 2. Auto-detect from column name patterns
+    const columnName = column.column_name.toLowerCase();
+    
+    // File-related patterns
+    const filePatterns = [
+      /_file$/,           // ends with _file (e.g., profile_file, document_file)
+      /_files$/,          // ends with _files (e.g., attachments_files)
+      /^file_/,           // starts with file_ (e.g., file_path, file_url)
+      /_path$/,           // ends with _path (e.g., file_path, document_path)
+      /_url$/,            // ends with _url (e.g., file_url, image_url)
+      /attachment/,       // contains attachment (e.g., attachment, attachments, user_attachment)
+      /image/,            // contains image (e.g., image, profile_image, cover_image)
+      /photo/,            // contains photo (e.g., photo, profile_photo)
+      /picture/,          // contains picture (e.g., picture, profile_picture)
+      /document/,         // contains document (e.g., document, legal_document)
+      /^avatar$/,         // exact match for avatar
+      /^logo$/,           // exact match for logo
+      /thumbnail/,        // contains thumbnail
+      /media/,            // contains media (e.g., media, media_file)
+      /upload/,           // contains upload (e.g., upload, uploaded_file)
+    ];
+
+    return filePatterns.some(pattern => pattern.test(columnName));
   }
 
   /**

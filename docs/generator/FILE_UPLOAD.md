@@ -99,12 +99,36 @@ npm install @azure/storage-blob
 npm install sharp
 ```
 
-### 3. Configure Metadata
+### 3. Configure Metadata (Optional)
 
-In your database metadata, mark columns as file upload:
+File upload is **automatically detected** from column names! The generator recognizes these patterns:
+
+**Auto-Detected Column Names**:
+
+- `*_file` - profile_file, document_file
+- `*_files` - attachments_files, media_files
+- `file_*` - file_path, file_url, file_name
+- `*_path` - document_path, media_path
+- `*_url` - image_url, photo_url
+- `*attachment*` - attachment, user_attachment
+- `*image*` - image, profile_image, cover_image
+- `*photo*` - photo, profile_photo
+- `*picture*` - picture, profile_picture
+- `*document*` - document, legal_document
+- `avatar` - avatar column
+- `logo` - logo column
+- `*thumbnail*` - thumbnail, thumbnail_url
+- `*media*` - media, media_file
+- `*upload*` - upload, uploaded_file
+
+**Example**: A table with columns `profile_picture`, `avatar`, or `document_file` will automatically get file upload endpoints!
+
+**For Advanced Configuration** (optional):
+
+If you need custom file upload settings (size limits, mime types, image processing), you can explicitly configure in the database metadata:
 
 ```sql
--- PostgreSQL
+-- PostgreSQL - Explicit configuration with custom settings
 INSERT INTO meta.column_metadata (
   table_metadata_id,
   column_name,
@@ -151,6 +175,8 @@ INSERT INTO meta.column_metadata (
   }'::jsonb
 );
 ```
+
+**Note**: Auto-detection uses default settings (5MB limit, all file types). Use explicit configuration for custom requirements.
 
 ## Quick Start
 

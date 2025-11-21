@@ -18,12 +18,12 @@ Based on actual generation testing (`apps/microservices/entity`):
 | **Microservices** | ✅ Complete | @MessagePattern handlers, proper payload handling |
 | **RBAC Decorators** | ✅ Complete | @RequirePermission, @RequireRole, @Public auto-applied (v4.0.1) |
 | **Swagger/OpenAPI** | ✅ Complete | Full suite: @ApiTags, @ApiOperation, @ApiResponse, @ApiBody, @ApiParam, @ApiQuery (v4.0.1) |
+| **File Upload** | ✅ Complete | Auto-detects from column names (e.g., `*_file`, `avatar`, `*_image`), generates upload/delete endpoints |
 
-### ❌ Features Requiring Manual Setup (3/9 - 33%)
+### ❌ Features Requiring Manual Setup (2/9 - 22%)
 
 | Feature | Status | Missing Component | Required Action |
 |---------|--------|-------------------|-----------------|
-| **File Upload** | ❌ Not Detected | StorageModule, upload methods | Requires file columns in metadata |
 | **Advanced Queries** | ❌ Not Detected | JOINs, CTEs, recaps, aggregations | Requires foreign keys in metadata |
 | **Search** | ❌ Not Generated | SearchModule, fulltext search | Manual enable with `--features.search` |
 | **Export** | ❌ Not Generated | CSV/Excel endpoints | Manual enable with `--features.export` |
@@ -96,7 +96,7 @@ The generator detects features from metadata structure:
 ### Automatic Detection
 
 - **Foreign Keys** → Generates JOIN queries and relation methods
-- **File Columns** (`file_path`, `file_url`, `*_file`) → Adds StorageService and upload methods
+- **File Columns** → **AUTO-DETECTED** from patterns: `*_file`, `*_files`, `file_*`, `*_path`, `*_url`, `*attachment*`, `*image*`, `*photo*`, `*picture*`, `*document*`, `avatar`, `logo`, `*thumbnail*`, `*media*`, `*upload*` → Adds StorageService and upload/delete methods
 - **Timestamp Columns** (`created_at`, `updated_at`) → Enables recap queries (daily/monthly/yearly)
 - **Soft Delete** (`deleted_at`, `is_deleted`) → Generates soft delete logic
 
@@ -121,7 +121,7 @@ nest-generator generate schema.table --features.export=true
 
 1. **Advanced Queries** - Requires proper foreign key constraints in metadata
 2. **Search** - Always requires explicit `--features.search` flag
-3. **File Upload** - Detection based on column naming patterns (`*_file`, `file_path`, etc.)
+3. **File Upload** - ✅ **Now auto-detected!** Detection based on column naming patterns (see list above). Use `is_file_upload` metadata flag or `--features.upload` for explicit control.
 
 ## Reference & History
 

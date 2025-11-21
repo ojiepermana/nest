@@ -366,6 +366,142 @@ describe('FileUploadGenerator', () => {
       expect(generator.hasFileUploadColumns()).toBe(false);
     });
   });
+
+  describe('Auto-Detection from Column Names', () => {
+    const testCases = [
+      { columnName: 'profile_file', shouldDetect: true, description: 'column ending with _file' },
+      { columnName: 'attachments_files', shouldDetect: true, description: 'column ending with _files' },
+      { columnName: 'file_path', shouldDetect: true, description: 'column starting with file_' },
+      { columnName: 'file_url', shouldDetect: true, description: 'column starting with file_' },
+      { columnName: 'document_path', shouldDetect: true, description: 'column ending with _path' },
+      { columnName: 'image_url', shouldDetect: true, description: 'column ending with _url' },
+      { columnName: 'attachment', shouldDetect: true, description: 'column containing attachment' },
+      { columnName: 'user_attachment', shouldDetect: true, description: 'column containing attachment' },
+      { columnName: 'profile_image', shouldDetect: true, description: 'column containing image' },
+      { columnName: 'cover_image', shouldDetect: true, description: 'column containing image' },
+      { columnName: 'profile_photo', shouldDetect: true, description: 'column containing photo' },
+      { columnName: 'profile_picture', shouldDetect: true, description: 'column containing picture' },
+      { columnName: 'legal_document', shouldDetect: true, description: 'column containing document' },
+      { columnName: 'avatar', shouldDetect: true, description: 'exact match for avatar' },
+      { columnName: 'logo', shouldDetect: true, description: 'exact match for logo' },
+      { columnName: 'thumbnail', shouldDetect: true, description: 'column containing thumbnail' },
+      { columnName: 'media_file', shouldDetect: true, description: 'column containing media' },
+      { columnName: 'uploaded_file', shouldDetect: true, description: 'column containing upload' },
+      { columnName: 'username', shouldDetect: false, description: 'regular column name' },
+      { columnName: 'email', shouldDetect: false, description: 'regular column name' },
+      { columnName: 'description', shouldDetect: false, description: 'regular column name' },
+      { columnName: 'created_at', shouldDetect: false, description: 'timestamp column' },
+    ];
+
+    testCases.forEach(({ columnName, shouldDetect, description }) => {
+      it(`should ${shouldDetect ? 'detect' : 'not detect'} ${description}: "${columnName}"`, () => {
+        const testColumns = [
+          ...columns,
+          {
+            id: '99',
+            table_id: '123',
+            column_name: columnName,
+            data_type: 'varchar',
+            is_nullable: true,
+            is_unique: false,
+            is_primary_key: false,
+            is_required: false,
+            is_filterable: false,
+            is_searchable: false,
+            display_in_list: true,
+            display_in_form: true,
+            display_in_detail: true,
+            column_order: 99,
+            // No is_file_upload flag - testing auto-detection
+            created_at: new Date(),
+            updated_at: new Date(),
+            created_by: 'system',
+            updated_by: 'system',
+          },
+        ];
+
+        const generator = new FileUploadGenerator(tableMetadata, testColumns, {
+          tableName: 'users',
+          storageProvider: 'local',
+        });
+
+        expect(generator.hasFileUploadColumns()).toBe(shouldDetect);
+      });
+    });
+
+    it('should prioritize explicit is_file_upload flag over naming patterns', () => {
+      const testColumns = [
+        ...columns,
+        {
+          id: '98',
+          table_id: '123',
+          column_name: 'regular_column', // Doesn't match any pattern
+          data_type: 'varchar',
+          is_nullable: true,
+          is_unique: false,
+          is_primary_key: false,
+          is_required: false,
+          is_filterable: false,
+          is_searchable: false,
+          display_in_list: true,
+          display_in_form: true,
+          display_in_detail: true,
+          column_order: 98,
+          is_file_upload: true, // Explicitly marked as file upload
+          created_at: new Date(),
+          updated_at: new Date(),
+          created_by: 'system',
+          updated_by: 'system',
+        },
+      ];
+
+      const generator = new FileUploadGenerator(tableMetadata, testColumns, {
+        tableName: 'users',
+        storageProvider: 'local',
+      });
+
+      expect(generator.hasFileUploadColumns()).toBe(true);
+    });
+
+    it('should generate upload endpoints for auto-detected columns', () => {
+      const testColumns = [
+        ...columns,
+        {
+          id: '100',
+          table_id: '123',
+          column_name: 'profile_picture',
+          data_type: 'varchar',
+          is_nullable: true,
+          is_unique: false,
+          is_primary_key: false,
+          is_required: false,
+          is_filterable: false,
+          is_searchable: false,
+          display_in_list: true,
+          display_in_form: true,
+          display_in_detail: true,
+          column_order: 100,
+          // Auto-detected, no explicit is_file_upload flag
+          created_at: new Date(),
+          updated_at: new Date(),
+          created_by: 'system',
+          updated_by: 'system',
+        },
+      ];
+
+      const generator = new FileUploadGenerator(tableMetadata, testColumns, {
+        tableName: 'users',
+        storageProvider: 'local',
+        enableSwagger: true,
+      });
+
+      const code = generator.generateUploadEndpoints();
+
+      expect(code).toContain('uploadProfilePicture');
+      expect(code).toContain('FileInterceptor');
+      expect(code).toContain('deleteProfilePicture');
+    });
+  });
 });
 
 describe('StorageServiceGenerator', () => {

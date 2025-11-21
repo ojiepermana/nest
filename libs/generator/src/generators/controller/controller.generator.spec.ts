@@ -89,9 +89,9 @@ describe('ControllerGenerator', () => {
       );
       expect(result).toContain("import { UsersService } from '../services/users.service'");
       expect(result).toContain("import { Users } from '../entities/users.entity'");
-      expect(result).toContain("import { CreateUsersDto } from '../dto/create-users.dto'");
-      expect(result).toContain("import { UpdateUsersDto } from '../dto/update-users.dto'");
-      expect(result).toContain("import { UsersFilterDto } from '../dto/users-filter.dto'");
+      expect(result).toContain("import { CreateUsersDto } from '../dto/users/create-users.dto'");
+      expect(result).toContain("import { UpdateUsersDto } from '../dto/users/update-users.dto'");
+      expect(result).toContain("import { UsersFilterDto } from '../dto/users/users-filter.dto'");
     });
 
     it('should include Swagger imports when enabled', () => {
@@ -140,7 +140,7 @@ describe('ControllerGenerator', () => {
       const result = generator.generate();
 
       expect(result).toContain("@ApiOperation({ summary: 'Create a new users' })");
-      expect(result).toContain("@ApiOperation({ summary: 'Get all userss' })");
+      expect(result).toContain("@ApiOperation({ summary: 'Get all userss with pagination' })");
       expect(result).toContain("@ApiOperation({ summary: 'Get a users by ID' })");
       expect(result).toContain("@ApiOperation({ summary: 'Update a users' })");
       expect(result).toContain("@ApiOperation({ summary: 'Delete a users' })");
@@ -219,8 +219,8 @@ describe('ControllerGenerator', () => {
       const result = generator.generate();
 
       expect(result).toContain('@Get()');
-      expect(result).toContain('async findAll(): Promise<Users[]>');
-      expect(result).toContain('return this.service.findAll()');
+      expect(result).toContain('async findAll(');
+      expect(result).toContain('return this.service.findWithFilters');
     });
 
     it('should generate findOne endpoint with ParseIntPipe for number ID', () => {
@@ -318,7 +318,9 @@ describe('ControllerGenerator', () => {
 
       const result = generator.generate();
 
-      expect(result).not.toContain('findWithFilters');
+      // Should not have a separate findWithFilters endpoint at /filter route
+      expect(result).not.toContain("@Get('filter')");
+      expect(result).not.toContain('async findWithFilters(');
     });
 
     it('should include pagination ApiQuery decorators when both Swagger and pagination enabled', () => {
@@ -430,7 +432,8 @@ describe('ControllerGenerator', () => {
       // Check optional features absent
       expect(result).not.toContain('@ApiTags');
       expect(result).not.toContain('ValidationPipe');
-      expect(result).not.toContain('findWithFilters');
+      expect(result).not.toContain("@Get('filter')"); // No separate filter endpoint
+      expect(result).not.toContain('async findWithFilters('); // No separate filter method
     });
   });
 
@@ -444,7 +447,7 @@ describe('ControllerGenerator', () => {
       const result = generator.generate();
 
       expect(result).toContain(
-        "import { RequirePermission } from '@ojiepermana/nest-generator/rbac'",
+        "import { RequirePermission, RequireRole, Public, RoleLogic } from '@ojiepermana/nest-generator/rbac'",
       );
     });
 
@@ -467,17 +470,20 @@ describe('ControllerGenerator', () => {
 
       const result = generator.generate();
 
-      // Check CREATE endpoint
-      expect(result).toContain("@RequirePermission('users.create')");
+      // Check CREATE endpoint - permission-based
+      expect(result).toContain("@RequirePermission(['users.create'])");
 
-      // Check READ endpoints
-      expect(result).toContain("@RequirePermission('users.read')");
+      // Check READ endpoints - public for list
+      expect(result).toContain("@Public()");
 
-      // Check UPDATE endpoint
-      expect(result).toContain("@RequirePermission('users.update')");
+      // Check READ ONE endpoint - role-based for authenticated users
+      expect(result).toContain("@RequireRole(['user', 'admin'], { logic: RoleLogic.OR })");
 
-      // Check DELETE endpoint
-      expect(result).toContain("@RequirePermission('users.delete')");
+      // Check UPDATE endpoint - permission-based
+      expect(result).toContain("@RequirePermission(['users.update'])");
+
+      // Check DELETE endpoint - admin only
+      expect(result).toContain("@RequireRole(['admin'])");
     });
 
     it('should use custom rbacResourceName when provided', () => {
@@ -489,10 +495,12 @@ describe('ControllerGenerator', () => {
 
       const result = generator.generate();
 
-      expect(result).toContain("@RequirePermission('profiles.create')");
-      expect(result).toContain("@RequirePermission('profiles.read')");
-      expect(result).toContain("@RequirePermission('profiles.update')");
-      expect(result).toContain("@RequirePermission('profiles.delete')");
+      expect(result).toContain("@RequirePermission(['profiles.create'])");
+      expect(result).toContain("@RequirePermission(['profiles.update'])");
+      // Read is always @Public() regardless of resource name
+      expect(result).toContain("@Public()");
+      // Delete is always admin role regardless of resource name
+      expect(result).toContain("@RequireRole(['admin'])");
     });
 
     it('should not add decorators when enableRbac is false', () => {

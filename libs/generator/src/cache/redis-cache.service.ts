@@ -78,7 +78,7 @@ export class RedisCacheService implements ICacheService {
     try {
       // Note: This requires Redis store with SCAN support
       const stores = (this.cacheManager as any).stores;
-      const store = stores?.[0] || this.cacheManager;
+      const store = stores?.[0] || (this.cacheManager as any).store || this.cacheManager;
 
       if (!store.keys) {
         Logger.warn('Cache store does not support pattern deletion');
@@ -108,7 +108,7 @@ export class RedisCacheService implements ICacheService {
     try {
       // Note: cache-manager v5+ doesn't have reset(), use deletePattern
       const stores = (this.cacheManager as any).stores;
-      const store = stores?.[0] || this.cacheManager;
+      const store = stores?.[0] || (this.cacheManager as any).store || this.cacheManager;
 
       if (store.reset) {
         await store.reset();
@@ -141,7 +141,7 @@ export class RedisCacheService implements ICacheService {
   async ttl(key: string): Promise<number> {
     try {
       const stores = (this.cacheManager as any).stores;
-      const store = stores?.[0] || this.cacheManager;
+      const store = stores?.[0] || (this.cacheManager as any).store || this.cacheManager;
 
       if (!store.ttl) {
         Logger.warn('Cache store does not support TTL query');
@@ -193,7 +193,7 @@ export class RedisCacheService implements ICacheService {
   async getStats(): Promise<CacheStats> {
     try {
       const stores = (this.cacheManager as any).stores;
-      const store = stores?.[0] || this.cacheManager;
+      const store = stores?.[0] || (this.cacheManager as any).store || this.cacheManager;
       let keys = 0;
 
       if (store.keys) {

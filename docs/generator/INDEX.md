@@ -8,7 +8,7 @@ NestJS metadata-driven CRUD generator with audit, caching, RBAC, and file upload
 
 Based on actual generation testing (`apps/microservices/entity`):
 
-### ✅ Auto-Generated Features (4/9 - 44%)
+### ✅ Auto-Generated Features (6/9 - 67%)
 
 | Feature | Status | Evidence |
 |---------|--------|----------|
@@ -16,13 +16,13 @@ Based on actual generation testing (`apps/microservices/entity`):
 | **Caching** | ✅ Complete | CacheModule, Cache Manager, invalidation in services |
 | **Audit Trail** | ✅ Complete | AuditModule, AuditLogService, logging in CREATE/UPDATE/DELETE |
 | **Microservices** | ✅ Complete | @MessagePattern handlers, proper payload handling |
+| **RBAC Decorators** | ✅ Complete | @RequirePermission, @RequireRole, @Public auto-applied (v4.0.1) |
+| **Swagger/OpenAPI** | ✅ Complete | Full suite: @ApiTags, @ApiOperation, @ApiResponse, @ApiBody, @ApiParam, @ApiQuery (v4.0.1) |
 
-### ❌ Features Requiring Manual Setup (5/9 - 56%)
+### ❌ Features Requiring Manual Setup (3/9 - 33%)
 
 | Feature | Status | Missing Component | Required Action |
 |---------|--------|-------------------|-----------------|
-| **RBAC Decorators** | ⚠️ Partial | Decorators not applied | Add `@RequirePermission()`, `@RequireRole()`, `@Public()` to controllers |
-| **Swagger/OpenAPI** | ❌ Not Generated | API decorators | Add `@ApiTags()`, `@ApiOperation()`, `@ApiResponse()` (gateway only) |
 | **File Upload** | ❌ Not Detected | StorageModule, upload methods | Requires file columns in metadata |
 | **Advanced Queries** | ❌ Not Detected | JOINs, CTEs, recaps, aggregations | Requires foreign keys in metadata |
 | **Search** | ❌ Not Generated | SearchModule, fulltext search | Manual enable with `--features.search` |
@@ -119,10 +119,9 @@ nest-generator generate schema.table --features.export=true
 
 ### Known Limitations
 
-1. **RBAC Decorators** - RBACModule imported but decorators (`@RequirePermission`, `@RequireRole`) NOT auto-added to controllers
-2. **Swagger** - Not generated for microservices (@MessagePattern), only for HTTP controllers
-3. **Advanced Queries** - Requires proper foreign key constraints in metadata
-4. **Search** - Always requires explicit `--features.search` flag
+1. **Advanced Queries** - Requires proper foreign key constraints in metadata
+2. **Search** - Always requires explicit `--features.search` flag
+3. **File Upload** - Detection based on column naming patterns (`*_file`, `file_path`, etc.)
 
 ## Reference & History
 
@@ -172,18 +171,24 @@ docs/generator/
 - **Issues**: [Open issues](https://github.com/ojiepermana/nest/issues)
 - **License**: MIT © Ojie Permana
 
-## Recent Updates (v4.0.0)
-
-**Breaking Changes**:
-
-- Metadata tables renamed: `meta.table_metadata` → `meta.table`, `meta.column_metadata` → `meta.column`
-- Migration SQL required for existing databases (see [MIGRATION.md](./MIGRATION.md))
+## Recent Updates (v4.0.1)
 
 **New Features**:
+
+- ✅ **RBAC Decorators Auto-Generation** - Smart decorator selection (@Public, @RequireRole, @RequirePermission) based on endpoint action
+- ✅ **Complete Swagger/OpenAPI Suite** - Full decorators (@ApiTags, @ApiOperation, @ApiResponse, @ApiBody, @ApiParam, @ApiQuery) for gateway controllers
+- ✅ **RBAC Schema Migration** - Consolidated RBAC tables from `rbac` schema to `user` schema
+
+**Previous Updates (v4.0.0)**:
 
 - ✅ Full microservices support with @MessagePattern handlers
 - ✅ Gateway controller generation for HTTP → microservice proxy
 - ✅ Improved RBAC module with global guards
 - ✅ Enhanced audit trail integration
 
-**Test Results**: 579/585 passing (99% coverage)
+**Breaking Changes (v4.0.0)**:
+
+- Metadata tables renamed: `meta.table_metadata` → `meta.table`, `meta.column_metadata` → `meta.column`
+- Migration SQL required for existing databases (see [MIGRATION.md](./MIGRATION.md))
+
+**Test Results**: 711/742 passing (95.8% coverage)

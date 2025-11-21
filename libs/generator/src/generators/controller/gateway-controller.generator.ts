@@ -66,7 +66,9 @@ ${endpoints}
     ];
 
     if (this.options.enableSwagger) {
-      imports.push("import { ApiTags, ApiOperation } from '@nestjs/swagger';");
+      imports.push(
+        "import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiQuery } from '@nestjs/swagger';",
+      );
     }
 
     if (this.options.enableRateLimit) {
@@ -120,7 +122,11 @@ export class ${controllerName} {`;
 
     const endpoints = `
   // GENERATED_ENDPOINT_START: findAll
-  ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Get all ${camelName}s' })` : ''}
+  ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Get all ${camelName}s', description: 'Retrieve a list of all ${camelName}s with optional filtering' })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 200, description: 'Successfully retrieved list of ${camelName}s', type: [${entityName}FilterDto] })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 500, description: 'Internal server error' })` : ''}
+  ${this.options.enableSwagger ? `@ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number for pagination' })` : ''}
+  ${this.options.enableSwagger ? `@ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of items per page' })` : ''}
   ${this.options.enableRateLimit ? '@Throttle({ default: { limit: 100, ttl: 60000 } })' : ''}
 ${this.generateRbacDecorator('read')}  @Get()
   async findAll(@Query() filters: ${entityName}FilterDto) {
@@ -131,7 +137,10 @@ ${this.generateRbacDecorator('read')}  @Get()
   // GENERATED_ENDPOINT_END: findAll
 
   // GENERATED_ENDPOINT_START: recap
-  ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Get yearly recap' })` : ''}
+  ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Get yearly recap', description: 'Retrieve yearly statistics and recap data' })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 200, description: 'Successfully retrieved recap data' })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 500, description: 'Internal server error' })` : ''}
+  ${this.options.enableSwagger ? `@ApiQuery({ name: 'year', required: false, type: Number, description: 'Year for recap (defaults to current year)' })` : ''}
 ${this.generateRbacDecorator('read')}  @Get('recap')
   async getRecap(@Query() dto: any) {
     return firstValueFrom(
@@ -141,7 +150,11 @@ ${this.generateRbacDecorator('read')}  @Get('recap')
   // GENERATED_ENDPOINT_END: recap
 
   // GENERATED_ENDPOINT_START: findOne
-  ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Get single ${camelName}' })` : ''}
+  ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Get single ${camelName}', description: 'Retrieve a specific ${camelName} by ID' })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 200, description: 'Successfully retrieved ${camelName}' })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 404, description: '${entityName} not found' })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 500, description: 'Internal server error' })` : ''}
+  ${this.options.enableSwagger ? `@ApiParam({ name: 'id', type: String, description: 'The ID of the ${camelName}' })` : ''}
 ${this.generateRbacDecorator('read-one')}  @Get(':id')
   async findOne(@Param('id') id: string) {
     return firstValueFrom(
@@ -151,7 +164,11 @@ ${this.generateRbacDecorator('read-one')}  @Get(':id')
   // GENERATED_ENDPOINT_END: findOne
 
   // GENERATED_ENDPOINT_START: create
-  ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Create ${camelName}' })` : ''}
+  ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Create ${camelName}', description: 'Create a new ${camelName}' })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 201, description: '${entityName} successfully created' })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 400, description: 'Invalid input data' })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 500, description: 'Internal server error' })` : ''}
+  ${this.options.enableSwagger ? `@ApiBody({ type: Create${entityName}Dto, description: 'Data for creating a new ${camelName}' })` : ''}
 ${this.generateRbacDecorator('create')}  @Post()
   async create(@Body() dto: Create${entityName}Dto) {
     return firstValueFrom(
@@ -161,7 +178,13 @@ ${this.generateRbacDecorator('create')}  @Post()
   // GENERATED_ENDPOINT_END: create
 
   // GENERATED_ENDPOINT_START: update
-  ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Update ${camelName}' })` : ''}
+  ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Update ${camelName}', description: 'Update an existing ${camelName}' })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 200, description: '${entityName} successfully updated' })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 400, description: 'Invalid input data' })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 404, description: '${entityName} not found' })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 500, description: 'Internal server error' })` : ''}
+  ${this.options.enableSwagger ? `@ApiParam({ name: 'id', type: String, description: 'The ID of the ${camelName} to update' })` : ''}
+  ${this.options.enableSwagger ? `@ApiBody({ type: Update${entityName}Dto, description: 'Updated data for the ${camelName}' })` : ''}
 ${this.generateRbacDecorator('update')}  @Put(':id')
   async update(
     @Param('id') id: string,
@@ -174,7 +197,11 @@ ${this.generateRbacDecorator('update')}  @Put(':id')
   // GENERATED_ENDPOINT_END: update
 
   // GENERATED_ENDPOINT_START: remove
-  ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Delete ${camelName}' })` : ''}
+  ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Delete ${camelName}', description: 'Delete a ${camelName} by ID' })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 200, description: '${entityName} successfully deleted' })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 404, description: '${entityName} not found' })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 500, description: 'Internal server error' })` : ''}
+  ${this.options.enableSwagger ? `@ApiParam({ name: 'id', type: String, description: 'The ID of the ${camelName} to delete' })` : ''}
 ${this.generateRbacDecorator('delete')}  @Delete(':id')
   async remove(@Param('id') id: string) {
     return firstValueFrom(

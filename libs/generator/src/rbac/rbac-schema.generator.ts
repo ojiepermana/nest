@@ -20,7 +20,7 @@ export class RBACSchemaGenerator {
 
   constructor(options: RBACSchemaOptions) {
     this.database = options.database;
-    this.schemaName = options.schemaName || 'rbac';
+    this.schemaName = options.schemaName || 'user';
     this.includeFieldPermissions = options.includeFieldPermissions ?? true;
     this.includeRowLevelSecurity = options.includeRowLevelSecurity ?? false;
   }

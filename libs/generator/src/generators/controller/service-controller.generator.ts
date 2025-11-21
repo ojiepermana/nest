@@ -12,6 +12,8 @@ export interface ServiceControllerGeneratorOptions {
   tableName: string;
   serviceName: string;
   enableEvents?: boolean;
+  enableRbac?: boolean;
+  rbacResourceName?: string; // For permission namespacing
 }
 
 export class ServiceControllerGenerator {
@@ -58,6 +60,13 @@ ${eventPatterns}
       `import { ${entityName}FilterDto } from '../dto/${this.toKebabCase(entityName)}/${this.toKebabCase(entityName)}-filter.dto';`,
     ];
 
+    // Add RBAC imports
+    if (this.options.enableRbac) {
+      imports.push(
+        "import { RequirePermission, RequireRole, Public, RoleLogic } from '@ojiepermana/nest-generator/rbac';",
+      );
+    }
+
     return imports.join('\n');
   }
 
@@ -86,28 +95,28 @@ export class ${controllerName} {`;
 
     return `
   // GENERATED_HANDLER_START: findAll
-  @MessagePattern('${serviceName}.findAll')
+${this.generateRbacDecorator('read')}  @MessagePattern('${serviceName}.findAll')
   async findAll(@Payload() filters: ${entityName}FilterDto) {
     return this.service.findAll();
   }
   // GENERATED_HANDLER_END: findAll
 
   // GENERATED_HANDLER_START: findOne
-  @MessagePattern('${serviceName}.findOne')
+${this.generateRbacDecorator('read-one')}  @MessagePattern('${serviceName}.findOne')
   async findOne(@Payload() data: { id: string }) {
     return this.service.findOne(data.id);
   }
   // GENERATED_HANDLER_END: findOne
 
   // GENERATED_HANDLER_START: create
-  @MessagePattern('${serviceName}.create')
+${this.generateRbacDecorator('create')}  @MessagePattern('${serviceName}.create')
   async create(@Payload() dto: Create${entityName}Dto) {
     return this.service.create(dto);
   }
   // GENERATED_HANDLER_END: create
 
   // GENERATED_HANDLER_START: update
-  @MessagePattern('${serviceName}.update')
+${this.generateRbacDecorator('update')}  @MessagePattern('${serviceName}.update')
   async update(@Payload() data: { id: string } & Update${entityName}Dto) {
     const { id, ...dto } = data;
     return this.service.update(id, dto);
@@ -115,7 +124,7 @@ export class ${controllerName} {`;
   // GENERATED_HANDLER_END: update
 
   // GENERATED_HANDLER_START: remove
-  @MessagePattern('${serviceName}.remove')
+${this.generateRbacDecorator('delete')}  @MessagePattern('${serviceName}.remove')
   async remove(@Payload() data: { id: string }) {
     return this.service.remove(data.id);
   }
@@ -185,5 +194,44 @@ export class ${controllerName} {`;
       .replace(/([a-z])([A-Z])/g, '$1-$2')
       .replace(/[\s_]+/g, '-')
       .toLowerCase();
+  }
+
+  /**
+   * Generate RBAC decorator for message pattern
+   * Same logic as REST controller but for microservices
+   */
+  private generateRbacDecorator(
+    action: 'create' | 'read' | 'read-one' | 'update' | 'delete',
+  ): string {
+    if (!this.options.enableRbac) {
+      return '';
+    }
+
+    const resourceName = this.options.rbacResourceName || this.options.tableName;
+
+    switch (action) {
+      case 'read':
+        // Public endpoint for listing resources
+        return `  @Public()\n`;
+
+      case 'read-one':
+        // Authenticated users can read individual resources
+        return `  @RequireRole(['user', 'admin'], { logic: RoleLogic.OR })\n`;
+
+      case 'create':
+        // Permission-based for creating resources
+        return `  @RequirePermission(['${resourceName}.create'])\n`;
+
+      case 'update':
+        // Permission-based for updating resources
+        return `  @RequirePermission(['${resourceName}.update'])\n`;
+
+      case 'delete':
+        // Admin-only for deleting resources
+        return `  @RequireRole(['admin'])\n`;
+
+      default:
+        return '';
+    }
   }
 }

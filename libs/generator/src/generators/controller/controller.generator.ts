@@ -124,7 +124,9 @@ ${crudEndpoints}${fileUploadEndpoints}
 
     // Add RBAC imports
     if (this.options.enableRbac) {
-      imports.push("import { RequirePermission } from '@ojiepermana/nest-generator/rbac';");
+      imports.push(
+        "import { RequirePermission, RequireRole, Public, RoleLogic } from '@ojiepermana/nest-generator/rbac';",
+      );
     }
 
     return imports.join('\n');
@@ -330,7 +332,7 @@ export class ${controllerName} {`;
 
     // Add RBAC decorator
     if (this.options.enableRbac) {
-      endpoint += `\n${this.generateRbacDecorator('read')}`;
+      endpoint += `\n${this.generateRbacDecorator('read-one')}`;
     }
 
     endpoint += `  @Get(':id')`;
@@ -533,16 +535,46 @@ export class ${controllerName} {`;
 
   /**
    * Generate RBAC decorator for endpoint
+   * Smart selection:
+   * - findAll (read): @Public() - allow public access for list endpoints
+   * - findOne (read-one): @RequireRole(['user', 'admin'], { logic: RoleLogic.OR }) - authenticated users
+   * - create: @RequirePermission(['resource.create']) - permission-based
+   * - update: @RequirePermission(['resource.update']) - permission-based
+   * - delete: @RequireRole(['admin']) - admin only
    */
-  private generateRbacDecorator(action: 'create' | 'read' | 'update' | 'delete'): string {
+  private generateRbacDecorator(
+    action: 'create' | 'read' | 'read-one' | 'update' | 'delete',
+  ): string {
     if (!this.options.enableRbac) {
       return '';
     }
 
     const resourceName = this.options.rbacResourceName || this.options.tableName;
-    const permission = `${resourceName}.${action}`;
 
-    return `  @RequirePermission('${permission}')\n`;
+    switch (action) {
+      case 'read':
+        // Public endpoint for listing resources
+        return `  @Public()\n`;
+
+      case 'read-one':
+        // Authenticated users can read individual resources
+        return `  @RequireRole(['user', 'admin'], { logic: RoleLogic.OR })\n`;
+
+      case 'create':
+        // Permission-based for creating resources
+        return `  @RequirePermission(['${resourceName}.create'])\n`;
+
+      case 'update':
+        // Permission-based for updating resources
+        return `  @RequirePermission(['${resourceName}.update'])\n`;
+
+      case 'delete':
+        // Admin-only for deleting resources
+        return `  @RequireRole(['admin'])\n`;
+
+      default:
+        return '';
+    }
   }
 
   /**

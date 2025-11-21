@@ -2,28 +2,67 @@
 
 NestJS metadata-driven CRUD generator with audit, caching, RBAC, and file upload support. Use this index as the navigation hub for every guide inside `docs/generator/`.
 
+**Current Version**: 4.0.0 | **Test Coverage**: 579/585 (99%) | **Feature Score**: 119/100
+
+## 📊 Feature Implementation Status
+
+Based on actual generation testing (`apps/microservices/entity`):
+
+### ✅ Auto-Generated Features (4/9 - 44%)
+
+| Feature | Status | Evidence |
+|---------|--------|----------|
+| **Core CRUD** | ✅ Complete | Controllers, Services, Repositories, DTOs, Entities |
+| **Caching** | ✅ Complete | CacheModule, Cache Manager, invalidation in services |
+| **Audit Trail** | ✅ Complete | AuditModule, AuditLogService, logging in CREATE/UPDATE/DELETE |
+| **Microservices** | ✅ Complete | @MessagePattern handlers, proper payload handling |
+
+### ❌ Features Requiring Manual Setup (5/9 - 56%)
+
+| Feature | Status | Missing Component | Required Action |
+|---------|--------|-------------------|-----------------|
+| **RBAC Decorators** | ⚠️ Partial | Decorators not applied | Add `@RequirePermission()`, `@RequireRole()`, `@Public()` to controllers |
+| **Swagger/OpenAPI** | ❌ Not Generated | API decorators | Add `@ApiTags()`, `@ApiOperation()`, `@ApiResponse()` (gateway only) |
+| **File Upload** | ❌ Not Detected | StorageModule, upload methods | Requires file columns in metadata |
+| **Advanced Queries** | ❌ Not Detected | JOINs, CTEs, recaps, aggregations | Requires foreign keys in metadata |
+| **Search** | ❌ Not Generated | SearchModule, fulltext search | Manual enable with `--features.search` |
+| **Export** | ❌ Not Generated | CSV/Excel endpoints | Manual enable with `--features.export` |
+
+**Note**: Features depend on metadata structure and explicit flags. See [Feature Detection](#feature-detection) below.
+
 ## Start Here
 
 - [Quick Start Guide](./QUICKSTART.md) – Generate the first module in five minutes
 - [Requirements](./REQUIREMENTS.md) – Node, npm, database, and tooling checklist
 - [Installation](../../libs/generator/README.md#installation) – Add the generator to a project
+- [Configuration](./CONFIGURATION.md) – Generator config and feature flags
 
 ## Feature Guides
 
-- [Features Overview](./FEATURES.md) – Generator capabilities and status matrix
-- [Audit Trail](./audit/AUDIT_GUIDE.md) – Metadata, tables, and query hooks
-- [RBAC Guide](./rbac/RBAC_GUIDE.md) – Role, permission, and decorator usage
+### Core Features
+
+- [Features Overview](./FEATURES.md) – Complete generator capabilities and status matrix
+- [Configuration](./CONFIGURATION.md) – Feature flags, CLI options, and config files
+- [Best Practices](./BEST_PRACTICES.md) – Production considerations and patterns
+
+### Advanced Features
+
+- [Audit Trail](./audit/AUDIT_GUIDE.md) – Metadata, tables, and query hooks (✅ Auto-generated)
+- [RBAC Guide](./rbac/RBAC_GUIDE.md) – Role, permission, and decorator usage (⚠️ Module only)
+- [RBAC Implementation Status](./rbac/IMPLEMENTATION_STATUS.md) – Current RBAC feature state
+- [RBAC Examples](./rbac/RBAC_EXAMPLES.md) – Real-world RBAC patterns
 - [File Upload Guide](./FILE_UPLOAD.md) – Storage providers, validation, and generated helpers
-- [Caching Guide](./CACHING.md) – Redis integration and cache invalidation flows
+- [Caching Guide](./CACHING.md) – Redis integration and cache invalidation flows (✅ Auto-generated)
 
 ## Quick Paths by Goal
 
-- Ship CRUD fast → [Quick Start](./QUICKSTART.md)
-- Secure endpoints → [RBAC Guide](./rbac/RBAC_GUIDE.md)
-- Track changes → [Audit Guide](./audit/AUDIT_GUIDE.md)
-- Handle files → [File Upload](./FILE_UPLOAD.md)
-- Improve performance → [Caching](./CACHING.md)
-- Plan architecture → [Features · Architecture Support](./FEATURES.md#architecture-support)
+- **Ship CRUD fast** → [Quick Start](./QUICKSTART.md)
+- **Secure endpoints** → [RBAC Guide](./rbac/RBAC_GUIDE.md) + [RBAC Quickstart](./quickstart/RBAC_QUICKSTART.md)
+- **Track changes** → [Audit Guide](./audit/AUDIT_GUIDE.md) + [Audit Quickstart](./quickstart/AUDIT_QUICKSTART.md)
+- **Handle files** → [File Upload](./FILE_UPLOAD.md) + [Upload Quickstart](./quickstart/UPLOAD_QUICKSTART.md)
+- **Improve performance** → [Caching](./CACHING.md)
+- **Build microservices** → [Microservices Quickstart](./quickstart/MICROSERVICES_QUICKSTART.md)
+- **Plan architecture** → [Features · Architecture Support](./FEATURES.md#architecture-support)
 
 ## Architecture & Data
 
@@ -43,17 +82,81 @@ NestJS metadata-driven CRUD generator with audit, caching, RBAC, and file upload
 
 ## Quickstart Series
 
-- [RBAC Quickstart](./quickstart/RBAC_QUICKSTART.md) – Role-based access control in 10 minutes
-- [Audit Quickstart](./quickstart/AUDIT_QUICKSTART.md) – Track all changes automatically
+- [RBAC Quickstart](./quickstart/RBAC_QUICKSTART.md) – Role-based access control in 10 minutes ⚠️
+- [Audit Quickstart](./quickstart/AUDIT_QUICKSTART.md) – Track all changes automatically ✅
 - [Upload Quickstart](./quickstart/UPLOAD_QUICKSTART.md) – File uploads with S3/GCS/Azure
-- [Microservices Quickstart](./quickstart/MICROSERVICES_QUICKSTART.md) – Gateway + Services architecture ✨ NEW!
+- [Microservices Quickstart](./quickstart/MICROSERVICES_QUICKSTART.md) – Gateway + Services architecture ✅
+
+**Legend**: ✅ Auto-generated | ⚠️ Module only, decorators manual | ❌ Manual setup required
+
+## Feature Detection
+
+The generator detects features from metadata structure:
+
+### Automatic Detection
+
+- **Foreign Keys** → Generates JOIN queries and relation methods
+- **File Columns** (`file_path`, `file_url`, `*_file`) → Adds StorageService and upload methods
+- **Timestamp Columns** (`created_at`, `updated_at`) → Enables recap queries (daily/monthly/yearly)
+- **Soft Delete** (`deleted_at`, `is_deleted`) → Generates soft delete logic
+
+### Manual Flags
+
+Use CLI flags to explicitly enable features:
+
+```bash
+# Enable all features
+nest-generator generate schema.table --all
+
+# Specific features
+nest-generator generate schema.table --features.audit=true
+nest-generator generate schema.table --features.cache=true
+nest-generator generate schema.table --features.rbac=true
+nest-generator generate schema.table --features.upload=true
+nest-generator generate schema.table --features.search=true
+nest-generator generate schema.table --features.export=true
+```
+
+### Known Limitations
+
+1. **RBAC Decorators** - RBACModule imported but decorators (`@RequirePermission`, `@RequireRole`) NOT auto-added to controllers
+2. **Swagger** - Not generated for microservices (@MessagePattern), only for HTTP controllers
+3. **Advanced Queries** - Requires proper foreign key constraints in metadata
+4. **Search** - Always requires explicit `--features.search` flag
 
 ## Reference & History
 
+### Source Code
+
 - Project CLI contract → `libs/generator/src/cli`
 - Generator sources → `libs/generator/src/generators`
+- Feature modules → `libs/generator/src/audit`, `libs/generator/src/rbac`, `libs/generator/src/cache`
+
+### Documentation Structure
+
+```
+docs/generator/
+├── INDEX.md                    ← You are here
+├── FEATURES.md                 ← Complete feature matrix
+├── QUICKSTART.md               ← 5-minute tutorial
+├── CONFIGURATION.md            ← Config & flags
+├── BEST_PRACTICES.md           ← Production patterns
+├── ENTERPRISE_QUALITY.md       ← Hardening checklist
+├── EXAMPLES.md                 ← Real scenarios
+├── TROUBLESHOOTING.md          ← Common errors
+├── quickstart/                 ← Quick tutorials (4 files)
+├── rbac/                       ← RBAC guides (3 files)
+├── audit/                      ← Audit documentation
+├── database/                   ← DB schemas
+├── result/                     ← Generation results
+└── archive/                    ← Historical notes
+```
+
+### Archives
+
 - Archived notes → `docs/generator/archive/`
 - Original specification → [archive/specs/prompt.md](./archive/specs/prompt.md)
+- Progress history → [archive/PROGRESS_HISTORY.md](./archive/PROGRESS_HISTORY.md)
 
 ## Contributing to the Docs
 
@@ -64,6 +167,23 @@ NestJS metadata-driven CRUD generator with audit, caching, RBAC, and file upload
 
 ## Support & Links
 
-- [Open issues](https://github.com/ojiepermana/nest/issues)
-- [Package](https://www.npmjs.com/package/@ojiepermana/nest-generator)
-- License: MIT © Ojie Permana
+- **NPM Package**: [@ojiepermana/nest-generator](https://www.npmjs.com/package/@ojiepermana/nest-generator) v4.0.0
+- **Repository**: [github.com/ojiepermana/nest](https://github.com/ojiepermana/nest)
+- **Issues**: [Open issues](https://github.com/ojiepermana/nest/issues)
+- **License**: MIT © Ojie Permana
+
+## Recent Updates (v4.0.0)
+
+**Breaking Changes**:
+
+- Metadata tables renamed: `meta.table_metadata` → `meta.table`, `meta.column_metadata` → `meta.column`
+- Migration SQL required for existing databases (see [MIGRATION.md](./MIGRATION.md))
+
+**New Features**:
+
+- ✅ Full microservices support with @MessagePattern handlers
+- ✅ Gateway controller generation for HTTP → microservice proxy
+- ✅ Improved RBAC module with global guards
+- ✅ Enhanced audit trail integration
+
+**Test Results**: 579/585 passing (99% coverage)

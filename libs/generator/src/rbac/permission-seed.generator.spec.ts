@@ -15,7 +15,7 @@ describe('PermissionSeedGenerator', () => {
       expect(sql).toContain('users.read');
       expect(sql).toContain('users.update');
       expect(sql).toContain('users.delete');
-      expect(sql).toContain('INSERT INTO rbac.permissions');
+      expect(sql).toContain('INSERT INTO user.permissions');
       expect(sql).toContain('ON CONFLICT (code) DO UPDATE');
     });
 
@@ -110,7 +110,7 @@ describe('PermissionSeedGenerator', () => {
       const permissions = ['users.create', 'users.read', 'users.update'];
       const sql = generator.generateRolePermissions('admin', permissions);
 
-      expect(sql).toContain('INSERT INTO rbac.role_permissions');
+      expect(sql).toContain('INSERT INTO user.role_permissions');
       expect(sql).toContain("r.code = 'admin'");
       expect(sql).toContain("p.code = 'users.create'");
       expect(sql).toContain("p.code = 'users.read'");

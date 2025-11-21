@@ -78,7 +78,7 @@ describe('RBACRepository', () => {
       const result = await repository.getUserRoles('user-123');
 
       expect(result).toEqual(mockRoles);
-      expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('FROM rbac.roles r'), [
+      expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('FROM user.roles r'), [
         'user-123',
       ]);
     });
@@ -188,7 +188,7 @@ describe('RBACRepository', () => {
 
       expect(result).toEqual(mockUserRole);
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO rbac.user_roles'),
+        expect.stringContaining('INSERT INTO user.user_roles'),
         ['user-123', 'role-1', 'admin-123', undefined],
       );
     });
@@ -223,15 +223,15 @@ describe('RBACRepository', () => {
     it('should soft delete role assignment', async () => {
       (mockPool.query.mockResolvedValue as any)({ rowCount: 1 } as any);
 
-      await repository.removeRoleFromUser('user-123', 'role-1');
+      await repository.removeRoleFromUser('user-123', 'role-123');
 
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE rbac.user_roles'),
-        ['user-123', 'role-1'],
+        expect.stringContaining('UPDATE user.user_roles'),
+        ['user-123', 'role-123'],
       );
       expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('is_active = false'), [
         'user-123',
-        'role-1',
+        'role-123',
       ]);
     });
   });
@@ -253,7 +253,7 @@ describe('RBACRepository', () => {
 
       expect(result).toEqual(mockRolePermission);
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO rbac.role_permissions'),
+        expect.stringContaining('INSERT INTO user.role_permissions'),
         ['role-1', 'perm-1', 'admin-123'],
       );
     });
@@ -261,13 +261,13 @@ describe('RBACRepository', () => {
 
   describe('revokePermissionFromRole', () => {
     it('should delete permission from role', async () => {
-      (mockPool.query.mockResolvedValue as any)({ rowCount: 1 } as any);
+      (mockPool.query.mockResolvedValue as any)({ rows: [] } as any);
 
-      await repository.revokePermissionFromRole('role-1', 'perm-1');
+      await repository.revokePermissionFromRole('role-123', 'perm-123');
 
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('DELETE FROM rbac.role_permissions'),
-        ['role-1', 'perm-1'],
+        expect.stringContaining('DELETE FROM user.role_permissions'),
+        ['role-123', 'perm-123'],
       );
     });
   });
@@ -343,7 +343,7 @@ describe('RBACRepository', () => {
 
       expect(result).toBe(5);
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE rbac.user_roles'),
+        expect.stringContaining('UPDATE user.user_roles'),
       );
     });
 
@@ -380,7 +380,7 @@ describe('RBACRepository', () => {
 
       expect(result).toEqual(mockPermission);
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO rbac.permissions'),
+        expect.stringContaining('INSERT INTO user.permissions'),
         ['users.create', 'users', 'create', 'Create users'],
       );
     });
@@ -404,7 +404,7 @@ describe('RBACRepository', () => {
 
       expect(result).toEqual(mockRole);
       expect(mockPool.query).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO rbac.roles'),
+        expect.stringContaining('INSERT INTO user.roles'),
         ['editor', 'Content editor', false],
       );
     });

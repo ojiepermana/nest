@@ -70,36 +70,59 @@ bump_version() {
     
     # Calculate new version
     if [ "$VERSION_TYPE" = "custom" ]; then
-        NEW_VERSION="$CUSTOM_VERSION"
+        # For custom version, ask for each library separately when bumping both
+        if [ "$lib_choice" = "3" ]; then
+            read -p "Enter custom version for ${lib_name} (e.g., 2.1.5): " LIB_CUSTOM_VERSION
+            NEW_VERSION="$LIB_CUSTOM_VERSION"
+        else
+            NEW_VERSION="$CUSTOM_VERSION"
+        fi
         echo -e "Current: ${CURRENT_VERSION}"
         echo -e "New:     ${NEW_VERSION}"
     else
-        # Show what will happen
+        # Calculate new version for preview
+        IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+        case $VERSION_TYPE in
+            "major")
+                NEW_VERSION="$((major + 1)).0.0"
+                ;;
+            "minor")
+                NEW_VERSION="${major}.$((minor + 1)).0"
+                ;;
+            "patch")
+                NEW_VERSION="${major}.${minor}.$((patch + 1))"
+                ;;
+        esac
         echo -e "Current: ${CURRENT_VERSION}"
         echo -e "Type:    ${VERSION_TYPE}"
+        echo -e "New:     ${NEW_VERSION}"
     fi
     
     # Confirm
     read -p "Proceed with version bump? (y/N): " confirm
     if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
         echo -e "${YELLOW}⚠️  Skipped ${lib_name}${NC}"
-        cd ../..
+        cd - > /dev/null
         return
     fi
     
     # Bump version
     if [ "$VERSION_TYPE" = "custom" ]; then
-        npm version "$CUSTOM_VERSION" --no-git-tag-version --allow-same-version
+        if [ "$lib_choice" = "3" ]; then
+            npm version "$LIB_CUSTOM_VERSION" --no-git-tag-version --allow-same-version
+        else
+            npm version "$CUSTOM_VERSION" --no-git-tag-version --allow-same-version
+        fi
     else
         npm version "$VERSION_TYPE" --no-git-tag-version
     fi
     
     # Get new version
-    NEW_VERSION=$(node -p "require('./package.json').version")
+    FINAL_VERSION=$(node -p "require('./package.json').version")
     
-    cd ../..
+    cd - > /dev/null
     
-    echo -e "${GREEN}✓ ${lib_name}: ${CURRENT_VERSION} -> ${NEW_VERSION}${NC}"
+    echo -e "${GREEN}✓ ${lib_name}: ${CURRENT_VERSION} -> ${FINAL_VERSION}${NC}"
 }
 
 case $lib_choice in

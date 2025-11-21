@@ -753,6 +753,8 @@ export class GenerateCommand {
           (process.env.TRANSPORT_TYPE as 'TCP' | 'REDIS' | 'NATS' | 'MQTT' | 'RMQ') || 'TCP',
         enableSwagger: features.swagger,
         enableRateLimit: false,
+        enableRbac: features.rbac,
+        rbacResourceName: moduleName, // Use module name as resource
       });
       controllerCode = gatewayGenerator.generate();
     } else if (architecture === 'microservices' && !isGateway) {
@@ -762,6 +764,8 @@ export class GenerateCommand {
         tableName,
         serviceName: moduleName,
         enableEvents: false,
+        enableRbac: features.rbac,
+        rbacResourceName: moduleName, // Use module name as resource
       });
       controllerCode = serviceControllerGenerator.generate();
 
@@ -1717,6 +1721,8 @@ export * from './controllers/${moduleName}.controller';
         transport: serviceTransport,
         enableSwagger: features.swagger,
         enableRateLimit: false,
+        enableRbac: features.rbac,
+        rbacResourceName: moduleName, // Use module name as resource
       });
       const gatewayControllerCode = gatewayGenerator.generate();
       this.writeFile(

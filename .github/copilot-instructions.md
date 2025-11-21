@@ -8,6 +8,34 @@
 - `docs/generator/` - Feature guides, API docs, examples
 - `docs/nestjs/` - NestJS patterns and best practices
 
+**🚨 CRITICAL - Always Update INDEX.md**:
+
+When making changes to library features or documentation:
+
+1. **Update `docs/generator/INDEX.md`** after:
+   - ✅ Adding new features
+   - ✅ Updating existing features
+   - ✅ Changing feature implementation status
+   - ✅ Adding new documentation files
+   - ✅ Version bumps or releases
+
+2. **Update Feature Implementation Status table**:
+   - Mark features as: ✅ Auto-generated | ⚠️ Partial | ❌ Not generated
+   - Update evidence and required actions
+   - Test actual generation output to verify status
+
+3. **Update Documentation Structure**:
+   - Add new `.md` files to appropriate section
+   - Update file counts in tree diagram
+   - Cross-link related guides
+
+4. **Update Recent Updates section**:
+   - Document breaking changes
+   - List new features with status
+   - Update test results
+
+**Flow**: `Feature change` → `Test generation` → `Update INDEX.md` → `Update related docs` → `Commit`
+
 ---
 
 ## 🎯 Project Overview
@@ -71,11 +99,18 @@ nest-generator generate users --features.audit=true  # With audit
 
 ## 📝 Code Generation Flow
 
-**Input**: Metadata tables (`meta.table_metadata`, `meta.column_metadata`)
+**Input**: Metadata tables (`meta.table`, `meta.column`)
 
 **Output**: Complete NestJS module (Controller, Service, Repository, DTOs)
 
 **Features**: Auto-detected from metadata or CLI flags
+
+**Documentation Flow**:
+
+1. Generate code → Test output → Verify features
+2. Update `docs/generator/INDEX.md` with actual status
+3. Update feature-specific guides if behavior changed
+4. Run tests to ensure coverage maintained
 
 ---
 
@@ -128,7 +163,17 @@ nest-generator generate users --features.audit=true  # With audit
 2. Dependencies in root `package.json` only
 3. Follow generator pattern
 4. Write tests first
-5. Update docs
+5. **Update `docs/generator/INDEX.md`** with status changes
+6. Update related documentation
+
+**After Changes Checklist**:
+
+- [ ] Tests passing
+- [ ] Generator rebuilt (`npm run build:generator`)
+- [ ] Test generation output verified
+- [ ] `docs/generator/INDEX.md` updated with new status
+- [ ] Feature-specific guides updated if needed
+- [ ] Version bumped if breaking changes
 
 ---
 

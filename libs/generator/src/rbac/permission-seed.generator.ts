@@ -16,7 +16,7 @@ export class PermissionSeedGenerator {
    * Generate permission seed SQL for CRUD operations
    */
   generateCrudPermissions(options: PermissionSeedOptions): string {
-    const { resourceName, schema = 'rbac', description, category } = options;
+    const { resourceName, schema = 'user', description, category } = options;
 
     const permissions = [
       {
@@ -66,7 +66,7 @@ export class PermissionSeedGenerator {
       description: string;
       category: string;
     }>,
-    schema: string = 'rbac',
+    schema: string = 'user',
   ): string {
     return this.generateInsertStatements(permissions, schema);
   }
@@ -113,7 +113,7 @@ SET
       name: string;
       description: string;
     }> = [],
-    schema: string = 'rbac',
+    schema: string = 'user',
   ): string {
     // Generate CRUD permissions
     const crudSql = this.generateCrudPermissions({ resourceName, schema });
@@ -141,7 +141,7 @@ SET
   generateRolePermissions(
     roleCode: string,
     permissions: string[],
-    schema: string = 'rbac',
+    schema: string = 'user',
   ): string {
     const inserts = permissions.map((permCode) => {
       return `INSERT INTO ${schema}.role_permissions (role_id, permission_id)
@@ -176,7 +176,7 @@ ON CONFLICT (role_id, permission_id) DO NOTHING;`;
       schema?: string;
     } = {},
   ): string {
-    const { customEndpoints = [], roleMappings = [], schema = 'rbac' } = options;
+    const { customEndpoints = [], roleMappings = [], schema = 'user' } = options;
 
     // Generate permission INSERT statements
     const permissionsSql = this.generateModulePermissions(resourceName, customEndpoints, schema);

@@ -18,6 +18,8 @@ export interface GatewayControllerGeneratorOptions {
   transport: 'TCP' | 'REDIS' | 'NATS' | 'MQTT' | 'RMQ';
   enableSwagger?: boolean;
   enableRateLimit?: boolean;
+  enableRbac?: boolean;
+  rbacResourceName?: string; // For permission namespacing
 }
 
 export class GatewayControllerGenerator {
@@ -71,6 +73,13 @@ ${endpoints}
       imports.push("import { Throttle } from '@nestjs/throttler';");
     }
 
+    // Add RBAC imports
+    if (this.options.enableRbac) {
+      imports.push(
+        "import { RequirePermission, RequireRole, Public, RoleLogic } from '@ojiepermana/nest-generator/rbac';",
+      );
+    }
+
     return imports.join('\n');
   }
 
@@ -113,7 +122,7 @@ export class ${controllerName} {`;
   // GENERATED_ENDPOINT_START: findAll
   ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Get all ${camelName}s' })` : ''}
   ${this.options.enableRateLimit ? '@Throttle({ default: { limit: 100, ttl: 60000 } })' : ''}
-  @Get()
+${this.generateRbacDecorator('read')}  @Get()
   async findAll(@Query() filters: ${entityName}FilterDto) {
     return firstValueFrom(
       this.client.send('${resourceName}.findAll', filters),
@@ -123,7 +132,7 @@ export class ${controllerName} {`;
 
   // GENERATED_ENDPOINT_START: recap
   ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Get yearly recap' })` : ''}
-  @Get('recap')
+${this.generateRbacDecorator('read')}  @Get('recap')
   async getRecap(@Query() dto: any) {
     return firstValueFrom(
       this.client.send('${resourceName}.getRecap', dto),
@@ -133,7 +142,7 @@ export class ${controllerName} {`;
 
   // GENERATED_ENDPOINT_START: findOne
   ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Get single ${camelName}' })` : ''}
-  @Get(':id')
+${this.generateRbacDecorator('read-one')}  @Get(':id')
   async findOne(@Param('id') id: string) {
     return firstValueFrom(
       this.client.send('${resourceName}.findOne', { id }),
@@ -143,7 +152,7 @@ export class ${controllerName} {`;
 
   // GENERATED_ENDPOINT_START: create
   ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Create ${camelName}' })` : ''}
-  @Post()
+${this.generateRbacDecorator('create')}  @Post()
   async create(@Body() dto: Create${entityName}Dto) {
     return firstValueFrom(
       this.client.send('${resourceName}.create', dto),
@@ -153,7 +162,7 @@ export class ${controllerName} {`;
 
   // GENERATED_ENDPOINT_START: update
   ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Update ${camelName}' })` : ''}
-  @Put(':id')
+${this.generateRbacDecorator('update')}  @Put(':id')
   async update(
     @Param('id') id: string,
     @Body() dto: Update${entityName}Dto,
@@ -166,7 +175,7 @@ export class ${controllerName} {`;
 
   // GENERATED_ENDPOINT_START: remove
   ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Delete ${camelName}' })` : ''}
-  @Delete(':id')
+${this.generateRbacDecorator('delete')}  @Delete(':id')
   async remove(@Param('id') id: string) {
     return firstValueFrom(
       this.client.send('${resourceName}.remove', { id }),
@@ -190,5 +199,44 @@ export class ${controllerName} {`;
       .replace(/([a-z])([A-Z])/g, '$1-$2')
       .replace(/[\s_]+/g, '-')
       .toLowerCase();
+  }
+
+  /**
+   * Generate RBAC decorator for gateway endpoint
+   * Same logic as REST controller
+   */
+  private generateRbacDecorator(
+    action: 'create' | 'read' | 'read-one' | 'update' | 'delete',
+  ): string {
+    if (!this.options.enableRbac) {
+      return '';
+    }
+
+    const resourceName = this.options.rbacResourceName || this.options.tableName;
+
+    switch (action) {
+      case 'read':
+        // Public endpoint for listing resources
+        return `  @Public()\n`;
+
+      case 'read-one':
+        // Authenticated users can read individual resources
+        return `  @RequireRole(['user', 'admin'], { logic: RoleLogic.OR })\n`;
+
+      case 'create':
+        // Permission-based for creating resources
+        return `  @RequirePermission(['${resourceName}.create'])\n`;
+
+      case 'update':
+        // Permission-based for updating resources
+        return `  @RequirePermission(['${resourceName}.update'])\n`;
+
+      case 'delete':
+        // Admin-only for deleting resources
+        return `  @RequireRole(['admin'])\n`;
+
+      default:
+        return '';
+    }
   }
 }

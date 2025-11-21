@@ -18,9 +18,9 @@ export class RBACRepository {
   async getUserPermissions(userId: string): Promise<Permission[]> {
     const query = `
       SELECT DISTINCT p.*
-      FROM rbac.permissions p
-      INNER JOIN rbac.role_permissions rp ON p.id = rp.permission_id
-      INNER JOIN rbac.user_roles ur ON rp.role_id = ur.role_id
+      FROM user.permissions p
+      INNER JOIN user.role_permissions rp ON p.id = rp.permission_id
+      INNER JOIN user.user_roles ur ON rp.role_id = ur.role_id
       WHERE ur.user_id = $1
         AND ur.is_active = true
         AND p.is_active = true
@@ -42,8 +42,8 @@ export class RBACRepository {
   ): Promise<Role[]> {
     let query = `
       SELECT r.*
-      FROM rbac.roles r
-      INNER JOIN rbac.user_roles ur ON r.id = ur.role_id
+      FROM user.roles r
+      INNER JOIN user.user_roles ur ON r.id = ur.role_id
       WHERE ur.user_id = $1
     `;
 
@@ -68,9 +68,9 @@ export class RBACRepository {
     const query = `
       SELECT EXISTS(
         SELECT 1
-        FROM rbac.permissions p
-        INNER JOIN rbac.role_permissions rp ON p.id = rp.permission_id
-        INNER JOIN rbac.user_roles ur ON rp.role_id = ur.role_id
+        FROM user.permissions p
+        INNER JOIN user.role_permissions rp ON p.id = rp.permission_id
+        INNER JOIN user.user_roles ur ON rp.role_id = ur.role_id
         WHERE ur.user_id = $1
           AND p.name = $2
           AND ur.is_active = true
@@ -98,8 +98,8 @@ export class RBACRepository {
     let query = `
       SELECT EXISTS(
         SELECT 1
-        FROM rbac.roles r
-        INNER JOIN rbac.user_roles ur ON r.id = ur.role_id
+        FROM user.roles r
+        INNER JOIN user.user_roles ur ON r.id = ur.role_id
         WHERE ur.user_id = $1
           AND r.name = $2
     `;
@@ -123,7 +123,7 @@ export class RBACRepository {
    */
   async getPermissionByName(name: string): Promise<Permission | null> {
     const query = `
-      SELECT * FROM rbac.permissions
+      SELECT * FROM user.permissions
       WHERE name = $1 AND is_active = true
     `;
 
@@ -136,7 +136,7 @@ export class RBACRepository {
    */
   async getRoleByName(name: string): Promise<Role | null> {
     const query = `
-      SELECT * FROM rbac.roles
+      SELECT * FROM user.roles
       WHERE name = $1 AND is_active = true
     `;
 
@@ -154,7 +154,7 @@ export class RBACRepository {
     expiresAt?: Date,
   ): Promise<UserRole> {
     const query = `
-      INSERT INTO rbac.user_roles (
+      INSERT INTO user.user_roles (
         user_id, role_id, assigned_by, expires_at
       ) VALUES ($1, $2, $3, $4)
       ON CONFLICT (user_id, role_id)
@@ -175,7 +175,7 @@ export class RBACRepository {
    */
   async removeRoleFromUser(userId: string, roleId: string): Promise<void> {
     const query = `
-      UPDATE rbac.user_roles
+      UPDATE user.user_roles
       SET is_active = false, updated_at = NOW()
       WHERE user_id = $1 AND role_id = $2
     `;
@@ -192,7 +192,7 @@ export class RBACRepository {
     grantedBy?: string,
   ): Promise<RolePermission> {
     const query = `
-      INSERT INTO rbac.role_permissions (
+      INSERT INTO user.role_permissions (
         role_id, permission_id, granted_by
       ) VALUES ($1, $2, $3)
       ON CONFLICT (role_id, permission_id) DO NOTHING
@@ -208,7 +208,7 @@ export class RBACRepository {
    */
   async revokePermissionFromRole(roleId: string, permissionId: string): Promise<void> {
     const query = `
-      DELETE FROM rbac.role_permissions
+      DELETE FROM user.role_permissions
       WHERE role_id = $1 AND permission_id = $2
     `;
 
@@ -225,7 +225,7 @@ export class RBACRepository {
     description?: string,
   ): Promise<Permission> {
     const query = `
-      INSERT INTO rbac.permissions (name, resource, action, description)
+      INSERT INTO user.permissions (name, resource, action, description)
       VALUES ($1, $2, $3, $4)
       RETURNING *
     `;
@@ -239,7 +239,7 @@ export class RBACRepository {
    */
   async createRole(name: string, description?: string, isDefault: boolean = false): Promise<Role> {
     const query = `
-      INSERT INTO rbac.roles (name, description, is_default)
+      INSERT INTO user.roles (name, description, is_default)
       VALUES ($1, $2, $3)
       RETURNING *
     `;
@@ -254,8 +254,8 @@ export class RBACRepository {
   async getRolePermissions(roleId: string): Promise<Permission[]> {
     const query = `
       SELECT p.*
-      FROM rbac.permissions p
-      INNER JOIN rbac.role_permissions rp ON p.id = rp.permission_id
+      FROM user.permissions p
+      INNER JOIN user.role_permissions rp ON p.id = rp.permission_id
       WHERE rp.role_id = $1 AND p.is_active = true
       ORDER BY p.resource, p.action
     `;
@@ -292,8 +292,8 @@ export class RBACRepository {
   async getExpiredRoles(userId: string): Promise<Role[]> {
     const query = `
       SELECT r.*
-      FROM rbac.roles r
-      INNER JOIN rbac.user_roles ur ON r.id = ur.role_id
+      FROM user.roles r
+      INNER JOIN user.user_roles ur ON r.id = ur.role_id
       WHERE ur.user_id = $1
         AND ur.expires_at IS NOT NULL
         AND ur.expires_at <= NOW()
@@ -309,7 +309,7 @@ export class RBACRepository {
    */
   async cleanupExpiredRoles(): Promise<number> {
     const query = `
-      UPDATE rbac.user_roles
+      UPDATE user.user_roles
       SET is_active = false, updated_at = NOW()
       WHERE expires_at IS NOT NULL
         AND expires_at <= NOW()

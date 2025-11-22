@@ -18,6 +18,7 @@ describe('RedisCacheService', () => {
       store: {
         keys: jest.fn(),
         ttl: jest.fn(),
+        reset: jest.fn(),
       },
     };
 
@@ -115,11 +116,11 @@ describe('RedisCacheService', () => {
 
   describe('clear', () => {
     it('should clear all cache', async () => {
-      mockCacheManager.reset.mockResolvedValue(undefined);
+      mockCacheManager.store.reset.mockResolvedValue(undefined);
 
       await service.clear();
 
-      expect(mockCacheManager.reset).toHaveBeenCalled();
+      expect(mockCacheManager.store.reset).toHaveBeenCalled();
     });
   });
 

@@ -44,9 +44,10 @@ fi
 echo -e "\n${BLUE}📚 Select library to publish:${NC}"
 echo "1. @ojiepermana/nest-generator"
 echo "2. @ojiepermana/nest"
-echo "3. Both libraries"
-echo "4. Cancel"
-read -p "Enter choice (1-4): " choice
+echo "3. @ojiepermana/nest-rbac"
+echo "4. All libraries"
+echo "5. Cancel"
+read -p "Enter choice (1-5): " choice
 
 publish_generator() {
     echo -e "\n${BLUE}📦 Publishing @ojiepermana/nest-generator...${NC}"
@@ -100,6 +101,28 @@ publish_nest() {
     echo -e "${GREEN}✅ @ojiepermana/nest published successfully!${NC}"
 }
 
+publish_rbac() {
+    echo -e "\n${BLUE}📦 Publishing @ojiepermana/nest-rbac...${NC}"
+    
+    # Build library
+    echo -e "${BLUE}🔨 Building rbac library...${NC}"
+    npm run build:rbac
+    
+    # Check if dist exists
+    if [ ! -d "libs/rbac/dist" ]; then
+        echo -e "${RED}❌ Build failed! dist directory not found${NC}"
+        exit 1
+    fi
+    
+    # Publish
+    cd libs/rbac
+    echo -e "${BLUE}📤 Publishing to npm...${NC}"
+    npm publish
+    cd ../..
+    
+    echo -e "${GREEN}✅ @ojiepermana/nest-rbac published successfully!${NC}"
+}
+
 case $choice in
     1)
         publish_generator
@@ -108,11 +131,15 @@ case $choice in
         publish_nest
         ;;
     3)
-        publish_generator
-        publish_nest
-        echo -e "\n${GREEN}🎉 All libraries published successfully!${NC}"
+        publish_rbac
         ;;
     4)
+        publish_generator
+        publish_nest
+        publish_rbac
+        echo -e "\n${GREEN}🎉 All libraries published successfully!${NC}"
+        ;;
+    5)
         echo -e "${YELLOW}❌ Publish cancelled${NC}"
         exit 0
         ;;
@@ -124,19 +151,25 @@ esac
 
 echo -e "\n${BLUE}📊 Published packages info:${NC}"
 echo -e "${YELLOW}View on npm:${NC}"
-if [[ $choice == "1" || $choice == "3" ]]; then
+if [[ $choice == "1" || $choice == "4" ]]; then
     echo "  - https://www.npmjs.com/package/@ojiepermana/nest-generator"
 fi
-if [[ $choice == "2" || $choice == "3" ]]; then
+if [[ $choice == "2" || $choice == "4" ]]; then
     echo "  - https://www.npmjs.com/package/@ojiepermana/nest"
+fi
+if [[ $choice == "3" || $choice == "4" ]]; then
+    echo "  - https://www.npmjs.com/package/@ojiepermana/nest-rbac"
 fi
 
 echo -e "\n${YELLOW}💡 Install in other projects:${NC}"
-if [[ $choice == "1" || $choice == "3" ]]; then
+if [[ $choice == "1" || $choice == "4" ]]; then
     echo "  npm install @ojiepermana/nest-generator"
 fi
-if [[ $choice == "2" || $choice == "3" ]]; then
+if [[ $choice == "2" || $choice == "4" ]]; then
     echo "  npm install @ojiepermana/nest"
+fi
+if [[ $choice == "3" || $choice == "4" ]]; then
+    echo "  npm install @ojiepermana/nest-rbac"
 fi
 
 echo -e "\n${GREEN}✨ Done!${NC}"

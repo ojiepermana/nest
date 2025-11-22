@@ -137,19 +137,29 @@ CREATE TABLE roles (
 CREATE INDEX idx_roles_slug ON roles(slug);
 CREATE INDEX idx_roles_parent ON roles(parent_role_id);
 
--- Permissions
+-- Permissions (with scope support)
 CREATE TABLE permissions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-  name VARCHAR(100) UNIQUE NOT NULL,
-  slug VARCHAR(100) UNIQUE NOT NULL, -- users:create, users:read, users:update, users:delete
-  resource VARCHAR(100) NOT NULL, -- users, posts, comments
+  code VARCHAR(200) UNIQUE NOT NULL, -- users:create:basic, users:read:team, orders:approve:team:under-10k
+  name VARCHAR(100) NOT NULL,
+  resource VARCHAR(100) NOT NULL, -- users, posts, orders
   action VARCHAR(50) NOT NULL, -- create, read, update, delete, approve
+  scope VARCHAR(50) DEFAULT 'own', -- own, team, department, all
+  conditions JSONB, -- {"amount": {"$lt": 10000}, "status": "active"}
+  priority INTEGER DEFAULT 10, -- Higher = more specific
+  is_active BOOLEAN DEFAULT true,
+  is_system BOOLEAN DEFAULT false, -- Cannot be deleted
   description TEXT,
-  created_at TIMESTAMP DEFAULT NOW()
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX idx_permissions_slug ON permissions(slug);
+CREATE INDEX idx_permissions_code ON permissions(code);
 CREATE INDEX idx_permissions_resource ON permissions(resource);
+CREATE INDEX idx_permissions_scope ON permissions(scope);
+CREATE INDEX idx_permissions_priority ON permissions(priority);
+CREATE INDEX idx_permissions_active ON permissions(is_active) WHERE is_active = true;
 
 -- Role-Permission mapping
 CREATE TABLE role_permissions (
@@ -191,12 +201,27 @@ INSERT INTO roles (name, slug, level, is_system) VALUES
   ('User', 'user', 10, true),
   ('Guest', 'guest', 0, true);
 
-INSERT INTO permissions (name, slug, resource, action) VALUES
-  ('Create Users', 'users:create', 'users', 'create'),
-  ('View Users', 'users:read', 'users', 'read'),
-  ('Update Users', 'users:update', 'users', 'update'),
-  ('Delete Users', 'users:delete', 'users', 'delete'),
-  ('Manage Roles', 'roles:manage', 'roles', 'manage');
+-- Seed permissions with scope hierarchy
+INSERT INTO permissions (code, name, resource, action, scope, priority, is_system) VALUES
+  -- User permissions
+  ('users:create:basic', 'Create User Account', 'users', 'create', 'own', 10, true),
+  ('users:read:own', 'Read Own Profile', 'users', 'read', 'own', 10, true),
+  ('users:read:team', 'Read Team Users', 'users', 'read', 'team', 20, true),
+  ('users:read:all', 'Read All Users', 'users', 'read', 'all', 30, true),
+  ('users:update:own', 'Update Own Profile', 'users', 'update', 'own', 10, true),
+  ('users:update:team', 'Update Team Users', 'users', 'update', 'team', 20, true),
+  ('users:update:all', 'Update All Users', 'users', 'update', 'all', 30, true),
+  ('users:delete:own', 'Delete Own Account', 'users', 'delete', 'own', 10, true),
+  ('users:delete:team', 'Delete Team Users', 'users', 'delete', 'team', 20, true),
+  ('users:delete:all', 'Delete Any User', 'users', 'delete', 'all', 30, true),
+  
+  -- Role management
+  ('roles:manage:all', 'Manage All Roles', 'roles', 'manage', 'all', 30, true),
+  
+  -- Order approval with conditions
+  ('orders:approve:team:under-10k', 'Approve Team Orders < $10k', 'orders', 'approve', 'team', 25, false),
+  ('orders:approve:department:under-100k', 'Approve Dept Orders < $100k', 'orders', 'approve', 'department', 35, false),
+  ('orders:approve:all:unlimited', 'Approve Any Order', 'orders', 'approve', 'all', 40, false);
 ```
 
 ---

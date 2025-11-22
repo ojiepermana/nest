@@ -350,6 +350,15 @@ bootstrap();
 
 Protect endpoints with permission requirements.
 
+**Permission Format:** `{resource}:{action}:{scope}[:{condition}]`
+
+- **resource**: Resource type (e.g., 'users', 'orders', 'products')
+- **action**: Action type (e.g., 'create', 'read', 'update', 'delete', 'approve')
+- **scope**: Access level (e.g., 'own', 'team', 'department', 'all')
+- **condition**: Optional condition (e.g., 'active-only', 'under-10k')
+
+**Scope Hierarchy:** `own` < `team` < `department` < `all`
+
 **Single Permission:**
 
 ```typescript
@@ -358,14 +367,30 @@ import { RequirePermission } from '../rbac/decorators/require-permission.decorat
 
 @Controller('users')
 export class UsersController {
+  // Allow users to create their own account
   @Post()
-  @RequirePermission('users.create')
+  @RequirePermission('users:create:basic')
   async createUser(@Body() createDto: CreateUserDto) {
     return this.service.create(createDto);
   }
 
+  // Allow users to view their own profile
+  @Get('profile')
+  @RequirePermission('users:read:own')
+  async getProfile(@User() user) {
+    return this.service.findOne(user.id);
+  }
+
+  // Allow managers to view team members
+  @Get('team')
+  @RequirePermission('users:read:team')
+  async getTeamMembers(@User() user) {
+    return this.service.findByTeam(user.teamId);
+  }
+
+  // Admin only - view all users
   @Get()
-  @RequirePermission('users.read')
+  @RequirePermission('users:read:all')
   async listUsers() {
     return this.service.findAll();
   }
@@ -375,11 +400,11 @@ export class UsersController {
 **Multiple Permissions (AND logic):**
 
 ```typescript
-@Post('admin-action')
-@RequirePermission(['users.create', 'users.update'], {
+@Post('approve-order')
+@RequirePermission(['orders:read:team', 'orders:approve:team'], {
   logic: PermissionLogic.AND, // User must have ALL permissions
 })
-async adminAction() {
+async approveTeamOrder() {
   // Only accessible if user has both permissions
 }
 ```
@@ -387,12 +412,22 @@ async adminAction() {
 **Multiple Permissions (OR logic):**
 
 ```typescript
-@Get('flexible-access')
-@RequirePermission(['users.read', 'users.list'], {
+@Get('users-data')
+@RequirePermission(['users:read:own', 'users:read:team'], {
   logic: PermissionLogic.OR, // User needs AT LEAST ONE
 })
-async flexibleAccess() {
-  // Accessible if user has either permission
+async getUsersData() {
+  // Accessible if user has either own or team scope
+}
+```
+
+**Conditional Permission:**
+
+```typescript
+@Post('approve-small-order')
+@RequirePermission('orders:approve:team:under-10k')
+async approveSmallOrder() {
+  // Only for orders under 10k with team scope
 }
 ```
 
@@ -400,7 +435,7 @@ async flexibleAccess() {
 
 ```typescript
 @Put(':id')
-@RequirePermission('posts.update', {
+@RequirePermission('posts:update:own', {
   requireOwnership: true,
   ownershipField: 'user_id',
 })
@@ -413,8 +448,8 @@ async updatePost(@Param('id') id: string, @Body() updateDto: UpdatePostDto) {
 
 ```typescript
 @Delete(':id')
-@RequirePermission('users.delete', {
-  errorMessage: 'You do not have permission to delete users',
+@RequirePermission('users:delete:team', {
+  errorMessage: 'You do not have permission to delete team users',
 })
 async deleteUser(@Param('id') id: string) {
   return this.service.delete(id);
@@ -635,7 +670,7 @@ export class UsersService {
 
   async sensitiveAction(userId: string) {
     // Check permission programmatically
-    const hasPermission = await this.rbac.hasPermission(userId, 'users.delete');
+    const hasPermission = await this.rbac.hasPermission(userId, 'users:delete:team');
 
     if (!hasPermission) {
       throw new ForbiddenException('Permission denied');
@@ -643,26 +678,70 @@ export class UsersService {
 
     // Proceed with action
   }
+
+  async scopeAwareAction(userId: string, resourceOwnerId: string) {
+    // Check with scope hierarchy
+    const hasOwn = await this.rbac.hasPermissionWithScope(
+      userId, 
+      'users', 
+      'update', 
+      'own'
+    );
+    const hasTeam = await this.rbac.hasPermissionWithScope(
+      userId, 
+      'users', 
+      'update', 
+      'team'
+    );
+
+    if (userId === resourceOwnerId && hasOwn) {
+      // User can update their own data
+    } else if (hasTeam) {
+      // User can update team members
+    } else {
+      throw new ForbiddenException('Insufficient permissions');
+    }
+  }
 }
 ```
 
 ### Permission Methods
 
-#### `hasPermission(userId: string, permission: string): Promise<boolean>`
+#### `hasPermission(userId: string, permissionCode: string): Promise<boolean>`
 
-Check if user has a specific permission.
+Check if user has a specific permission by code.
 
 ```typescript
-const canDelete = await this.rbac.hasPermission('user-123', 'users.delete');
+const canDelete = await this.rbac.hasPermission('user-123', 'users:delete:team');
 // Returns: true or false
 ```
 
-#### `hasAllPermissions(userId: string, permissions: string[]): Promise<PermissionCheckResult>`
+#### `hasPermissionWithScope(userId: string, resource: string, action: string, scope: string): Promise<boolean>`
+
+Check if user has permission with specific scope (supports hierarchy).
+
+```typescript
+// Check if user can read team data
+const canReadTeam = await this.rbac.hasPermissionWithScope(
+  'user-123',
+  'users',
+  'read',
+  'team'
+);
+
+// User with 'users:read:all' will also pass 'team' check (hierarchy)
+```
+
+#### `hasAllPermissions(userId: string, permissionCodes: string[]): Promise<PermissionCheckResult>`
 
 Check if user has ALL specified permissions (AND logic).
 
 ```typescript
-const result = await this.rbac.hasAllPermissions('user-123', ['users.create', 'users.update', 'users.delete']);
+const result = await this.rbac.hasAllPermissions('user-123', [
+  'users:create:basic',
+  'users:update:own',
+  'users:delete:own'
+]);
 
 /*
 Returns:
@@ -680,12 +759,16 @@ if (result.granted) {
 }
 ```
 
-#### `hasAnyPermission(userId: string, permissions: string[]): Promise<PermissionCheckResult>`
+#### `hasAnyPermission(userId: string, permissionCodes: string[]): Promise<PermissionCheckResult>`
 
 Check if user has ANY of the specified permissions (OR logic).
 
 ```typescript
-const result = await this.rbac.hasAnyPermission('user-123', ['posts.update', 'posts.delete']);
+const result = await this.rbac.hasAnyPermission('user-123', [
+  'posts:update:own',
+  'posts:update:team',
+  'posts:delete:team'
+]);
 
 if (result.granted) {
   // User has at least one permission
@@ -740,6 +823,8 @@ const context = await this.rbac.getUserContext('user-123');
 Returns:
 {
   userId: string,
+  teamId?: string,
+  departmentId?: string,
   roles: Array<{
     id: string,
     name: string,
@@ -749,9 +834,12 @@ Returns:
   }>,
   permissions: Array<{
     id: string,
+    code: string,      // e.g., 'users:read:team'
     name: string,
-    resource: string,
-    action: string
+    resource: string,  // e.g., 'users'
+    action: string,    // e.g., 'read'
+    scope: string,     // e.g., 'team'
+    priority: number
   }>,
   isSuperAdmin: boolean
 }
@@ -759,6 +847,7 @@ Returns:
 
 console.log(`User has ${context.permissions.length} permissions`);
 console.log(`Roles: ${context.roles.map((r) => r.name).join(', ')}`);
+console.log(`Scopes: ${[...new Set(context.permissions.map(p => p.scope))].join(', ')}`);
 ```
 
 ### Role Management
@@ -986,12 +1075,16 @@ export class CreateUserDto {
   email: string;
 
   @IsString()
-  @RequireFieldPermission('users.set_role')
-  role?: string; // Only users with users.set_role can set this field
+  @RequireFieldPermission('users:update:role')
+  role?: string; // Only users with users:update:role can set this field
 
   @IsNumber()
-  @RequireFieldPermission('users.set_salary')
-  salary?: number; // Sensitive field
+  @RequireFieldPermission('users:update:salary')
+  salary?: number; // Sensitive field - requires specific permission
+
+  @IsBoolean()
+  @RequireFieldPermission('users:manage:all')
+  is_active?: boolean; // Admin-only field
 }
 ```
 
@@ -1004,10 +1097,19 @@ import { FieldPermissionsGuard } from '../rbac/guards/field-permissions.guard';
 @Controller('users')
 @UseGuards(FieldPermissionsGuard)
 export class UsersController {
+### Guard Usage:**
+
+```typescript
+import { UseGuards } from '@nestjs/common';
+import { FieldPermissionsGuard } from '../rbac/guards/field-permissions.guard';
+
+@Controller('users')
+@UseGuards(FieldPermissionsGuard)
+export class UsersController {
   @Post()
   async createUser(@Body() dto: CreateUserDto) {
     // Guard automatically checks field permissions
-    // If user lacks 'users.set_role', the 'role' field is ignored
+    // If user lacks 'users:update:role', the 'role' field is ignored
   }
 }
 ```
@@ -1034,9 +1136,19 @@ RBACModule.register({
 
 The system uses predictable cache keys:
 
-- **User Permission:** `rbac:user:{userId}:permission:{permission}`
+- **User Permission:** `rbac:user:{userId}:permission:{permissionCode}`
+- **User Scope Permission:** `rbac:user:{userId}:scope:{resource}:{action}:{scope}`
 - **User Role:** `rbac:user:{userId}:role:{roleName}`
 - **User Context:** `rbac:user:{userId}:context`
+
+**Examples:**
+
+```
+rbac:user:u123:permission:users:read:team
+rbac:user:u123:scope:orders:approve:team
+rbac:user:u123:role:admin
+rbac:user:u123:context
+```
 
 ### Manual Cache Invalidation
 
@@ -1109,28 +1221,52 @@ async deletePost(userId: string, postId: string) {
 
 ### 3. Implement Principle of Least Privilege
 
-Grant minimum permissions necessary:
+Grant minimum permissions necessary with appropriate scope:
 
 ```typescript
-// ✅ Good - Specific permission
-@Post('publish')
-@RequirePermission('posts.publish')
+// ✅ Good - Specific permission with scope
+@Post('create')
+@RequirePermission('posts:create:basic')
+
+@Get('my-posts')
+@RequirePermission('posts:read:own')
+
+@Get('team-posts')
+@RequirePermission('posts:read:team')
 
 // ❌ Bad - Overly broad permission
-@Post('publish')
+@Post('create')
 @RequireRole('admin')
 ```
 
-### 4. Use Role Hierarchies
+### 4. Use Scope Hierarchies Effectively
+
+Leverage scope hierarchy for flexible authorization:
 
 ```typescript
-// Define clear role hierarchy
-const roleHierarchy = {
-  super_admin: ['admin', 'moderator', 'user'],
-  admin: ['moderator', 'user'],
-  moderator: ['user'],
-  user: [],
-};
+// User with 'users:read:all' automatically has access to:
+// - users:read:department
+// - users:read:team  
+// - users:read:own
+
+async getUserData(userId: string, targetUserId: string) {
+  // Check highest scope first
+  if (await this.rbac.hasPermissionWithScope(userId, 'users', 'read', 'all')) {
+    return this.findAll(); // Can read all users
+  }
+  
+  if (await this.rbac.hasPermissionWithScope(userId, 'users', 'read', 'team')) {
+    return this.findByTeam(userId); // Can read team users
+  }
+  
+  if (await this.rbac.hasPermissionWithScope(userId, 'users', 'read', 'own')) {
+    if (userId === targetUserId) {
+      return this.findOne(targetUserId); // Can only read own data
+    }
+  }
+  
+  throw new ForbiddenException();
+}
 ```
 
 ### 5. Validate User Context
@@ -1183,11 +1319,11 @@ async update(@Param('id') id: string, @Body() dto: UpdateDto) {
 }
 ```
 
-### Pattern 2: Multiple Permissions (Any)
+### Pattern 2: Multiple Permissions with Scope (Any)
 
 ```typescript
 @Get('dashboard')
-@RequirePermission(['admin.view_dashboard', 'reports.view_dashboard'], {
+@RequirePermission(['admin:view:all', 'reports:view:department'], {
   logic: PermissionLogic.OR,
 })
 async dashboard() {
@@ -1195,20 +1331,53 @@ async dashboard() {
 }
 ```
 
-### Pattern 3: Role-Based Feature Flags
+### Pattern 3: Hierarchical Scope Checking
 
 ```typescript
-@Get('beta-feature')
-async betaFeature(@Request() req) {
-  const hasBetaAccess = await this.rbac.hasRole(req.user.id, 'beta_tester');
-
-  return {
-    feature: hasBetaAccess ? this.getBetaContent() : this.getStandardContent(),
-  };
+@Get('orders')
+async getOrders(@User() user) {
+  // Check scope hierarchy
+  if (await this.rbac.hasPermissionWithScope(user.id, 'orders', 'read', 'all')) {
+    return this.orderService.findAll();
+  }
+  
+  if (await this.rbac.hasPermissionWithScope(user.id, 'orders', 'read', 'department')) {
+    return this.orderService.findByDepartment(user.departmentId);
+  }
+  
+  if (await this.rbac.hasPermissionWithScope(user.id, 'orders', 'read', 'team')) {
+    return this.orderService.findByTeam(user.teamId);
+  }
+  
+  if (await this.rbac.hasPermissionWithScope(user.id, 'orders', 'read', 'own')) {
+    return this.orderService.findByUser(user.id);
+  }
+  
+  throw new ForbiddenException();
 }
 ```
 
-### Pattern 4: Programmatic Permission Check
+### Pattern 4: Conditional Permissions
+
+```typescript
+@Post('approve-order/:id')
+async approveOrder(@Param('id') orderId: string, @User() user) {
+  const order = await this.orderService.findOne(orderId);
+  
+  // Different approval permissions based on order amount
+  if (order.amount < 10000) {
+    await this.rbac.checkPermission(user.id, 'orders:approve:team:under-10k');
+  } else if (order.amount < 100000) {
+    await this.rbac.checkPermission(user.id, 'orders:approve:department:under-100k');
+  } else {
+    await this.rbac.checkPermission(user.id, 'orders:approve:all:unlimited');
+  }
+  
+  return this.orderService.approve(orderId);
+}
+```
+
+### Pattern 5: Programmatic Permission Check
 
 ```typescript
 async complexBusinessLogic(userId: string, resourceId: string) {
@@ -1221,7 +1390,7 @@ async complexBusinessLogic(userId: string, resourceId: string) {
   }
 
   // Check multiple conditions
-  const hasPermission = await this.rbac.hasPermission(userId, 'resource.action');
+  const hasPermission = await this.rbac.hasPermission(userId, 'resource:action:scope');
   const ownsResource = await this.rbac.checkOwnership(userId, 'app', 'resources', resourceId, {
     ownerField: 'user_id',
   });
@@ -1287,7 +1456,7 @@ app.useGlobalGuards(
 
 ```typescript
 // Make sure decorator is applied
-@RequirePermission('users.create') // ← This must be present
+@RequirePermission('users:create:basic') // ← This must be present
 async createUser() {}
 ```
 
@@ -1311,7 +1480,7 @@ if (!user || !user.id) {
 
 ```sql
 -- Check if user has permission
-SELECT p.name
+SELECT p.code, p.scope
 FROM rbac.permissions p
 LEFT JOIN rbac.user_permissions up ON p.id = up.permission_id
 LEFT JOIN rbac.role_permissions rp ON p.id = rp.permission_id
@@ -1395,6 +1564,64 @@ SELECT user_id FROM app.posts WHERE id = 'post-123';
 
 ## Migration Guide
 
+### Migrating from Old Permission Format
+
+If you're upgrading from the old `table.action` format to the new `resource:action:scope` format, follow these steps:
+
+**Step 1:** Run the migration SQL
+
+```bash
+# PostgreSQL
+psql -U postgres -d yourdb -f libs/generator/src/rbac/migrations/001_migrate_to_code_format.sql
+
+# MySQL
+mysql -u root -p yourdb < libs/generator/src/rbac/migrations/001_migrate_to_code_format.sql
+```
+
+**Step 2:** Update your code to use new format
+
+```typescript
+// Before
+@RequirePermission('users.create')
+@RequirePermission('users.read')
+await this.rbac.hasPermission(userId, 'users.update');
+
+// After
+@RequirePermission('users:create:basic')
+@RequirePermission('users:read:own')
+await this.rbac.hasPermission(userId, 'users:update:own');
+```
+
+**Step 3:** Leverage scope hierarchy
+
+```typescript
+// Instead of checking multiple permissions
+const canCreate = await this.rbac.hasPermission(userId, 'users:create:basic');
+const canRead = await this.rbac.hasPermission(userId, 'users:read:team');
+
+// Use scope-aware checking
+const canReadTeam = await this.rbac.hasPermissionWithScope(
+  userId,
+  'users',
+  'read',
+  'team'
+); // Returns true if user has 'team' or 'all' scope
+```
+
+**Step 4:** Verify migration
+
+```sql
+-- Check permission format
+SELECT code, name, scope, priority FROM rbac.permissions WHERE resource = 'users';
+
+-- Expected output:
+-- code                | name               | scope      | priority
+-- users:create:basic  | Create User        | own        | 10
+-- users:read:own      | Read Own Profile   | own        | 10
+-- users:read:team     | Read Team Users    | team       | 20
+-- users:read:all      | Read All Users     | all        | 30
+```
+
 ### Migrating from Custom Authorization
 
 **Step 1:** Install RBAC system
@@ -1406,13 +1633,16 @@ nest-generator generate <table> --features.rbac=true
 **Step 2:** Seed permissions and roles
 
 ```sql
--- Map existing permissions
-INSERT INTO rbac.permissions (name, description, resource, action)
+-- Map existing permissions to new format
+INSERT INTO rbac.permissions (code, name, description, resource, action, scope, priority)
 SELECT
-  CONCAT(resource, '.', action) as name,
+  CONCAT(resource, ':', action, ':', 'basic') as code,
+  name,
   description,
   resource,
-  action
+  action,
+  'own' as scope,
+  10 as priority
 FROM legacy_permissions;
 
 -- Map existing roles
@@ -1429,6 +1659,7 @@ SELECT name, description FROM legacy_roles;
 
 // After
 @RequireRole('admin')
+```
 ```
 
 **Step 4:** Replace custom service calls

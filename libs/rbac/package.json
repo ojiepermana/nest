@@ -45,8 +45,7 @@
     "dist/**/*.js",
     "dist/**/*.d.ts",
     "dist/**/*.js.map",
-    "schemas/*.sql",
-    "migrations/*.sql",
+    "dist/**/*.sql",
     "README.md",
     "LICENSE"
   ]

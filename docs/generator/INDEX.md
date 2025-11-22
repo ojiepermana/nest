@@ -10,22 +10,22 @@ Based on actual generation testing (`apps/microservices/entity`):
 
 ### ✅ Auto-Generated Features (8/9 - 89%)
 
-| Feature | Status | Evidence |
-|---------|--------|----------|
-| **Core CRUD** | ✅ Complete | Controllers, Services, Repositories, DTOs, Entities |
-| **Caching** | ✅ Complete | CacheModule, Cache Manager, invalidation in services |
-| **Audit Trail** | ✅ Complete | AuditModule, AuditLogService, logging in CREATE/UPDATE/DELETE |
-| **Microservices** | ✅ Complete | @MessagePattern handlers, proper payload handling |
-| **RBAC Decorators** | ✅ Complete | @RequirePermission, @RequireRole, @Public auto-applied (v4.0.1) |
+| Feature             | Status      | Evidence                                                                                   |
+| ------------------- | ----------- | ------------------------------------------------------------------------------------------ |
+| **Core CRUD**       | ✅ Complete | Controllers, Services, Repositories, DTOs, Entities                                        |
+| **Caching**         | ✅ Complete | CacheModule, Cache Manager, invalidation in services                                       |
+| **Audit Trail**     | ✅ Complete | AuditModule, AuditLogService, logging in CREATE/UPDATE/DELETE                              |
+| **Microservices**   | ✅ Complete | @MessagePattern handlers, proper payload handling                                          |
+| **RBAC Decorators** | ✅ Complete | @RequirePermission, @RequireRole, @Public auto-applied (v4.0.1)                            |
 | **Swagger/OpenAPI** | ✅ Complete | Full suite: @ApiTags, @ApiOperation, @ApiResponse, @ApiBody, @ApiParam, @ApiQuery (v4.0.1) |
-| **File Upload** | ✅ Complete | Auto-detect file columns, upload/delete endpoints with Swagger (v4.0.1) |
-| **JOIN Queries** | ✅ Complete | findWithRelations(), findAllWithRelations() with FK detection (v4.0.2) |
-| **Recap/Analytics** | ✅ Complete | getDailyRecap(), getMonthlyRecap(), getYearlyRecap(), getMonthlyBreakdown() (v4.0.2) |
+| **File Upload**     | ✅ Complete | Auto-detect file columns, upload/delete endpoints with Swagger (v4.0.1)                    |
+| **JOIN Queries**    | ✅ Complete | findWithRelations(), findAllWithRelations() with FK detection (v4.0.2)                     |
+| **Recap/Analytics** | ✅ Complete | getDailyRecap(), getMonthlyRecap(), getYearlyRecap(), getMonthlyBreakdown() (v4.0.2)       |
 
 ### ❌ Features Requiring Manual Setup (1/9 - 11%)
 
-| Feature | Status | Missing Component | Required Action |
-|---------|--------|-------------------|-----------------|
+| Feature              | Status     | Missing Component                                  | Required Action                             |
+| -------------------- | ---------- | -------------------------------------------------- | ------------------------------------------- |
 | **Advanced Queries** | ⚠️ Partial | Aggregations (COUNT/SUM/AVG), Search, Export, CTEs | Manual implementation or future enhancement |
 
 **Note**: 92% of core features are now auto-generated! Only export and CTE features require manual setup.
@@ -123,7 +123,7 @@ nest-generator generate schema.table --features.export=true
 ### Known Limitations
 
 1. **Export Features** - CSV/Excel export requires manual implementation
-2. **CTE Queries** - WITH clause queries require manual implementation  
+2. **CTE Queries** - WITH clause queries require manual implementation
 3. **Fuzzy Search** - Requires PostgreSQL pg_trgm extension to be installed
 4. **File Upload** - Detection based on column naming patterns (`*_file`, `file_path`, etc.)
 

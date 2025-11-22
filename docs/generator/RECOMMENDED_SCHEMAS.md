@@ -214,10 +214,10 @@ INSERT INTO permissions (code, name, resource, action, scope, priority, is_syste
   ('users:delete:own', 'Delete Own Account', 'users', 'delete', 'own', 10, true),
   ('users:delete:team', 'Delete Team Users', 'users', 'delete', 'team', 20, true),
   ('users:delete:all', 'Delete Any User', 'users', 'delete', 'all', 30, true),
-  
+
   -- Role management
   ('roles:manage:all', 'Manage All Roles', 'roles', 'manage', 'all', 30, true),
-  
+
   -- Order approval with conditions
   ('orders:approve:team:under-10k', 'Approve Team Orders < $10k', 'orders', 'approve', 'team', 25, false),
   ('orders:approve:department:under-100k', 'Approve Dept Orders < $100k', 'orders', 'approve', 'department', 35, false),

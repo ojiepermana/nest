@@ -681,18 +681,8 @@ export class UsersService {
 
   async scopeAwareAction(userId: string, resourceOwnerId: string) {
     // Check with scope hierarchy
-    const hasOwn = await this.rbac.hasPermissionWithScope(
-      userId, 
-      'users', 
-      'update', 
-      'own'
-    );
-    const hasTeam = await this.rbac.hasPermissionWithScope(
-      userId, 
-      'users', 
-      'update', 
-      'team'
-    );
+    const hasOwn = await this.rbac.hasPermissionWithScope(userId, 'users', 'update', 'own');
+    const hasTeam = await this.rbac.hasPermissionWithScope(userId, 'users', 'update', 'team');
 
     if (userId === resourceOwnerId && hasOwn) {
       // User can update their own data
@@ -722,12 +712,7 @@ Check if user has permission with specific scope (supports hierarchy).
 
 ```typescript
 // Check if user can read team data
-const canReadTeam = await this.rbac.hasPermissionWithScope(
-  'user-123',
-  'users',
-  'read',
-  'team'
-);
+const canReadTeam = await this.rbac.hasPermissionWithScope('user-123', 'users', 'read', 'team');
 
 // User with 'users:read:all' will also pass 'team' check (hierarchy)
 ```
@@ -740,7 +725,7 @@ Check if user has ALL specified permissions (AND logic).
 const result = await this.rbac.hasAllPermissions('user-123', [
   'users:create:basic',
   'users:update:own',
-  'users:delete:own'
+  'users:delete:own',
 ]);
 
 /*
@@ -767,7 +752,7 @@ Check if user has ANY of the specified permissions (OR logic).
 const result = await this.rbac.hasAnyPermission('user-123', [
   'posts:update:own',
   'posts:update:team',
-  'posts:delete:team'
+  'posts:delete:team',
 ]);
 
 if (result.granted) {
@@ -847,7 +832,7 @@ Returns:
 
 console.log(`User has ${context.permissions.length} permissions`);
 console.log(`Roles: ${context.roles.map((r) => r.name).join(', ')}`);
-console.log(`Scopes: ${[...new Set(context.permissions.map(p => p.scope))].join(', ')}`);
+console.log(`Scopes: ${[...new Set(context.permissions.map((p) => p.scope))].join(', ')}`);
 ```
 
 ### Role Management
@@ -1090,7 +1075,7 @@ export class CreateUserDto {
 
 **Guard Usage:**
 
-```typescript
+````typescript
 import { UseGuards } from '@nestjs/common';
 import { FieldPermissionsGuard } from '../rbac/guards/field-permissions.guard';
 
@@ -1112,7 +1097,7 @@ export class UsersController {
     // If user lacks 'users:update:role', the 'role' field is ignored
   }
 }
-```
+````
 
 ---
 
@@ -1246,7 +1231,7 @@ Leverage scope hierarchy for flexible authorization:
 ```typescript
 // User with 'users:read:all' automatically has access to:
 // - users:read:department
-// - users:read:team  
+// - users:read:team
 // - users:read:own
 
 async getUserData(userId: string, targetUserId: string) {
@@ -1254,17 +1239,17 @@ async getUserData(userId: string, targetUserId: string) {
   if (await this.rbac.hasPermissionWithScope(userId, 'users', 'read', 'all')) {
     return this.findAll(); // Can read all users
   }
-  
+
   if (await this.rbac.hasPermissionWithScope(userId, 'users', 'read', 'team')) {
     return this.findByTeam(userId); // Can read team users
   }
-  
+
   if (await this.rbac.hasPermissionWithScope(userId, 'users', 'read', 'own')) {
     if (userId === targetUserId) {
       return this.findOne(targetUserId); // Can only read own data
     }
   }
-  
+
   throw new ForbiddenException();
 }
 ```
@@ -1340,19 +1325,19 @@ async getOrders(@User() user) {
   if (await this.rbac.hasPermissionWithScope(user.id, 'orders', 'read', 'all')) {
     return this.orderService.findAll();
   }
-  
+
   if (await this.rbac.hasPermissionWithScope(user.id, 'orders', 'read', 'department')) {
     return this.orderService.findByDepartment(user.departmentId);
   }
-  
+
   if (await this.rbac.hasPermissionWithScope(user.id, 'orders', 'read', 'team')) {
     return this.orderService.findByTeam(user.teamId);
   }
-  
+
   if (await this.rbac.hasPermissionWithScope(user.id, 'orders', 'read', 'own')) {
     return this.orderService.findByUser(user.id);
   }
-  
+
   throw new ForbiddenException();
 }
 ```
@@ -1363,7 +1348,7 @@ async getOrders(@User() user) {
 @Post('approve-order/:id')
 async approveOrder(@Param('id') orderId: string, @User() user) {
   const order = await this.orderService.findOne(orderId);
-  
+
   // Different approval permissions based on order amount
   if (order.amount < 10000) {
     await this.rbac.checkPermission(user.id, 'orders:approve:team:under-10k');
@@ -1372,7 +1357,7 @@ async approveOrder(@Param('id') orderId: string, @User() user) {
   } else {
     await this.rbac.checkPermission(user.id, 'orders:approve:all:unlimited');
   }
-  
+
   return this.orderService.approve(orderId);
 }
 ```
@@ -1600,12 +1585,7 @@ const canCreate = await this.rbac.hasPermission(userId, 'users:create:basic');
 const canRead = await this.rbac.hasPermission(userId, 'users:read:team');
 
 // Use scope-aware checking
-const canReadTeam = await this.rbac.hasPermissionWithScope(
-  userId,
-  'users',
-  'read',
-  'team'
-); // Returns true if user has 'team' or 'all' scope
+const canReadTeam = await this.rbac.hasPermissionWithScope(userId, 'users', 'read', 'team'); // Returns true if user has 'team' or 'all' scope
 ```
 
 **Step 4:** Verify migration
@@ -1660,7 +1640,8 @@ SELECT name, description FROM legacy_roles;
 // After
 @RequireRole('admin')
 ```
-```
+
+````
 
 **Step 4:** Replace custom service calls
 
@@ -1670,7 +1651,7 @@ const hasAccess = await this.authService.checkPermission(userId, 'users.create')
 
 // After
 const hasAccess = await this.rbac.hasPermission(userId, 'users.create');
-```
+````
 
 **Step 5:** Update guard registration
 

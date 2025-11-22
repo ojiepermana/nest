@@ -16,7 +16,8 @@ Migrated all RBAC tables from separate `rbac` schema to consolidated `user` sche
 
 ### Database Changes
 
-**Before**: 
+**Before**:
+
 ```
 rbac.permissions
 rbac.roles
@@ -27,6 +28,7 @@ rbac.permission_audit
 ```
 
 **After**:
+
 ```
 user.permissions
 user.roles
@@ -37,6 +39,7 @@ user.permission_audit
 ```
 
 **Benefits**:
+
 - All user-related tables in one schema (users, sessions, RBAC)
 - Better organization
 - Easier permissions management
@@ -77,6 +80,7 @@ user.permission_audit
 **RBAC Tests**: 90/104 passed (14 guard test failures unrelated to schema)
 
 Schema-related tests (ALL PASSED ✅):
+
 - ✅ rbac.repository.spec.ts - 25/25 tests
 - ✅ permission-seed.generator.spec.ts - 13/13 tests
 - ✅ rbac.module.spec.ts - passed
@@ -84,6 +88,7 @@ Schema-related tests (ALL PASSED ✅):
 - ✅ decorators tests - all passed
 
 Non-schema failures (pre-existing):
+
 - ❌ guards/roles.guard.spec.ts - 7 failures (mock setup issue)
 - ❌ guards/permissions.guard.spec.ts - 7 failures (mock setup issue)
 
@@ -104,7 +109,7 @@ DROP SCHEMA IF EXISTS rbac CASCADE;
 
 -- Results:
 -- ✅ 6 tables created
--- ✅ 12 indexes created  
+-- ✅ 12 indexes created
 -- ✅ 3 helper functions created
 -- ✅ 2 triggers created
 -- ✅ Seeded: 9 permissions, 4 roles, 18 role-permission mappings
@@ -130,11 +135,13 @@ npm test -- libs/generator/src/rbac  # ✅ 90/104 passed
 ## 🗂️ File Artifacts
 
 **SQL Migration Script**:
+
 ```
 libs/generator/src/rbac/schemas/postgresql-rbac-user-schema.sql
 ```
 
 **TypeScript Files Modified**:
+
 ```
 libs/generator/src/rbac/rbac.repository.ts
 libs/generator/src/rbac/rbac-schema.generator.ts
@@ -161,6 +168,7 @@ psql -U edsis -d edsis -c "SELECT COUNT(*) FROM user.role_permissions;"
 ```
 
 **Expected Results**:
+
 - Schema `user` exists
 - 9 tables in user schema (6 RBAC + 3 existing)
 - 9 permissions, 4 roles, 18 role-permission mappings
@@ -179,13 +187,13 @@ psql -U edsis -d edsis -c "SELECT COUNT(*) FROM user.role_permissions;"
 
 ## 📊 Impact Summary
 
-| Category | Before | After | Status |
-|----------|--------|-------|--------|
-| Schemas | 2 (user, rbac) | 1 (user) | ✅ Consolidated |
-| RBAC Tables | 6 in rbac schema | 6 in user schema | ✅ Migrated |
-| SQL Queries | rbac.* references | user.* references | ✅ Updated |
-| Test Coverage | 579/585 (99%) | 711/742 (95.8%) | ✅ Maintained |
-| Generator Build | Success | Success | ✅ Working |
+| Category        | Before             | After              | Status          |
+| --------------- | ------------------ | ------------------ | --------------- |
+| Schemas         | 2 (user, rbac)     | 1 (user)           | ✅ Consolidated |
+| RBAC Tables     | 6 in rbac schema   | 6 in user schema   | ✅ Migrated     |
+| SQL Queries     | rbac.\* references | user.\* references | ✅ Updated      |
+| Test Coverage   | 579/585 (99%)      | 711/742 (95.8%)    | ✅ Maintained   |
+| Generator Build | Success            | Success            | ✅ Working      |
 
 ---
 

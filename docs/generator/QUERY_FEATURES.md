@@ -30,18 +30,20 @@ Auto-generates JOIN query methods when foreign key relationships are detected in
 Fetch single record with all related data using JOINs.
 
 **SQL Example**:
+
 ```sql
 SELECT
   t.*,
   rel_0.id AS business_entity_id_id,
   rel_0.name AS business_entity_id_name
 FROM "entity"."entity" AS t
-INNER JOIN "entity"."business_entity" AS rel_0 
+INNER JOIN "entity"."business_entity" AS rel_0
   ON t.business_entity_id = rel_0.id
 WHERE t.id = $1 AND t.deleted_at IS NULL
 ```
 
 **TypeScript**:
+
 ```typescript
 const entity = await entityRepository.findOneWithRelations('uuid-here');
 // Returns:
@@ -59,10 +61,11 @@ const entity = await entityRepository.findOneWithRelations('uuid-here');
 Fetch multiple records with relations, supports pagination and filtering.
 
 **TypeScript**:
+
 ```typescript
 const entities = await entityRepository.findAllWithRelations(
   { status: 'active' },
-  { limit: 10, offset: 0, sortBy: 'name', sortOrder: 'ASC' }
+  { limit: 10, offset: 0, sortBy: 'name', sortOrder: 'ASC' },
 );
 ```
 
@@ -98,11 +101,9 @@ Auto-generates time-based analytics methods when timestamp columns are detected.
 Get daily aggregation within date range.
 
 **TypeScript**:
+
 ```typescript
-const dailyStats = await entityRepository.getDailyRecap(
-  new Date('2025-01-01'),
-  new Date('2025-01-31')
-);
+const dailyStats = await entityRepository.getDailyRecap(new Date('2025-01-01'), new Date('2025-01-31'));
 // Returns: [
 //   { date: '2025-01-01', count: 15 },
 //   { date: '2025-01-02', count: 23 },
@@ -111,6 +112,7 @@ const dailyStats = await entityRepository.getDailyRecap(
 ```
 
 **SQL**:
+
 ```sql
 SELECT
   DATE(created_at) as date,
@@ -127,6 +129,7 @@ ORDER BY date
 Get monthly counts for specific year.
 
 **TypeScript**:
+
 ```typescript
 const monthlyStats = await entityRepository.getMonthlyRecap(2025);
 // Returns: [
@@ -141,6 +144,7 @@ const monthlyStats = await entityRepository.getMonthlyRecap(2025);
 Get yearly statistics across all years.
 
 **TypeScript**:
+
 ```typescript
 const yearlyStats = await entityRepository.getYearlyRecap();
 // Returns: [
@@ -155,6 +159,7 @@ const yearlyStats = await entityRepository.getYearlyRecap();
 Get comprehensive breakdown with all 12 months (even if count is 0).
 
 **TypeScript**:
+
 ```typescript
 const breakdown = await entityRepository.getMonthlyBreakdown(2025);
 // Returns: {
@@ -193,6 +198,7 @@ Auto-generates statistical methods when numeric columns are detected.
 Comprehensive statistics for ALL numeric columns in single query.
 
 **TypeScript**:
+
 ```typescript
 const stats = await locationRepository.getStatistics();
 // Returns: {
@@ -210,6 +216,7 @@ const stats = await locationRepository.getStatistics();
 ```
 
 **SQL**:
+
 ```sql
 SELECT
   COUNT(building_area) as building_area_count,
@@ -231,10 +238,11 @@ WHERE deleted_at IS NULL
 Dynamic GROUP BY aggregation with column validation.
 
 **TypeScript**:
+
 ```typescript
 const grouped = await locationRepository.getAggregation(
-  'location_type_id',   // Group by type
-  'building_area'       // Aggregate this column
+  'location_type_id', // Group by type
+  'building_area', // Aggregate this column
 );
 // Returns: [
 //   {
@@ -257,6 +265,7 @@ const grouped = await locationRepository.getAggregation(
 ```
 
 **Features**:
+
 - ✅ Column validation (prevents SQL injection)
 - ✅ Validates groupBy is categorical (varchar, text, uuid)
 - ✅ Validates aggregateColumn is numeric
@@ -268,18 +277,21 @@ const grouped = await locationRepository.getAggregation(
 For each numeric column, generates 3 methods:
 
 **getSum{Column}()** - Sum total:
+
 ```typescript
 const total = await locationRepository.getSumBuildingArea();
 // Returns: 45000
 ```
 
 **getAvg{Column}()** - Average value:
+
 ```typescript
 const average = await locationRepository.getAvgBuildingArea();
 // Returns: 300
 ```
 
 **getMinMax{Column}()** - Min and max values:
+
 ```typescript
 const range = await locationRepository.getMinMaxBuildingArea();
 // Returns: { min: 50, max: 1200 }
@@ -309,14 +321,13 @@ Auto-generates search methods when text columns are detected.
 Multi-column full-text search across ALL text fields.
 
 **TypeScript**:
+
 ```typescript
-const results = await entityRepository.search(
-  'Jakarta',
-  { limit: 10, offset: 0 }
-);
+const results = await entityRepository.search('Jakarta', { limit: 10, offset: 0 });
 ```
 
 **SQL**:
+
 ```sql
 SELECT *
 FROM "entity"."entity"
@@ -334,6 +345,7 @@ LIMIT $N OFFSET $M
 ```
 
 **Features**:
+
 - Searches ALL text columns simultaneously
 - Case-insensitive (ILIKE)
 - Wildcard support (`%Jakarta%` pattern)
@@ -344,15 +356,13 @@ LIMIT $N OFFSET $M
 Search specific column with validation.
 
 **TypeScript**:
+
 ```typescript
-const results = await entityRepository.searchByColumn(
-  'email',
-  'example.com',
-  { limit: 20 }
-);
+const results = await entityRepository.searchByColumn('email', 'example.com', { limit: 20 });
 ```
 
 **Features**:
+
 - ✅ Column validation (whitelist)
 - ✅ Error throwing for invalid columns
 - ✅ Pagination support
@@ -363,6 +373,7 @@ const results = await entityRepository.searchByColumn(
 Count total search results (for pagination metadata).
 
 **TypeScript**:
+
 ```typescript
 const total = await entityRepository.searchCount('Jakarta');
 // Returns: 45
@@ -372,7 +383,7 @@ const page = 1;
 const limit = 10;
 const results = await entityRepository.search('Jakarta', {
   limit,
-  offset: (page - 1) * limit
+  offset: (page - 1) * limit,
 });
 const total = await entityRepository.searchCount('Jakarta');
 const totalPages = Math.ceil(total / limit);
@@ -383,11 +394,12 @@ const totalPages = Math.ceil(total / limit);
 PostgreSQL trigram similarity search (requires `pg_trgm` extension).
 
 **TypeScript**:
+
 ```typescript
 const results = await entityRepository.fuzzySearch(
-  'Jakarata',  // Typo!
-  0.3,         // 30% similarity threshold
-  { limit: 10 }
+  'Jakarata', // Typo!
+  0.3, // 30% similarity threshold
+  { limit: 10 },
 );
 // Returns: [
 //   {
@@ -400,12 +412,14 @@ const results = await entityRepository.fuzzySearch(
 ```
 
 **Requirements**:
+
 ```sql
 -- Enable extension (run once)
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 ```
 
 **Features**:
+
 - ✅ Typo-tolerant search
 - ✅ Similarity scoring (0.0-1.0)
 - ✅ Configurable threshold
@@ -416,6 +430,7 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 Auto-generated for columns containing: `name`, `title`, `description`, `email`
 
 **TypeScript**:
+
 ```typescript
 // Auto-generated if 'name' column exists
 const byName = await entityRepository.searchByName('Office');
@@ -425,6 +440,7 @@ const byEmail = await entityRepository.searchByEmail('@example.com');
 ```
 
 **Features**:
+
 - Limit 50 results
 - Ordered by searched column
 - No pagination (use searchByColumn for that)
@@ -438,6 +454,7 @@ const byEmail = await entityRepository.searchByEmail('@example.com');
 5. **Install pg_trgm**: Required for fuzzy search
 
 **SQL Injection Safety**:
+
 - ✅ All queries use parametrized statements
 - ✅ Column names validated against whitelist
 - ✅ No dynamic SQL concatenation
@@ -452,20 +469,20 @@ const byEmail = await entityRepository.searchByEmail('@example.com');
 async function paginatedSearch(query: string, page: number = 1) {
   const limit = 10;
   const offset = (page - 1) * limit;
-  
+
   const [results, total] = await Promise.all([
     entityRepository.search(query, { limit, offset }),
-    entityRepository.searchCount(query)
+    entityRepository.searchCount(query),
   ]);
-  
+
   return {
     data: results,
     meta: {
       page,
       limit,
       total,
-      totalPages: Math.ceil(total / limit)
-    }
+      totalPages: Math.ceil(total / limit),
+    },
   };
 }
 ```
@@ -477,13 +494,13 @@ async function getDashboardStats(year: number) {
   const [monthlyData, breakdown, numericStats] = await Promise.all([
     entityRepository.getMonthlyRecap(year),
     entityRepository.getMonthlyBreakdown(year),
-    locationRepository.getStatistics()
+    locationRepository.getStatistics(),
   ]);
-  
+
   return {
     timeline: monthlyData,
     breakdown,
-    aggregations: numericStats
+    aggregations: numericStats,
   };
 }
 ```
@@ -493,12 +510,10 @@ async function getDashboardStats(year: number) {
 ```typescript
 async function searchWithRelations(query: string) {
   const results = await entityRepository.search(query, { limit: 50 });
-  
+
   // Get full related data for results
-  const enriched = await Promise.all(
-    results.map(r => entityRepository.findOneWithRelations(r.id))
-  );
-  
+  const enriched = await Promise.all(results.map((r) => entityRepository.findOneWithRelations(r.id)));
+
   return enriched;
 }
 ```
@@ -552,25 +567,29 @@ SELECT * FROM pg_extension WHERE extname = 'pg_trgm';
 ### Metadata Requirements
 
 **For JOIN Queries**:
+
 ```sql
 -- Columns must have FK metadata
 UPDATE meta.column
-SET 
+SET
   ref_schema = 'entity',
   ref_table = 'business_entity',
   ref_column = 'id'
-WHERE table_name = 'entity' 
+WHERE table_name = 'entity'
   AND column_name = 'business_entity_id';
 ```
 
 **For Recap/Analytics**:
+
 - At least one timestamp column (`*_at`)
 - Preferably `created_at` or `updated_at`
 
 **For Aggregation**:
+
 - At least one numeric column (integer, bigint, decimal, etc.)
 
 **For Search**:
+
 - At least one text column (varchar, text, char)
 
 ---
@@ -578,19 +597,23 @@ WHERE table_name = 'entity'
 ## Troubleshooting
 
 ### "No JOIN methods generated"
+
 - Check foreign key metadata (`ref_schema`, `ref_table`, `ref_column`)
 - Verify columns have FK constraints in database
 - Run: `SELECT * FROM meta.column WHERE ref_table IS NOT NULL`
 
 ### "No search methods generated"
+
 - Verify text columns exist
 - Check data types: `SELECT column_name, data_type FROM information_schema.columns WHERE data_type LIKE '%char%'`
 
 ### "fuzzySearch() throws error"
+
 - Install pg_trgm: `CREATE EXTENSION pg_trgm;`
 - Check extension: `SELECT * FROM pg_extension WHERE extname = 'pg_trgm';`
 
 ### "getAggregation() throws 'Invalid column'"
+
 - Check column name spelling
 - Verify column is in valid lists (printed in error message)
 - Ensure groupBy column is categorical (varchar/text/uuid)

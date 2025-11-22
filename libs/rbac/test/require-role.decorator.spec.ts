@@ -12,7 +12,7 @@ import {
   IS_PUBLIC_KEY,
   SKIP_PERMISSION_KEY,
   RoleLogic,
-} from './require-role.decorator';
+} from '../src/decorators/require-role.decorator';
 
 // Mock SetMetadata
 jest.mock('@nestjs/common', () => ({

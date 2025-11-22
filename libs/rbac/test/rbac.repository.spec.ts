@@ -1,6 +1,6 @@
 import { Pool } from 'pg';
-import { RBACRepository } from './rbac.repository';
-import { Permission, Role, UserRole, RolePermission } from './interfaces';
+import { RBACRepository } from '../src/rbac.repository';
+import { Permission, Role, UserRole, RolePermission } from '../src/interfaces';
 
 describe('RBACRepository', () => {
   let repository: RBACRepository;

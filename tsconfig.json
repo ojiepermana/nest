@@ -23,6 +23,8 @@
     "noFallthroughCasesInSwitch": false,
     "paths": {
       "@app/contracts/*": ["libs/contracts/*"],
+      "@ojiepermana/nest-rbac": ["libs/rbac/src"],
+      "@ojiepermana/nest-rbac/*": ["libs/rbac/src/*"],
       "@ojiepermana/nest": ["libs/nest/src"],
       "@ojiepermana/nest-generator": ["libs/generator/src"],
       "@ojiepermana/nest-generator/*": ["libs/generator/src/*"],

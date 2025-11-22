@@ -1,8 +1,8 @@
 import { ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { RolesGuard } from './roles.guard';
-import { RBACService } from '../rbac.service';
-import { RoleLogic } from '../decorators/require-role.decorator';
+import { RolesGuard } from '../src/guards/roles.guard';
+import { RBACService } from '../src/rbac.service';
+import { RoleLogic } from '../src/decorators/require-role.decorator';
 
 describe('RolesGuard', () => {
   let guard: RolesGuard;

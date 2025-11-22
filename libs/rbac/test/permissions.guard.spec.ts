@@ -1,8 +1,8 @@
 import { ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { PermissionsGuard } from './permissions.guard';
-import { RBACService } from '../rbac.service';
-import { PermissionLogic } from '../decorators/require-permission.decorator';
+import { PermissionsGuard } from '../src/guards/permissions.guard';
+import { RBACService } from '../src/rbac.service';
+import { PermissionLogic } from '../src/decorators/require-permission.decorator';
 
 describe('PermissionsGuard', () => {
   let guard: PermissionsGuard;

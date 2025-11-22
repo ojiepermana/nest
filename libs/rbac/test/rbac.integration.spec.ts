@@ -1,5 +1,5 @@
-import { RBACService } from './rbac.service';
-import { RBACRepository } from './rbac.repository';
+import { RBACService } from '../src/rbac.service';
+import { RBACRepository } from '../src/rbac.repository';
 
 describe('RBAC Integration Tests', () => {
   let service: RBACService;

@@ -6,7 +6,7 @@ import {
   RequireOwnership,
   PERMISSIONS_KEY,
   PermissionLogic,
-} from './require-permission.decorator';
+} from '../src/decorators/require-permission.decorator';
 
 // Mock SetMetadata
 jest.mock('@nestjs/common', () => ({

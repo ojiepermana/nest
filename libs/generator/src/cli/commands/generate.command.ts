@@ -1637,7 +1637,7 @@ export * from './controllers/${moduleName}.controller';
       const lastImportMatch = appModuleContent.match(/import.*from.*['"];?\n(?!import)/);
       if (lastImportMatch && lastImportMatch.index !== undefined) {
         const insertPos = lastImportMatch.index + lastImportMatch[0].length;
-        const importStatement = `import { RBACModule } from '@ojiepermana/nest-generator/rbac';\n`;
+        const importStatement = `import { RBACModule } from '@ojiepermana/nest-rbac';\n`;
         appModuleContent =
           appModuleContent.slice(0, insertPos) +
           importStatement +

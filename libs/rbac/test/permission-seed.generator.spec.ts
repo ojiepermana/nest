@@ -1,4 +1,4 @@
-import { PermissionSeedGenerator } from './permission-seed.generator';
+import { PermissionSeedGenerator } from '../../generator/src/rbac/permission-seed.generator';
 
 describe('PermissionSeedGenerator', () => {
   let generator: PermissionSeedGenerator;

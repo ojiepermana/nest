@@ -1,4 +1,4 @@
-import { RBACModule } from './rbac.module';
+import { RBACModule } from '../src/rbac.module';
 
 describe('RBACModule', () => {
   it('should be defined', () => {

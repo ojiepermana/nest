@@ -6,14 +6,27 @@
 
 /**
  * Permission entity from database
+ *
+ * Format: {resource}:{action}:{scope}[:{condition}]
+ * Examples:
+ * - users:create:basic
+ * - users:read:own
+ * - users:read:team
+ * - orders:approve:team:under-10k
  */
 export interface Permission {
   id: string;
-  name: string;
-  resource: string;
-  action: string;
+  code: string; // Primary identifier: "users:read:team"
+  name: string; // Display name: "View Team Users"
+  resource: string; // Resource type: "users", "orders"
+  action: string; // Action: "create", "read", "update", "delete", "approve"
+  scope?: string; // Scope: "own", "team", "department", "all"
+  conditions?: Record<string, any>; // Business rules: {status: ["active"], amount_lte: 10000}
   description?: string;
   is_active: boolean;
+  is_system: boolean; // System permission (cannot be deleted)
+  priority: number; // Permission priority (higher = more important)
+  metadata?: Record<string, any>; // Additional data
   created_at: Date;
   updated_at: Date;
 }
@@ -65,8 +78,10 @@ export interface RolePermission {
 export interface UserContext {
   id: string;
   roles: string[];
-  permissions: string[];
-  metadata?: Record<string, any>;
+  permissions: string[]; // Permission codes: ["users:read:own", "orders:approve:team"]
+  department?: string; // For scope filtering
+  team?: string; // For scope filtering
+  metadata?: Record<string, any>; // Additional attributes for ABAC
 }
 
 /**

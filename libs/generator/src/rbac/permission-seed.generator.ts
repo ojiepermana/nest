@@ -9,49 +9,175 @@ export interface PermissionSeedOptions {
   schema?: string;
   description?: string;
   category?: string;
+  generateScopes?: boolean; // Generate scoped permissions (own, team, all)
 }
 
 export class PermissionSeedGenerator {
   /**
    * Generate permission seed SQL for CRUD operations
+   * New format: {resource}:{action}:{scope}
    */
   generateCrudPermissions(options: PermissionSeedOptions): string {
-    const { resourceName, schema = 'user', description, category } = options;
+    const { resourceName, schema = 'user', description, category, generateScopes = true } = options;
 
-    const permissions = [
-      {
-        code: `${resourceName}.create`,
-        name: `Create ${resourceName}`,
-        description: description
-          ? `Create new ${description}`
-          : `Permission to create new ${resourceName}`,
-        category: category || resourceName,
-      },
-      {
-        code: `${resourceName}.read`,
-        name: `Read ${resourceName}`,
-        description: description
-          ? `View ${description}`
-          : `Permission to view ${resourceName} records`,
-        category: category || resourceName,
-      },
-      {
-        code: `${resourceName}.update`,
-        name: `Update ${resourceName}`,
-        description: description
-          ? `Edit ${description}`
-          : `Permission to update ${resourceName} records`,
-        category: category || resourceName,
-      },
-      {
-        code: `${resourceName}.delete`,
-        name: `Delete ${resourceName}`,
-        description: description
-          ? `Remove ${description}`
-          : `Permission to delete ${resourceName} records`,
-        category: category || resourceName,
-      },
-    ];
+    const permissions: Array<{
+      code: string;
+      name: string;
+      description: string;
+      category: string;
+      scope: string;
+      priority: number;
+    }> = [];
+
+    if (generateScopes) {
+      // Generate scoped permissions: own, team, all
+      permissions.push(
+        {
+          code: `${resourceName}:create:basic`,
+          name: `Create ${resourceName}`,
+          description: description
+            ? `Create new ${description}`
+            : `Permission to create new ${resourceName}`,
+          category: category || resourceName,
+          scope: 'own',
+          priority: 10,
+        },
+        {
+          code: `${resourceName}:read:own`,
+          name: `View Own ${resourceName}`,
+          description: description
+            ? `View own ${description}`
+            : `Permission to view own ${resourceName} records`,
+          category: category || resourceName,
+          scope: 'own',
+          priority: 10,
+        },
+        {
+          code: `${resourceName}:read:team`,
+          name: `View Team ${resourceName}`,
+          description: description
+            ? `View team ${description}`
+            : `Permission to view team ${resourceName} records`,
+          category: category || resourceName,
+          scope: 'team',
+          priority: 20,
+        },
+        {
+          code: `${resourceName}:read:all`,
+          name: `View All ${resourceName}`,
+          description: description
+            ? `View all ${description}`
+            : `Permission to view all ${resourceName} records`,
+          category: category || resourceName,
+          scope: 'all',
+          priority: 30,
+        },
+        {
+          code: `${resourceName}:update:own`,
+          name: `Update Own ${resourceName}`,
+          description: description
+            ? `Update own ${description}`
+            : `Permission to update own ${resourceName} records`,
+          category: category || resourceName,
+          scope: 'own',
+          priority: 10,
+        },
+        {
+          code: `${resourceName}:update:team`,
+          name: `Update Team ${resourceName}`,
+          description: description
+            ? `Update team ${description}`
+            : `Permission to update team ${resourceName} records`,
+          category: category || resourceName,
+          scope: 'team',
+          priority: 20,
+        },
+        {
+          code: `${resourceName}:update:all`,
+          name: `Update All ${resourceName}`,
+          description: description
+            ? `Update all ${description}`
+            : `Permission to update all ${resourceName} records`,
+          category: category || resourceName,
+          scope: 'all',
+          priority: 30,
+        },
+        {
+          code: `${resourceName}:delete:own`,
+          name: `Delete Own ${resourceName}`,
+          description: description
+            ? `Delete own ${description}`
+            : `Permission to delete own ${resourceName} records`,
+          category: category || resourceName,
+          scope: 'own',
+          priority: 10,
+        },
+        {
+          code: `${resourceName}:delete:team`,
+          name: `Delete Team ${resourceName}`,
+          description: description
+            ? `Delete team ${description}`
+            : `Permission to delete team ${resourceName} records`,
+          category: category || resourceName,
+          scope: 'team',
+          priority: 20,
+        },
+        {
+          code: `${resourceName}:delete:all`,
+          name: `Delete All ${resourceName}`,
+          description: description
+            ? `Delete all ${description}`
+            : `Permission to delete all ${resourceName} records`,
+          category: category || resourceName,
+          scope: 'all',
+          priority: 30,
+        },
+      );
+    } else {
+      // Simple mode: only basic CRUD (backward compatible)
+      permissions.push(
+        {
+          code: `${resourceName}:create:basic`,
+          name: `Create ${resourceName}`,
+          description: description
+            ? `Create new ${description}`
+            : `Permission to create new ${resourceName}`,
+          category: category || resourceName,
+          scope: 'own',
+          priority: 10,
+        },
+        {
+          code: `${resourceName}:read:all`,
+          name: `Read ${resourceName}`,
+          description: description
+            ? `View ${description}`
+            : `Permission to view ${resourceName} records`,
+          category: category || resourceName,
+          scope: 'all',
+          priority: 10,
+        },
+        {
+          code: `${resourceName}:update:all`,
+          name: `Update ${resourceName}`,
+          description: description
+            ? `Edit ${description}`
+            : `Permission to update ${resourceName} records`,
+          category: category || resourceName,
+          scope: 'all',
+          priority: 10,
+        },
+        {
+          code: `${resourceName}:delete:all`,
+          name: `Delete ${resourceName}`,
+          description: description
+            ? `Remove ${description}`
+            : `Permission to delete ${resourceName} records`,
+          category: category || resourceName,
+          scope: 'all',
+          priority: 10,
+        },
+      );
+    }
 
     return this.generateInsertStatements(permissions, schema);
   }
@@ -65,10 +191,18 @@ export class PermissionSeedGenerator {
       name: string;
       description: string;
       category: string;
+      scope?: string;
+      priority?: number;
     }>,
     schema: string = 'user',
   ): string {
-    return this.generateInsertStatements(permissions, schema);
+    // Add default scope and priority if not provided
+    const permissionsWithDefaults = permissions.map((p) => ({
+      ...p,
+      scope: p.scope || 'all',
+      priority: p.priority || 10,
+    }));
+    return this.generateInsertStatements(permissionsWithDefaults, schema);
   }
 
   /**
@@ -80,23 +214,28 @@ export class PermissionSeedGenerator {
       name: string;
       description: string;
       category: string;
+      scope: string;
+      priority: number;
     }>,
     schema: string,
   ): string {
     const inserts = permissions.map((perm) => {
-      return `INSERT INTO ${schema}.permissions (code, name, description, category, is_active)
-VALUES ('${perm.code}', '${perm.name}', '${perm.description}', '${perm.category}', true)
+      return `INSERT INTO ${schema}.permissions (code, name, description, category, scope, priority, is_active)
+VALUES ('${perm.code}', '${perm.name}', '${perm.description}', '${perm.category}', '${perm.scope}', ${perm.priority}, true)
 ON CONFLICT (code) DO UPDATE
 SET
   name = EXCLUDED.name,
   description = EXCLUDED.description,
   category = EXCLUDED.category,
+  scope = EXCLUDED.scope,
+  priority = EXCLUDED.priority,
   is_active = EXCLUDED.is_active,
   updated_at = NOW();`;
     });
 
     const comment = `-- ${permissions[0].category} Permissions
 -- Auto-generated by nest-generator
+-- Format: {resource}:{action}:{scope}
 -- Generated at: ${new Date().toISOString()}
 `;
 

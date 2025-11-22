@@ -13,26 +13,32 @@
 -- 1. PERMISSIONS TABLE
 -- ================================================
 -- Stores all available permissions in the system
+-- Permission Format: {resource}:{action}:{scope}[:{condition}]
 CREATE TABLE IF NOT EXISTS permissions (
   id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
-  name VARCHAR(100) NOT NULL UNIQUE,           -- e.g., 'users.create', 'posts.read'
-  resource VARCHAR(50) NOT NULL,                -- e.g., 'users', 'posts', 'products'
-  action VARCHAR(50) NOT NULL,                  -- e.g., 'create', 'read', 'update', 'delete'
+  code VARCHAR(200) NOT NULL UNIQUE,            -- e.g., 'users:read:team', 'orders:approve:all'
+  name VARCHAR(200) NOT NULL,                   -- Display name: 'View Team Users'
+  resource VARCHAR(100) NOT NULL,               -- e.g., 'users', 'orders', 'products'
+  action VARCHAR(50) NOT NULL,                  -- e.g., 'create', 'read', 'approve'
+  scope VARCHAR(50) DEFAULT 'own',              -- 'own', 'team', 'department', 'all'
+  conditions JSON DEFAULT '{}',                 -- Business rules: {"status": ["active"]}
   description TEXT,                             -- Human-readable description
+  is_active BOOLEAN DEFAULT true,               -- Can be disabled
   is_system BOOLEAN DEFAULT false,              -- System-level permission (cannot be deleted)
-  metadata JSON DEFAULT '{}',                   -- Additional data (conditions, constraints)
+  priority INT DEFAULT 0,                       -- Permission priority
+  metadata JSON DEFAULT '{}',                   -- Additional data
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   created_by CHAR(36),
   updated_by CHAR(36),
   
-  -- Ensure unique combination of resource + action
-  CONSTRAINT unique_resource_action UNIQUE(resource, action),
-  
   -- Indexes
+  INDEX idx_permissions_code (code),
   INDEX idx_permissions_resource (resource),
   INDEX idx_permissions_action (action),
-  INDEX idx_permissions_name (name)
+  INDEX idx_permissions_scope (scope),
+  INDEX idx_permissions_resource_action (resource, action),
+  INDEX idx_permissions_priority (priority DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ================================================
@@ -180,9 +186,11 @@ DELIMITER //
 CREATE PROCEDURE IF NOT EXISTS get_user_permissions(IN p_user_id CHAR(36))
 BEGIN
   SELECT DISTINCT
+    p.code,
     p.name,
     p.resource,
     p.action,
+    p.scope,
     r.name as via_role
   FROM user_roles ur
   JOIN roles r ON ur.role_id = r.id
@@ -190,13 +198,14 @@ BEGIN
   JOIN permissions p ON rp.permission_id = p.id
   WHERE ur.user_id = p_user_id
     AND ur.is_active = true
+    AND p.is_active = true
     AND (ur.expires_at IS NULL OR ur.expires_at > NOW())
     AND (rp.expires_at IS NULL OR rp.expires_at > NOW())
     AND r.is_active = true;
 END //
 
 -- Function: Check if user has specific permission
-CREATE FUNCTION IF NOT EXISTS has_permission(p_user_id CHAR(36), p_permission_name VARCHAR(100))
+CREATE FUNCTION IF NOT EXISTS has_permission(p_user_id CHAR(36), p_permission_code VARCHAR(200))
 RETURNS BOOLEAN
 DETERMINISTIC
 READS SQL DATA
@@ -210,8 +219,9 @@ BEGIN
     JOIN role_permissions rp ON r.id = rp.role_id
     JOIN permissions p ON rp.permission_id = p.id
     WHERE ur.user_id = p_user_id
-      AND p.name = p_permission_name
+      AND p.code = p_permission_code
       AND ur.is_active = true
+      AND p.is_active = true
       AND (ur.expires_at IS NULL OR ur.expires_at > NOW())
       AND (rp.expires_at IS NULL OR rp.expires_at > NOW())
       AND r.is_active = true
@@ -247,27 +257,31 @@ DELIMITER ;
 -- 8. SEED DATA (Default Permissions & Roles)
 -- ================================================
 
--- Insert default permissions (common CRUD operations)
-INSERT INTO permissions (name, resource, action, description, is_system) VALUES
-  ('users.create', 'users', 'create', 'Create new users', true),
-  ('users.read', 'users', 'read', 'View user information', true),
-  ('users.update', 'users', 'update', 'Update user information', true),
-  ('users.delete', 'users', 'delete', 'Delete users', true),
-  ('users.list', 'users', 'list', 'List all users', true),
-  ('users.export', 'users', 'export', 'Export user data', true),
-  
-  ('roles.manage', 'roles', 'manage', 'Manage roles and permissions', true),
-  ('permissions.manage', 'permissions', 'manage', 'Manage permissions', true),
-  
-  ('system.admin', 'system', 'admin', 'Full system administration', true)
-ON DUPLICATE KEY UPDATE name=name;
+-- Insert default permissions (new format: resource:action:scope)
+INSERT INTO permissions (code, name, resource, action, scope, description, is_system, priority) VALUES
+  -- User permissions
+  ('users:create:basic', 'Create User', 'users', 'create', 'own', 'Create new user account', true, 10),
+  ('users:read:own', 'View Own Profile', 'users', 'read', 'own', 'View own user profile', true, 10),
+  ('users:read:team', 'View Team Users', 'users', 'read', 'team', 'View users in same team', true, 20),
+  ('users:read:all', 'View All Users', 'users', 'read', 'all', 'View all users', true, 30),
+  ('users:update:own', 'Update Own Profile', 'users', 'update', 'own', 'Update own profile', true, 10),
+  ('users:update:team', 'Update Team Users', 'users', 'update', 'team', 'Update team users', true, 20),
+  ('users:update:all', 'Update All Users', 'users', 'update', 'all', 'Update any user', true, 30),
+  ('users:delete:team', 'Delete Team Users', 'users', 'delete', 'team', 'Delete team users', true, 20),
+  ('users:delete:all', 'Delete Any User', 'users', 'delete', 'all', 'Delete any user', true, 30),
+  ('users:export:all', 'Export All Users', 'users', 'export', 'all', 'Export all users', true, 30),
+  ('roles:manage:all', 'Manage Roles', 'roles', 'manage', 'all', 'Manage roles', true, 50),
+  ('permissions:manage:all', 'Manage Permissions', 'permissions', 'manage', 'all', 'Manage permissions', true, 50),
+  ('system:admin:all', 'System Admin', 'system', 'admin', 'all', 'Full system administration', true, 100)
+ON DUPLICATE KEY UPDATE code=code;
 
 -- Insert default roles
 INSERT INTO roles (name, display_name, description, level, is_system) VALUES
   ('super_admin', 'Super Administrator', 'Full system access', 0, true),
   ('admin', 'Administrator', 'Administrative access', 1, true),
-  ('editor', 'Editor', 'Content editing access', 2, true),
-  ('viewer', 'Viewer', 'Read-only access', 3, true)
+  ('manager', 'Manager', 'Team management access', 2, true),
+  ('user', 'User', 'Standard user access', 3, true),
+  ('viewer', 'Viewer', 'Read-only access', 4, true)
 ON DUPLICATE KEY UPDATE name=name;
 
 -- Assign permissions to super_admin (all permissions)
@@ -275,15 +289,31 @@ INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
 CROSS JOIN permissions p
-WHERE r.name = 'super_admin'
+WHERE r.name = 'super_admin' AND p.is_active = true
 ON DUPLICATE KEY UPDATE role_id=role_id;
 
--- Assign permissions to admin (all except system.admin)
+-- Assign permissions to admin (all except system:admin:all)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
 CROSS JOIN permissions p
-WHERE r.name = 'admin' AND p.name != 'system.admin'
+WHERE r.name = 'admin' AND p.code != 'system:admin:all' AND p.is_active = true
+ON DUPLICATE KEY UPDATE role_id=role_id;
+
+-- Assign permissions to manager (team-level permissions)
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+CROSS JOIN permissions p
+WHERE r.name = 'manager' AND p.scope IN ('own', 'team') AND p.is_active = true
+ON DUPLICATE KEY UPDATE role_id=role_id;
+
+-- Assign permissions to user (own-level permissions)
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+CROSS JOIN permissions p
+WHERE r.name = 'user' AND p.scope = 'own' AND p.is_active = true
 ON DUPLICATE KEY UPDATE role_id=role_id;
 
 -- Assign read permissions to viewer
@@ -291,7 +321,7 @@ INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
 CROSS JOIN permissions p
-WHERE r.name = 'viewer' AND p.action = 'read'
+WHERE r.name = 'viewer' AND p.action = 'read' AND p.scope IN ('own', 'team') AND p.is_active = true
 ON DUPLICATE KEY UPDATE role_id=role_id;
 
 -- ================================================

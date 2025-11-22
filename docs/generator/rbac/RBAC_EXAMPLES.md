@@ -34,10 +34,10 @@ npm install pg # or mysql2
 
 ```bash
 # PostgreSQL
-psql -U postgres -d myapp -f node_modules/@ojiepermana/nest-generator/rbac/schemas/postgresql-rbac.sql
+psql -U postgres -d myapp -f node_modules/@ojiepermana/nest-rbac/schemas/postgresql-rbac.sql
 
 # MySQL
-mysql -u root -p myapp < node_modules/@ojiepermana/nest-generator/rbac/schemas/mysql-rbac.sql
+mysql -u root -p myapp < node_modules/@ojiepermana/nest-rbac/schemas/mysql-rbac.sql
 ```
 
 ### 3. Configure App Module
@@ -45,7 +45,7 @@ mysql -u root -p myapp < node_modules/@ojiepermana/nest-generator/rbac/schemas/m
 ```typescript
 // app.module.ts
 import { Module } from '@nestjs/common';
-import { RBACModule } from '@ojiepermana/nest-generator/rbac';
+import { RBACModule } from '@ojiepermana/nest-rbac';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
@@ -111,7 +111,7 @@ nest-generator generate users --features.rbac=true --rbacResourceName=users
 ```typescript
 // users.controller.ts (auto-generated)
 import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
-import { RequirePermission } from '@ojiepermana/nest-generator/rbac';
+import { RequirePermission } from '@ojiepermana/nest-rbac';
 import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto } from './dto';
 
@@ -187,7 +187,7 @@ SET name = EXCLUDED.name, description = EXCLUDED.description, updated_at = NOW()
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { RBACRepository } from '@ojiepermana/nest-generator/rbac';
+import { RBACRepository } from '@ojiepermana/nest-rbac';
 
 @Injectable()
 export class PermissionService {
@@ -261,7 +261,7 @@ export class ProductsController {
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { RBACRepository } from '@ojiepermana/nest-generator/rbac';
+import { RBACRepository } from '@ojiepermana/nest-rbac';
 
 @Injectable()
 export class RoleService {
@@ -345,7 +345,7 @@ async assignRolesToUser(userId: string) {
 ### Using Role Decorators
 
 ```typescript
-import { RequireRole, RequireAdmin } from '@ojiepermana/nest-generator/rbac';
+import { RequireRole, RequireAdmin } from '@ojiepermana/nest-rbac';
 
 @Controller('admin')
 export class AdminController {
@@ -381,7 +381,7 @@ export class AdminController {
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { RBACService } from '@ojiepermana/nest-generator/rbac';
+import { RBACService } from '@ojiepermana/nest-rbac';
 
 @Injectable()
 export class UsersService {
@@ -427,7 +427,7 @@ WHERE p.code = 'users.update';
 ### Ownership-Based Access
 
 ```typescript
-import { RequireOwnership } from '@ojiepermana/nest-generator/rbac';
+import { RequireOwnership } from '@ojiepermana/nest-rbac';
 
 @Controller('posts')
 export class PostsController {
@@ -570,7 +570,7 @@ bootstrap();
 // app.module.ts
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { RBACModule } from '@ojiepermana/nest-generator/rbac';
+import { RBACModule } from '@ojiepermana/nest-rbac';
 import { UsersModule } from './modules/users/users.module';
 import { ProductsModule } from './modules/products/products.module';
 import { OrdersModule } from './modules/orders/orders.module';
@@ -612,7 +612,7 @@ export class ProductsModule {}
 ```typescript
 // products.controller.ts (Generated with RBAC)
 import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
-import { RequirePermission, RequireOwnership } from '@ojiepermana/nest-generator/rbac';
+import { RequirePermission, RequireOwnership } from '@ojiepermana/nest-rbac';
 import { ProductsService } from './products.service';
 import { CreateProductDto, UpdateProductDto, ProductFilterDto } from './dto';
 
@@ -670,7 +670,7 @@ export class ProductsController {
 // scripts/seed-rbac.ts
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
-import { RBACRepository } from '@ojiepermana/nest-generator/rbac';
+import { RBACRepository } from '@ojiepermana/nest-rbac';
 
 async function seedRBAC() {
   const app = await NestFactory.createApplicationContext(AppModule);
@@ -765,7 +765,7 @@ seedRBAC().catch(console.error);
 import { Test } from '@nestjs/testing';
 import { ProductsController } from './products.controller';
 import { ProductsService } from './products.service';
-import { RBACService } from '@ojiepermana/nest-generator/rbac';
+import { RBACService } from '@ojiepermana/nest-rbac';
 
 describe('ProductsController with RBAC', () => {
   let controller: ProductsController;

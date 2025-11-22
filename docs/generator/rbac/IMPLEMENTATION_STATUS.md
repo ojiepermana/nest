@@ -264,7 +264,7 @@ async remove(@Param('id') id: string) { }
 Auto-generates SQL INSERT statements for permissions:
 
 ```typescript
-import { PermissionSeedGenerator } from '@ojiepermana/nest-generator/rbac';
+import { PermissionSeedGenerator } from '@ojiepermana/nest-rbac';
 
 const generator = new PermissionSeedGenerator();
 
@@ -646,7 +646,7 @@ nest-generator generate users.profile --features.rbac=true
 ### 3. Use Decorators
 
 ```typescript
-import { RequirePermission, RequireOwnership, RequireAnyRole } from '@ojiepermana/nest-generator/rbac';
+import { RequirePermission, RequireOwnership, RequireAnyRole } from '@ojiepermana/nest-rbac';
 
 @Controller('users')
 export class UsersController {
@@ -671,7 +671,7 @@ export class UsersController {
 ### 4. Check Permissions Programmatically
 
 ```typescript
-import { RBACService } from '@ojiepermana/nest-generator/rbac';
+import { RBACService } from '@ojiepermana/nest-rbac';
 
 export class UsersService {
   constructor(private readonly rbacService: RBACService) {}

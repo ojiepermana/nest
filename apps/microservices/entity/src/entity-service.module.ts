@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DatabaseModule } from './database.module';
-import { RBACModule } from '@ojiepermana/nest-generator/rbac';
+import { RBACModule } from '@ojiepermana/nest-rbac';
 import { EntityModule } from './entity/entity.module';
 @Module({
   imports: [

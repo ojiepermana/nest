@@ -9,7 +9,7 @@
 ### Current State
 ```
 @ojiepermana/nest-generator (v4.0.0)
-  └── /rbac (exported as @ojiepermana/nest-generator/rbac)
+  └── /rbac (exported as @ojiepermana/nest-rbac)
        ├── 22 TypeScript files
        ├── ~248KB source code
        ├── Runtime dependencies: @nestjs/common, @nestjs/core, pg/mysql2
@@ -340,7 +340,7 @@ export * from './interfaces';
 protected generateImports(): string {
   if (this.hasRBAC()) {
     imports.push(
-      "import { RequirePermission, RequireRole, Public, RoleLogic } from '@ojiepermana/nest-generator/rbac';"
+      "import { RequirePermission, RequireRole, Public, RoleLogic } from '@ojiepermana/nest-rbac';"
     );
   }
 }
@@ -360,7 +360,7 @@ protected generateImports(): string {
 ```typescript
 // BEFORE
 if (hasRBAC) {
-  imports.push("import { RBACModule } from '@ojiepermana/nest-generator/rbac';");
+  imports.push("import { RBACModule } from '@ojiepermana/nest-rbac';");
 }
 
 // AFTER
@@ -520,7 +520,7 @@ Files to update:
 
 ### Old Import Path (v4.x)
 \`\`\`typescript
-import { RequirePermission } from '@ojiepermana/nest-generator/rbac';
+import { RequirePermission } from '@ojiepermana/nest-rbac';
 \`\`\`
 
 ### New Import Path (v5.x)
@@ -569,7 +569,7 @@ Keep old export in generator with deprecation notice:
  * Please update your imports:
  * 
  * Before:
- *   import { RequirePermission } from '@ojiepermana/nest-generator/rbac';
+ *   import { RequirePermission } from '@ojiepermana/nest-rbac';
  * 
  * After:
  *   import { RequirePermission } from '@ojiepermana/nest-rbac';
@@ -584,7 +584,7 @@ export * from '@ojiepermana/nest-rbac';
 console.warn(`
 ⚠️  DEPRECATION WARNING
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-You are importing RBAC from @ojiepermana/nest-generator/rbac
+You are importing RBAC from @ojiepermana/nest-rbac
 
 This path is deprecated. Please update to:
   npm install @ojiepermana/nest-rbac
@@ -600,15 +600,15 @@ The old path will be removed in v6.0.0
 #### 7.2 Version Timeline
 ```
 v4.x (Current)
-  └── @ojiepermana/nest-generator/rbac ✅ Works
+  └── @ojiepermana/nest-rbac ✅ Works
 
 v5.0.0 (Breaking, with compatibility)
   ├── @ojiepermana/nest-rbac ✅ Recommended
-  └── @ojiepermana/nest-generator/rbac ⚠️ Deprecated (re-exports v5.0)
+  └── @ojiepermana/nest-rbac ⚠️ Deprecated (re-exports v5.0)
 
 v6.0.0 (Future - full removal)
   ├── @ojiepermana/nest-rbac ✅ Only way
-  └── @ojiepermana/nest-generator/rbac ❌ Removed
+  └── @ojiepermana/nest-rbac ❌ Removed
 ```
 
 ---

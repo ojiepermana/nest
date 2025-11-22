@@ -198,7 +198,7 @@ npm install --save-dev @ojiepermana/nest-generator@^5.0.0
 
 **Before (v4.x)**:
 ```typescript
-import { RequirePermission, RBACModule } from '@ojiepermana/nest-generator/rbac';
+import { RequirePermission, RBACModule } from '@ojiepermana/nest-rbac';
 ```
 
 **After (v5.x)**:

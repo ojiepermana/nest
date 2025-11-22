@@ -11,7 +11,7 @@ This allows you to use RBAC in your NestJS applications without needing the enti
 ### Old Import Path (v4.x)
 
 ```typescript
-import { RequirePermission, RBACModule } from '@ojiepermana/nest-generator/rbac';
+import { RequirePermission, RBACModule } from '@ojiepermana/nest-rbac';
 ```
 
 ### New Import Path (v5.x)
@@ -51,7 +51,7 @@ import {
   RequireRole,
   RBACModule,
   RBACService,
-} from '@ojiepermana/nest-generator/rbac';
+} from '@ojiepermana/nest-rbac';
 ```
 
 **After:**
@@ -83,7 +83,7 @@ The old import path is still supported in v5.0.0 through re-exports, but will sh
 ```
 ⚠️  DEPRECATION WARNING
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-You are importing RBAC from @ojiepermana/nest-generator/rbac
+You are importing RBAC from @ojiepermana/nest-rbac
 
 This path is deprecated. Please update to:
   npm install @ojiepermana/nest-rbac
@@ -97,7 +97,7 @@ The old path will be removed in v6.0.0
 
 ### Timeline
 
-- **v4.x**: Old path works (`@ojiepermana/nest-generator/rbac`)
+- **v4.x**: Old path works (`@ojiepermana/nest-rbac`)
 - **v5.0.0**: Both paths work, old path shows deprecation warning
 - **v6.0.0**: Only new path works (`@ojiepermana/nest-rbac`)
 
@@ -133,7 +133,7 @@ Code generation tools remain in `@ojiepermana/nest-generator`:
 ```typescript
 // app.module.ts
 import { Module } from '@nestjs/common';
-import { RBACModule } from '@ojiepermana/nest-generator/rbac';
+import { RBACModule } from '@ojiepermana/nest-rbac';
 
 @Module({
   imports: [RBACModule.register({ /* config */ })],
@@ -142,7 +142,7 @@ export class AppModule {}
 
 // users.controller.ts
 import { Controller, Get } from '@nestjs/common';
-import { RequirePermission } from '@ojiepermana/nest-generator/rbac';
+import { RequirePermission } from '@ojiepermana/nest-rbac';
 
 @Controller('users')
 export class UsersController {
@@ -238,9 +238,9 @@ npm test
 
 | Generator Version | RBAC Package | Import Path | Status |
 |------------------|--------------|-------------|--------|
-| v4.x | Included | `@ojiepermana/nest-generator/rbac` | ✅ Supported |
+| v4.x | Included | `@ojiepermana/nest-rbac` | ✅ Supported |
 | v5.0.0 | `@ojiepermana/nest-rbac` v1.0.0 | `@ojiepermana/nest-rbac` | ✅ Recommended |
-| v5.0.0 | - | `@ojiepermana/nest-generator/rbac` | ⚠️ Deprecated |
+| v5.0.0 | - | `@ojiepermana/nest-rbac` | ⚠️ Deprecated |
 | v6.0.0+ | `@ojiepermana/nest-rbac` v1.x | `@ojiepermana/nest-rbac` | ✅ Required |
 
 ---

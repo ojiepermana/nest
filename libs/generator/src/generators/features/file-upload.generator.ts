@@ -318,9 +318,36 @@ export class FileUploadGenerator {
 
   /**
    * Get columns that have file upload enabled
+   * Detects file columns by:
+   * 1. Explicit flag: is_file_upload === true
+   * 2. Column name patterns: *_file, file_path, file_url, *_attachment, image_*, photo_*, avatar_*, document_*
    */
   private getFileUploadColumns(): ColumnMetadata[] {
-    return this.columns.filter((col) => col.is_file_upload === true);
+    return this.columns.filter((col) => {
+      // Check explicit flag first
+      if (col.is_file_upload === true) {
+        return true;
+      }
+
+      // Check column name patterns
+      const columnName = col.column_name.toLowerCase();
+      const filePatterns = [
+        /_file$/, // ends with _file
+        /^file_/, // starts with file_
+        /file_path/, // contains file_path
+        /file_url/, // contains file_url
+        /_attachment$/, // ends with _attachment
+        /^attachment_/, // starts with attachment_
+        /^image_/, // starts with image_
+        /^photo_/, // starts with photo_
+        /^avatar/, // starts with avatar
+        /^document_/, // starts with document_
+        /^media_/, // starts with media_
+        /_media$/, // ends with _media
+      ];
+
+      return filePatterns.some((pattern) => pattern.test(columnName));
+    });
   }
 
   /**

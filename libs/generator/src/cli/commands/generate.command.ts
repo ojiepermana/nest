@@ -29,6 +29,7 @@ import { ControllerGenerator } from '../../generators/controller/controller.gene
 import { GatewayControllerGenerator } from '../../generators/controller/gateway-controller.generator';
 import { ServiceControllerGenerator } from '../../generators/controller/service-controller.generator';
 import { ModuleGenerator } from '../../generators/module/module.generator';
+import { StorageServiceGenerator } from '../../generators/features/storage-service.generator';
 import { toPascalCase } from '../../utils/string.util';
 import type {
   GeneratorConfig,
@@ -79,11 +80,22 @@ export class GenerateCommand {
     // Step 4: Fetch metadata
     const { tableMetadata, columns } = await this.fetchMetadata(tableName);
 
+    // Auto-detect file columns
+    const hasFileColumns = this.detectFileColumns(columns);
+    if (hasFileColumns) {
+      Logger.info('   📁 File upload columns detected - auto-enabling file upload feature');
+    }
+
     // If --all flag is used, automatically skip prompts
     const skipPrompts = options.skipPrompts || options.all;
 
     // Step 5: Prompt for features or use provided
-    const features = await this.promptFeatures(options.features, skipPrompts, options.all);
+    const features = await this.promptFeatures(
+      options.features,
+      skipPrompts,
+      options.all,
+      hasFileColumns,
+    );
 
     // Step 6: Prompt for output path or use provided (with app name if specified)
     const outputPath = await this.promptOutputPath(
@@ -374,6 +386,7 @@ export class GenerateCommand {
     providedFeatures?: GenerateCommandOptions['features'],
     skipPrompts?: boolean,
     enableAll?: boolean,
+    hasFileColumns?: boolean,
   ): Promise<Required<NonNullable<GenerateCommandOptions['features']>>> {
     // If --all flag is provided, enable all features
     if (enableAll) {
@@ -397,7 +410,7 @@ export class GenerateCommand {
         pagination: providedFeatures.pagination ?? true,
         auditLog: providedFeatures.auditLog ?? false,
         softDelete: providedFeatures.softDelete ?? false,
-        fileUpload: providedFeatures.fileUpload ?? false,
+        fileUpload: providedFeatures.fileUpload ?? hasFileColumns ?? false, // Auto-enable if file columns detected
         rbac: providedFeatures.rbac ?? false,
       };
     }
@@ -444,8 +457,10 @@ export class GenerateCommand {
       {
         type: 'confirm',
         name: 'fileUpload',
-        message: '📁 Enable file upload? (auto-detects file columns)',
-        default: this.config?.features?.fileUpload ?? false,
+        message: hasFileColumns
+          ? '📁 Enable file upload? (✓ file columns detected)'
+          : '📁 Enable file upload?',
+        default: hasFileColumns ?? this.config?.features?.fileUpload ?? false,
       },
       {
         type: 'confirm',
@@ -734,6 +749,13 @@ export class GenerateCommand {
     const serviceCode = serviceGenerator.generate();
     this.writeFile(join(schemaDir, 'services', `${moduleName}.service.ts`), serviceCode);
     Logger.info('   ✓ Service generated');
+
+    // 4.5. Generate StorageService if file upload is enabled
+    if (features.fileUpload && this.detectFileColumns(columns)) {
+      Logger.info('   ⏳ Generating storage service...');
+      this.generateStorageService(schemaDir, features);
+      Logger.info('   ✓ Storage service generated');
+    }
 
     // 5. Generate Controller
     Logger.info('   ⏳ Generating controller...');
@@ -2021,5 +2043,72 @@ export { ${entityName}FilterDto };
       .replace(/([a-z])([A-Z])/g, '$1-$2')
       .replace(/[\s_]+/g, '-')
       .toLowerCase();
+  }
+
+  /**
+   * Detect if table has file upload columns by column naming patterns
+   */
+  private detectFileColumns(columns: ColumnMetadata[]): boolean {
+    return columns.some((col) => {
+      // Check explicit flag
+      if (col.is_file_upload === true) {
+        return true;
+      }
+
+      // Check column name patterns
+      const columnName = col.column_name.toLowerCase();
+      const filePatterns = [
+        /_file$/, // ends with _file
+        /^file_/, // starts with file_
+        /file_path/, // contains file_path
+        /file_url/, // contains file_url
+        /_attachment$/, // ends with _attachment
+        /^attachment_/, // starts with attachment_
+        /^image_/, // starts with image_
+        /^photo_/, // starts with photo_
+        /^avatar/, // starts with avatar
+        /^document_/, // starts with document_
+        /^media_/, // starts with media_
+        /_media$/, // ends with _media
+      ];
+
+      return filePatterns.some((pattern) => pattern.test(columnName));
+    });
+  }
+
+  /**
+   * Generate StorageService for file uploads
+   */
+  private generateStorageService(
+    schemaDir: string,
+    features: Required<NonNullable<GenerateCommandOptions['features']>>,
+  ): void {
+    const storageProvider =
+      (process.env.STORAGE_PROVIDER as 'local' | 's3' | 'gcs' | 'azure') || 'local';
+
+    const storageGenerator = new StorageServiceGenerator({
+      provider: storageProvider,
+      tableName: 'storage',
+    });
+
+    const storageCode = storageGenerator.generate();
+    this.writeFile(join(schemaDir, 'services', 'storage.service.ts'), storageCode);
+
+    // Generate .env.example with storage configuration
+    const projectRoot = this.findProjectRoot();
+    const envExamplePath = join(projectRoot, '.env.example');
+    const envDocs = storageGenerator.generateEnvDocs();
+
+    // Append to .env.example if exists, otherwise create
+    if (existsSync(envExamplePath)) {
+      const existingContent = readFileSync(envExamplePath, 'utf-8');
+      if (!existingContent.includes('# Storage Service Configuration')) {
+        writeFileSync(envExamplePath, `${existingContent}\n\n${envDocs}\n`, 'utf-8');
+        Logger.info(`   ✓ Updated .env.example with storage configuration`);
+      }
+    } else {
+      writeFileSync(envExamplePath, `${envDocs}\n`, 'utf-8');
+      Logger.info(`   ✓ Created .env.example with storage configuration`);
+    }
   }
 }

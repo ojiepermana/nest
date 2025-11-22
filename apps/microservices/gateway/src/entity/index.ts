@@ -12,3 +12,7 @@ export * from './dto/entity/create-entity.dto';
 export * from './dto/entity/update-entity.dto';
 export * from './dto/entity/entity-filter.dto';
 export * from './controllers/entity.controller';
+export * from './dto/document/create-document.dto';
+export * from './dto/document/update-document.dto';
+export * from './dto/document/document-filter.dto';
+export * from './controllers/document.controller';

@@ -5,6 +5,7 @@ import { AuditModule } from '@ojiepermana/nest-generator/audit';
 import { LocationController } from './controllers/location.controller';
 import { BusinessEntityController } from './controllers/business-entity.controller';
 import { EntityController } from './controllers/entity.controller';
+import { DocumentController } from './controllers/document.controller';
 
 @Module({
   imports: [
@@ -17,6 +18,6 @@ import { EntityController } from './controllers/entity.controller';
           port: parseInt(process.env.ENTITY_SERVICE_PORT || '3004'),
         },
       }]), CacheModule.register(), AuditModule],
-  controllers: [LocationController, BusinessEntityController]
+  controllers: [LocationController, BusinessEntityController, DocumentController]
 })
 export class EntityModule {}

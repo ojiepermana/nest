@@ -1,0 +1,52 @@
+{
+  "name": "@ojiepermana/nest-rbac",
+  "version": "1.0.0",
+  "description": "Role-Based Access Control (RBAC) for NestJS - Production-ready decorators, guards, and services",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "author": "Ojie Permana",
+  "license": "MIT",
+  "keywords": [
+    "nestjs",
+    "rbac",
+    "role-based-access-control",
+    "permissions",
+    "authorization",
+    "guards",
+    "decorators"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ojiepermana/nest.git",
+    "directory": "libs/rbac"
+  },
+  "homepage": "https://github.com/ojiepermana/nest/tree/main/libs/rbac#readme",
+  "bugs": "https://github.com/ojiepermana/nest/issues",
+  "peerDependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/cache-manager": "^2.0.0 || ^3.0.0",
+    "cache-manager": "^5.0.0 || ^7.0.0",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.0.0"
+  },
+  "peerDependenciesMeta": {
+    "pg": {
+      "optional": true
+    },
+    "mysql2": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "schemas/*.sql",
+    "migrations/*.sql",
+    "README.md",
+    "LICENSE"
+  ]
+}

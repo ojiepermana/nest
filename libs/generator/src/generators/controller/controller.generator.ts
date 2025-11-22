@@ -125,7 +125,7 @@ ${crudEndpoints}${fileUploadEndpoints}
     // Add RBAC imports
     if (this.options.enableRbac) {
       imports.push(
-        "import { RequirePermission, RequireRole, Public, RoleLogic } from '@ojiepermana/nest-generator/rbac';",
+        "import { RequirePermission, RequireRole, Public, RoleLogic } from '@ojiepermana/nest-rbac';",
       );
     }
 

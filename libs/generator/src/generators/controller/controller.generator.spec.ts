@@ -444,7 +444,7 @@ describe('ControllerGenerator', () => {
       const result = generator.generate();
 
       expect(result).toContain(
-        "import { RequirePermission } from '@ojiepermana/nest-generator/rbac'",
+        "import { RequirePermission } from '@ojiepermana/nest-rbac'",
       );
     });
 
@@ -456,7 +456,7 @@ describe('ControllerGenerator', () => {
 
       const result = generator.generate();
 
-      expect(result).not.toContain('@ojiepermana/nest-generator/rbac');
+      expect(result).not.toContain('@ojiepermana/nest-rbac');
     });
 
     it('should add @RequirePermission decorators to all CRUD endpoints', () => {

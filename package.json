@@ -11,16 +11,19 @@
   },
   "scripts": {
     "build": "nest build",
+    "build:rbac": "tsc -p libs/rbac/tsconfig.lib.json && npm run postbuild:rbac",
     "build:generator": "nest build generator && npm run postbuild:generator",
     "build:nest": "nest build nest && npm run postbuild:nest",
+    "postbuild:rbac": "mkdir -p libs/rbac/dist && cp -r libs/rbac/schemas libs/rbac/dist/ && cp -r libs/rbac/migrations libs/rbac/dist/ && cp libs/rbac/README.md libs/rbac/dist/ 2>/dev/null || true",
     "postbuild:generator": "mkdir -p libs/generator/dist && cp -r dist/libs/generator/* libs/generator/dist/",
     "postbuild:nest": "mkdir -p libs/nest/dist && cp -r dist/libs/nest/* libs/nest/dist/",
-    "build:all-libs": "npm run build:generator && npm run build:nest",
-    "clean:dist": "rm -rf dist libs/generator/dist libs/nest/dist",
+    "build:all-libs": "npm run build:rbac && npm run build:generator && npm run build:nest",
+    "clean:dist": "rm -rf dist libs/rbac/dist libs/generator/dist libs/nest/dist",
     "prebuild:libs": "npm run clean:dist && npm run build:all-libs",
+    "publish:rbac": "cd libs/rbac && npm publish",
     "publish:generator": "cd libs/generator && npm publish",
     "publish:nest": "cd libs/nest && npm publish",
-    "publish:all-libs": "npm run prebuild:libs && npm run publish:generator && npm run publish:nest",
+    "publish:all-libs": "npm run prebuild:libs && npm run publish:rbac && npm run publish:generator && npm run publish:nest",
     "format": "prettier --write \"**/*.{ts,js,json,md}\" --ignore-path .gitignore",
     "format:check": "prettier --check \"**/*.{ts,js,json,md}\" --ignore-path .gitignore",
     "lint:md": "markdownlint \"**/*.md\" --ignore node_modules --ignore dist",
@@ -35,6 +38,8 @@
     "start:prod": "node dist/apps/nest/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
+    "test:rbac": "jest --config=libs/rbac/jest.config.json",
+    "test:generator": "jest --selectProjects @ojiepermana/nest-generator",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
@@ -120,6 +125,7 @@
       "<rootDir>/apps/"
     ],
     "moduleNameMapper": {
+      "^@ojiepermana/nest-rbac(|/.*)$": "<rootDir>/libs/rbac/src/$1",
       "^@ojiepermana/nest-generator(|/.*)$": "<rootDir>/libs/generator/src/$1",
       "^@ojiepermana/nest(|/.*)$": "<rootDir>/libs/nest/src/$1"
     }

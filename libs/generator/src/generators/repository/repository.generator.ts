@@ -891,6 +891,17 @@ export const auditConfig = {
     const pkName = pkColumn?.column_name || 'id';
     const pkType = this.getTypeScriptType(pkColumn?.data_type || 'integer');
 
+    // Detect foreign keys
+    const fkColumns = this.columns.filter(
+      (col) => col.ref_schema && col.ref_table && col.ref_column,
+    );
+    const hasRelations = fkColumns.length > 0;
+
+    // Generate JOIN query methods if there are foreign keys
+    const joinMethods = hasRelations
+      ? this.generateJoinMethods(entityName, schemaName, tableName, pkName, pkType, fkColumns)
+      : '';
+
     return `import { Injectable, Inject } from '@nestjs/common';
 import { Pool } from 'pg';
 import { Create${entityName}Dto } from '../dto/${this.toKebabCase(entityName)}/create-${this.toKebabCase(entityName)}.dto';
@@ -1035,7 +1046,136 @@ export class ${repositoryName} {
     const result = await this.pool.query(query, [id]);
     return result.rows.length > 0;
   }
+${joinMethods}
 }
+`;
+  }
+
+  /**
+   * Generate JOIN methods for repositories with foreign keys
+   */
+  private generateJoinMethods(
+    entityName: string,
+    schemaName: string,
+    tableName: string,
+    pkName: string,
+    pkType: string,
+    fkColumns: ColumnMetadata[],
+  ): string {
+    const camelName = toCamelCase(entityName);
+
+    // Build JOIN clauses
+    const joinClauses: string[] = [];
+    const selectColumns: string[] = [`t.*`];
+
+    fkColumns.forEach((col, index) => {
+      const joinAlias = `rel_${index}`;
+      const refSchema = col.ref_schema || 'public';
+      const refTable = col.ref_table || '';
+      const refColumn = col.ref_column || 'id';
+      const joinType = col.is_nullable ? 'LEFT' : 'INNER';
+
+      // Generate JOIN clause
+      joinClauses.push(
+        `${joinType} JOIN "${refSchema}"."${refTable}" AS ${joinAlias} ON t.${col.column_name} = ${joinAlias}.${refColumn}`,
+      );
+
+      // Add select columns from joined table (name, title, code as common display fields)
+      selectColumns.push(
+        `${joinAlias}.id AS ${col.column_name}_id`,
+        `${joinAlias}.name AS ${col.column_name}_name`,
+      );
+    });
+
+    const joinClause = joinClauses.join('\n      ');
+    const selectClause = selectColumns.join(',\n        ');
+
+    return `
+  /**
+   * Find one ${camelName} by ID with relations
+   * Includes data from related tables via JOIN
+   */
+  async findOneWithRelations(id: ${pkType}): Promise<any | null> {
+    const query = \`
+      SELECT
+        ${selectClause}
+      FROM "${schemaName}"."${tableName}" AS t
+      ${joinClause}
+      WHERE t.${pkName} = $1
+      AND t.deleted_at IS NULL
+    \`;
+    
+    const result = await this.pool.query(query, [id]);
+    return result.rows[0] || null;
+  }
+
+  /**
+   * Find all ${camelName}s with relations
+   * Includes data from related tables via JOIN with pagination
+   */
+  async findAllWithRelations(
+    filters?: any,
+    options?: { page?: number; limit?: number; sort?: Array<{ field: string; order: 'ASC' | 'DESC' }> },
+  ): Promise<{ data: any[]; total: number }> {
+    // Build WHERE conditions
+    const conditions: string[] = ['t.deleted_at IS NULL'];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    if (filters) {
+      const paginationFields = ['page', 'limit', 'sort'];
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && !paginationFields.includes(key)) {
+          conditions.push(\`t.\${key} = $\${paramIndex}\`);
+          values.push(value);
+          paramIndex++;
+        }
+      });
+    }
+
+    const whereClause = \`WHERE \${conditions.join(' AND ')}\`;
+
+    // Get total count
+    const countQuery = \`
+      SELECT COUNT(*) as total
+      FROM "${schemaName}"."${tableName}" AS t
+      \${whereClause}
+    \`;
+    const countResult = await this.pool.query(countQuery, values);
+    const total = parseInt(countResult.rows[0].total, 10);
+
+    // Build ORDER BY clause
+    let orderByClause = \`ORDER BY t.${pkName}\`;
+    if (options?.sort && options.sort.length > 0) {
+      const sortClauses = options.sort.map(s => \`t.\${s.field} \${s.order}\`).join(', ');
+      orderByClause = \`ORDER BY \${sortClauses}\`;
+    }
+
+    // Build pagination
+    const page = options?.page || 1;
+    const limit = Math.min(options?.limit || 20, 100);
+    const offset = (page - 1) * limit;
+
+    // Get paginated data with JOINs
+    const dataQuery = \`
+      SELECT
+        ${selectClause}
+      FROM "${schemaName}"."${tableName}" AS t
+      ${joinClause}
+      \${whereClause}
+      \${orderByClause}
+      LIMIT $\${paramIndex}
+      OFFSET $\${paramIndex + 1}
+    \`;
+    
+    const dataValues = [...values, limit, offset];
+    const dataResult = await this.pool.query(dataQuery, dataValues);
+
+    return {
+      data: dataResult.rows,
+      total,
+    };
+  }
 `;
   }
 }

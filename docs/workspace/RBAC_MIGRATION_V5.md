@@ -45,23 +45,15 @@ find . -name "*.ts" -type f -not -path "*/node_modules/*" -exec sed -i \
 Update each import manually:
 
 **Before:**
+
 ```typescript
-import {
-  RequirePermission,
-  RequireRole,
-  RBACModule,
-  RBACService,
-} from '@ojiepermana/nest-rbac';
+import { RequirePermission, RequireRole, RBACModule, RBACService } from '@ojiepermana/nest-rbac';
 ```
 
 **After:**
+
 ```typescript
-import {
-  RequirePermission,
-  RequireRole,
-  RBACModule,
-  RBACService,
-} from '@ojiepermana/nest-rbac';
+import { RequirePermission, RequireRole, RBACModule, RBACService } from '@ojiepermana/nest-rbac';
 ```
 
 ### 3. Update Generator (Optional)
@@ -106,6 +98,7 @@ The old path will be removed in v6.0.0
 ### Moved to Separate Package
 
 All runtime RBAC code has moved to `@ojiepermana/nest-rbac`:
+
 - ✅ Decorators (`@RequirePermission`, `@RequireRole`, `@Public`)
 - ✅ Guards (`PermissionsGuard`, `RolesGuard`)
 - ✅ Services (`RBACService`, `RBACRepository`)
@@ -115,6 +108,7 @@ All runtime RBAC code has moved to `@ojiepermana/nest-rbac`:
 ### Stayed in Generator
 
 Code generation tools remain in `@ojiepermana/nest-generator`:
+
 - ✅ Permission seed generator
 - ✅ RBAC schema generator
 - ✅ CLI commands
@@ -136,7 +130,11 @@ import { Module } from '@nestjs/common';
 import { RBACModule } from '@ojiepermana/nest-rbac';
 
 @Module({
-  imports: [RBACModule.register({ /* config */ })],
+  imports: [
+    RBACModule.register({
+      /* config */
+    }),
+  ],
 })
 export class AppModule {}
 
@@ -162,7 +160,11 @@ import { Module } from '@nestjs/common';
 import { RBACModule } from '@ojiepermana/nest-rbac';
 
 @Module({
-  imports: [RBACModule.register({ /* config */ })],
+  imports: [
+    RBACModule.register({
+      /* config */
+    }),
+  ],
 })
 export class AppModule {}
 
@@ -198,11 +200,13 @@ export class UsersController {
 ### Issue: Module not found error
 
 **Error:**
+
 ```
 Cannot find module '@ojiepermana/nest-rbac'
 ```
 
 **Solution:**
+
 ```bash
 npm install @ojiepermana/nest-rbac
 ```
@@ -211,6 +215,7 @@ npm install @ojiepermana/nest-rbac
 
 **Solution:**
 Rebuild your project:
+
 ```bash
 npm run build
 ```
@@ -219,6 +224,7 @@ npm run build
 
 **Solution:**
 Update test imports and rebuild:
+
 ```bash
 # Update imports
 find . -name "*.spec.ts" -exec sed -i \
@@ -236,12 +242,12 @@ npm test
 
 ## Version Compatibility Matrix
 
-| Generator Version | RBAC Package | Import Path | Status |
-|------------------|--------------|-------------|--------|
-| v4.x | Included | `@ojiepermana/nest-rbac` | ✅ Supported |
-| v5.0.0 | `@ojiepermana/nest-rbac` v1.0.0 | `@ojiepermana/nest-rbac` | ✅ Recommended |
-| v5.0.0 | - | `@ojiepermana/nest-rbac` | ⚠️ Deprecated |
-| v6.0.0+ | `@ojiepermana/nest-rbac` v1.x | `@ojiepermana/nest-rbac` | ✅ Required |
+| Generator Version | RBAC Package                    | Import Path              | Status         |
+| ----------------- | ------------------------------- | ------------------------ | -------------- |
+| v4.x              | Included                        | `@ojiepermana/nest-rbac` | ✅ Supported   |
+| v5.0.0            | `@ojiepermana/nest-rbac` v1.0.0 | `@ojiepermana/nest-rbac` | ✅ Recommended |
+| v5.0.0            | -                               | `@ojiepermana/nest-rbac` | ⚠️ Deprecated  |
+| v6.0.0+           | `@ojiepermana/nest-rbac` v1.x   | `@ojiepermana/nest-rbac` | ✅ Required    |
 
 ---
 

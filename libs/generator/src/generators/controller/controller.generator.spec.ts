@@ -443,9 +443,7 @@ describe('ControllerGenerator', () => {
 
       const result = generator.generate();
 
-      expect(result).toContain(
-        "import { RequirePermission } from '@ojiepermana/nest-rbac'",
-      );
+      expect(result).toContain("import { RequirePermission } from '@ojiepermana/nest-rbac'");
     });
 
     it('should not include RBAC import when enableRbac is false', () => {

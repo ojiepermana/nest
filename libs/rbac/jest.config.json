@@ -1,0 +1,24 @@
+{
+  "displayName": "@ojiepermana/nest-rbac",
+  "preset": "../../jest.config.json",
+  "testEnvironment": "node",
+  "testMatch": ["<rootDir>/test/**/*.spec.ts", "<rootDir>/src/**/*.spec.ts"],
+  "collectCoverageFrom": [
+    "src/**/*.ts",
+    "!src/**/*.spec.ts",
+    "!src/**/*.interface.ts",
+    "!src/index.ts"
+  ],
+  "coverageThreshold": {
+    "global": {
+      "branches": 90,
+      "functions": 90,
+      "lines": 90,
+      "statements": 90
+    }
+  },
+  "moduleNameMapper": {
+    "^@ojiepermana/nest-rbac(|/.*)$": "<rootDir>/src/$1"
+  },
+  "roots": ["<rootDir>"]
+}

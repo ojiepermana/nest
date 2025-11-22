@@ -1,6 +1,6 @@
 {
   "name": "@ojiepermana/nest-generator",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "description": "NestJS Code Generator Library - Generate CRUD modules from database metadata",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -54,6 +54,7 @@
     "postinstall": "node -e \"console.log('\\n✅ @ojiepermana/nest-generator installed successfully!\\n   Run: npx nest-generator --help\\n')\""
   },
   "peerDependencies": {
+    "@ojiepermana/nest-rbac": "^1.0.0",
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "reflect-metadata": "^0.2.0",

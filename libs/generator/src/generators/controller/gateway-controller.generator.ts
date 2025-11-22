@@ -20,6 +20,7 @@ export interface GatewayControllerGeneratorOptions {
   enableRateLimit?: boolean;
   enableRbac?: boolean;
   rbacResourceName?: string; // For permission namespacing
+  enableFileUpload?: boolean; // Enable file upload endpoints
 }
 
 export class GatewayControllerGenerator {
@@ -57,9 +58,10 @@ ${endpoints}
    */
   private generateImports(entityName: string): string {
     const imports = [
-      "import { Controller, Get, Post, Put, Delete, Body, Param, Query, Inject } from '@nestjs/common';",
+      "import { Controller, Get, Post, Put, Delete, Body, Param, Query, Inject, UseInterceptors, UploadedFile, UploadedFiles, BadRequestException } from '@nestjs/common';",
       "import { ClientProxy } from '@nestjs/microservices';",
       "import { firstValueFrom } from 'rxjs';",
+      "import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';",
       `import { Create${entityName}Dto } from '../dto/${this.toKebabCase(entityName)}/create-${this.toKebabCase(entityName)}.dto';`,
       `import { Update${entityName}Dto } from '../dto/${this.toKebabCase(entityName)}/update-${this.toKebabCase(entityName)}.dto';`,
       `import { ${entityName}FilterDto } from '../dto/${this.toKebabCase(entityName)}/${this.toKebabCase(entityName)}-filter.dto';`,
@@ -67,7 +69,7 @@ ${endpoints}
 
     if (this.options.enableSwagger) {
       imports.push(
-        "import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiQuery } from '@nestjs/swagger';",
+        "import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiQuery, ApiConsumes } from '@nestjs/swagger';",
       );
     }
 
@@ -119,6 +121,11 @@ export class ${controllerName} {`;
     // Use resourceName for message patterns (table name), or fallback to serviceName
     const resourceName = (this.options.resourceName || this.options.serviceName).toLowerCase();
     const camelName = toCamelCase(entityName);
+
+    // Generate file upload endpoints if enabled
+    const fileUploadEndpoints = this.options.enableFileUpload
+      ? this.generateFileUploadEndpoints(entityName, resourceName)
+      : '';
 
     const endpoints = `
   // GENERATED_ENDPOINT_START: findAll
@@ -210,6 +217,8 @@ ${this.generateRbacDecorator('delete')}  @Delete(':id')
   }
   // GENERATED_ENDPOINT_END: remove
 
+${fileUploadEndpoints}
+
   // CUSTOM_ENDPOINT_START: custom-endpoints
   // Add your custom endpoints here
   // CUSTOM_ENDPOINT_END: custom-endpoints
@@ -265,5 +274,124 @@ ${this.generateRbacDecorator('delete')}  @Delete(':id')
       default:
         return '';
     }
+  }
+
+  /**
+   * Generate file upload endpoints for gateway
+   */
+  private generateFileUploadEndpoints(entityName: string, resourceName: string): string {
+    const fileColumns = this.getFileUploadColumns();
+
+    if (fileColumns.length === 0) {
+      return '';
+    }
+
+    const endpoints = fileColumns
+      .map((column) => {
+        const fieldName = column.column_name;
+        const camelFieldName = toCamelCase(fieldName);
+        const pascalFieldName = toPascalCase(camelFieldName);
+
+        return `
+  // GENERATED_ENDPOINT_START: upload-${camelFieldName}
+  ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Upload ${camelFieldName} file', description: 'Upload a file for ${camelFieldName}' })` : ''}
+  ${this.options.enableSwagger ? `@ApiConsumes('multipart/form-data')` : ''}
+  ${
+    this.options.enableSwagger
+      ? `@ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+        entityId: {
+          type: 'string',
+          description: 'Entity ID to attach file to',
+        },
+      },
+    },
+  })`
+      : ''
+  }
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 201, description: 'File uploaded successfully' })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 400, description: 'Invalid file or missing data' })` : ''}
+${this.generateRbacDecorator('update')}  @Post('upload/${camelFieldName}')
+  @UseInterceptors(FileInterceptor('file'))
+  async upload${pascalFieldName}(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('entityId') entityId: string,
+  ): Promise<{ url: string; filename: string; size: number }> {
+    if (!file) {
+      throw new BadRequestException('No file provided');
+    }
+
+    return firstValueFrom(
+      this.client.send('${resourceName}.upload${pascalFieldName}', {
+        file: {
+          originalname: file.originalname,
+          mimetype: file.mimetype,
+          size: file.size,
+          buffer: file.buffer,
+        },
+        entityId,
+      }),
+    );
+  }
+  // GENERATED_ENDPOINT_END: upload-${camelFieldName}
+
+  // GENERATED_ENDPOINT_START: delete-${camelFieldName}
+  ${this.options.enableSwagger ? `@ApiOperation({ summary: 'Delete ${camelFieldName} file', description: 'Delete the ${camelFieldName} file from entity' })` : ''}
+  ${this.options.enableSwagger ? `@ApiParam({ name: 'id', type: String, description: 'Entity ID' })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 200, description: 'File deleted successfully' })` : ''}
+  ${this.options.enableSwagger ? `@ApiResponse({ status: 404, description: 'Entity or file not found' })` : ''}
+${this.generateRbacDecorator('update')}  @Delete(':id/${camelFieldName}')
+  async delete${pascalFieldName}(
+    @Param('id') id: string,
+  ): Promise<{ message: string }> {
+    return firstValueFrom(
+      this.client.send('${resourceName}.delete${pascalFieldName}', { id }),
+    );
+  }
+  // GENERATED_ENDPOINT_END: delete-${camelFieldName}`;
+      })
+      .join('\n');
+
+    return endpoints;
+  }
+
+  /**
+   * Get columns that have file upload enabled
+   * Detects file columns by:
+   * 1. Explicit flag: is_file_upload === true
+   * 2. Column name patterns: *_file, file_path, file_url, *_attachment, image_*, photo_*, avatar_*, document_*
+   */
+  private getFileUploadColumns(): ColumnMetadata[] {
+    return this.columns.filter((col) => {
+      // Check explicit flag first
+      if (col.is_file_upload === true) {
+        return true;
+      }
+
+      // Check column name patterns
+      const columnName = col.column_name.toLowerCase();
+      const filePatterns = [
+        /_file$/, // ends with _file
+        /^file_/, // starts with file_
+        /file_path/, // contains file_path
+        /file_url/, // contains file_url
+        /_attachment$/, // ends with _attachment
+        /^attachment_/, // starts with attachment_
+        /^image_/, // starts with image_
+        /^photo_/, // starts with photo_
+        /^avatar/, // starts with avatar
+        /^document_/, // starts with document_
+        /^media_/, // starts with media_
+        /_media$/, // ends with _media
+      ];
+
+      return filePatterns.some((pattern) => pattern.test(columnName));
+    });
   }
 }

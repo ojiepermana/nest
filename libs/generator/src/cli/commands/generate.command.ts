@@ -777,6 +777,7 @@ export class GenerateCommand {
         enableRateLimit: false,
         enableRbac: features.rbac,
         rbacResourceName: moduleName, // Use module name as resource
+        enableFileUpload: features.fileUpload, // Enable file upload endpoints
       });
       controllerCode = gatewayGenerator.generate();
     } else if (architecture === 'microservices' && !isGateway) {
@@ -1745,6 +1746,7 @@ export * from './controllers/${moduleName}.controller';
         enableRateLimit: false,
         enableRbac: features.rbac,
         rbacResourceName: moduleName, // Use module name as resource
+        enableFileUpload: features.fileUpload, // Enable file upload endpoints
       });
       const gatewayControllerCode = gatewayGenerator.generate();
       this.writeFile(

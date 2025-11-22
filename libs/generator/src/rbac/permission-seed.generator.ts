@@ -251,6 +251,7 @@ SET
       action: string;
       name: string;
       description: string;
+      scope?: string;
     }> = [],
     schema: string = 'user',
   ): string {
@@ -263,10 +264,12 @@ SET
     }
 
     const customPermissions = customEndpoints.map((endpoint) => ({
-      code: `${resourceName}.${endpoint.action}`,
+      code: `${resourceName}:${endpoint.action}:${endpoint.scope || 'all'}`,
       name: endpoint.name,
       description: endpoint.description,
       category: resourceName,
+      scope: endpoint.scope || 'all',
+      priority: 30,
     }));
 
     const customSql = this.generateCustomPermissions(customPermissions, schema);

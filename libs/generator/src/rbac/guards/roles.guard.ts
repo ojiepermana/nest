@@ -133,7 +133,7 @@ export class RolesGuard implements CanActivate {
     }
 
     for (const role of roles) {
-      const hasRole = await this.permissionService.userHasRole(
+      const hasRole = await this.permissionService.hasRole(
         userId,
         role,
         activeOnly,
@@ -161,7 +161,7 @@ export class RolesGuard implements CanActivate {
     }
 
     for (const role of roles) {
-      const hasRole = await this.permissionService.userHasRole(
+      const hasRole = await this.permissionService.hasRole(
         userId,
         role,
         activeOnly,

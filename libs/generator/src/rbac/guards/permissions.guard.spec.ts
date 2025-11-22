@@ -70,7 +70,7 @@ describe('PermissionsGuard', () => {
       reflector.getAllAndOverride.mockReturnValueOnce(false); // isPublic
       reflector.getAllAndOverride.mockReturnValueOnce(false); // skipPermission
       reflector.getAllAndOverride.mockReturnValueOnce({
-        permissions: ['users.read'],
+        permissions: ['users:read:own'],
       });
 
       (mockContext.switchToHttp().getRequest as jest.Mock).mockReturnValue({});
@@ -82,7 +82,7 @@ describe('PermissionsGuard', () => {
       reflector.getAllAndOverride.mockReturnValueOnce(false); // isPublic
       reflector.getAllAndOverride.mockReturnValueOnce(false); // skipPermission
       reflector.getAllAndOverride.mockReturnValueOnce({
-        permissions: ['users.read'],
+        permissions: ['users:read:own'],
         options: {
           logic: PermissionLogic.AND,
           errorMessage: undefined,
@@ -96,14 +96,14 @@ describe('PermissionsGuard', () => {
       const result = await guard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(rbacService.hasPermission).toHaveBeenCalledWith('user-123', 'users.read');
+      expect(rbacService.hasPermission).toHaveBeenCalledWith('user-123', 'users:read:own');
     });
 
     it('should check multiple permissions with AND logic', async () => {
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce({
-        permissions: ['users.read', 'users.update'],
+        permissions: ['users:read:own', 'users:update:own'],
         options: {
           logic: PermissionLogic.AND,
           errorMessage: undefined,
@@ -117,15 +117,15 @@ describe('PermissionsGuard', () => {
       const result = await guard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(rbacService.hasPermission).toHaveBeenCalledWith('user-123', 'users.read');
-      expect(rbacService.hasPermission).toHaveBeenCalledWith('user-123', 'users.update');
+      expect(rbacService.hasPermission).toHaveBeenCalledWith('user-123', 'users:read:own');
+      expect(rbacService.hasPermission).toHaveBeenCalledWith('user-123', 'users:update:own');
     });
 
     it('should check permissions with OR logic', async () => {
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce({
-        permissions: ['users.read', 'admin.access'],
+        permissions: ['users:read:own', 'admin:access:all'],
         options: {
           logic: PermissionLogic.OR,
           errorMessage: undefined,
@@ -139,15 +139,15 @@ describe('PermissionsGuard', () => {
       const result = await guard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(rbacService.hasPermission).toHaveBeenCalledWith('user-123', 'users.read');
-      expect(rbacService.hasPermission).toHaveBeenCalledWith('user-123', 'admin.access');
+      expect(rbacService.hasPermission).toHaveBeenCalledWith('user-123', 'users:read:own');
+      expect(rbacService.hasPermission).toHaveBeenCalledWith('user-123', 'admin:access:all');
     });
 
     it('should throw ForbiddenException when permission denied', async () => {
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce({
-        permissions: ['users.delete'],
+        permissions: ['users:delete:own'],
         options: {
           logic: PermissionLogic.AND,
           errorMessage: undefined,
@@ -165,7 +165,7 @@ describe('PermissionsGuard', () => {
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce({
-        permissions: ['users.delete'],
+        permissions: ['users:delete:own'],
         options: {
           logic: PermissionLogic.AND,
           errorMessage: 'Custom error message',
@@ -183,7 +183,7 @@ describe('PermissionsGuard', () => {
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce({
-        permissions: ['users.update'],
+        permissions: ['users:update:own'],
         options: {
           logic: PermissionLogic.AND,
           errorMessage: undefined,
@@ -205,7 +205,7 @@ describe('PermissionsGuard', () => {
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce({
-        permissions: ['users.update'],
+        permissions: ['users:update:own'],
         options: {
           logic: PermissionLogic.AND,
           errorMessage: undefined,
@@ -227,7 +227,7 @@ describe('PermissionsGuard', () => {
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce(false);
       reflector.getAllAndOverride.mockReturnValueOnce({
-        permissions: ['users.read'],
+        permissions: ['users:read:own'],
       });
 
       const result = await guardWithoutService.canActivate(mockContext);

@@ -8,13 +8,18 @@ describe('PermissionSeedGenerator', () => {
   });
 
   describe('generateCrudPermissions', () => {
-    it('should generate CRUD permission SQL', () => {
-      const sql = generator.generateCrudPermissions({ resourceName: 'users' });
+    it('should generate CRUD permission SQL with scopes', () => {
+      const sql = generator.generateCrudPermissions({
+        resourceName: 'users',
+        generateScopes: true,
+      });
 
-      expect(sql).toContain('users.create');
-      expect(sql).toContain('users.read');
-      expect(sql).toContain('users.update');
-      expect(sql).toContain('users.delete');
+      expect(sql).toContain('users:create:basic');
+      expect(sql).toContain('users:read:own');
+      expect(sql).toContain('users:read:team');
+      expect(sql).toContain('users:read:all');
+      expect(sql).toContain('users:update:own');
+      expect(sql).toContain('users:delete:all');
       expect(sql).toContain('INSERT INTO user.permissions');
       expect(sql).toContain('ON CONFLICT (code) DO UPDATE');
     });
@@ -32,21 +37,25 @@ describe('PermissionSeedGenerator', () => {
       const sql = generator.generateCrudPermissions({
         resourceName: 'users',
         description: 'user accounts',
+        generateScopes: true,
       });
 
       expect(sql).toContain('Create new user accounts');
-      expect(sql).toContain('View user accounts');
-      expect(sql).toContain('Edit user accounts');
-      expect(sql).toContain('Remove user accounts');
+      expect(sql).toContain('View own user accounts');
+      expect(sql).toContain('View team user accounts');
+      expect(sql).toContain('Update own user accounts');
+      expect(sql).toContain('Delete all user accounts');
     });
 
     it('should use custom category when provided', () => {
       const sql = generator.generateCrudPermissions({
         resourceName: 'users',
         category: 'user_management',
+        generateScopes: true,
       });
 
-      expect(sql).toContain("'user_management', true)");
+      expect(sql).toContain("'user_management'");
+      expect(sql).toContain('users:create:basic');
     });
   });
 
@@ -54,23 +63,27 @@ describe('PermissionSeedGenerator', () => {
     it('should generate custom permission SQL', () => {
       const permissions = [
         {
-          code: 'users.export',
+          code: 'users:export:all',
           name: 'Export Users',
           description: 'Export users to CSV',
           category: 'users',
+          scope: 'all',
+          priority: 30,
         },
         {
-          code: 'users.import',
+          code: 'users:import:all',
           name: 'Import Users',
           description: 'Import users from CSV',
           category: 'users',
+          scope: 'all',
+          priority: 30,
         },
       ];
 
       const sql = generator.generateCustomPermissions(permissions);
 
-      expect(sql).toContain('users.export');
-      expect(sql).toContain('users.import');
+      expect(sql).toContain('users:export:all');
+      expect(sql).toContain('users:import:all');
       expect(sql).toContain('Export Users');
       expect(sql).toContain('Import users from CSV');
     });
@@ -80,10 +93,10 @@ describe('PermissionSeedGenerator', () => {
     it('should generate CRUD permissions only when no custom endpoints', () => {
       const sql = generator.generateModulePermissions('products');
 
-      expect(sql).toContain('products.create');
-      expect(sql).toContain('products.read');
-      expect(sql).toContain('products.update');
-      expect(sql).toContain('products.delete');
+      expect(sql).toContain('products:create:basic');
+      expect(sql).toContain('products:read:own');
+      expect(sql).toContain('products:update:own');
+      expect(sql).toContain('products:delete:own');
       expect(sql).not.toContain('Custom Endpoint Permissions');
     });
 
@@ -93,13 +106,14 @@ describe('PermissionSeedGenerator', () => {
           action: 'export',
           name: 'Export Products',
           description: 'Export products to CSV',
+          scope: 'all',
         },
       ];
 
       const sql = generator.generateModulePermissions('products', customEndpoints);
 
-      expect(sql).toContain('products.create');
-      expect(sql).toContain('products.export');
+      expect(sql).toContain('products:create:basic');
+      expect(sql).toContain('products:export:all');
       expect(sql).toContain('Export Products');
       expect(sql).toContain('Custom Endpoint Permissions');
     });
@@ -107,14 +121,14 @@ describe('PermissionSeedGenerator', () => {
 
   describe('generateRolePermissions', () => {
     it('should generate role-permission mapping SQL', () => {
-      const permissions = ['users.create', 'users.read', 'users.update'];
+      const permissions = ['users:create:basic', 'users:read:all', 'users:update:all'];
       const sql = generator.generateRolePermissions('admin', permissions);
 
       expect(sql).toContain('INSERT INTO user.role_permissions');
       expect(sql).toContain("r.code = 'admin'");
-      expect(sql).toContain("p.code = 'users.create'");
-      expect(sql).toContain("p.code = 'users.read'");
-      expect(sql).toContain("p.code = 'users.update'");
+      expect(sql).toContain("p.code = 'users:create:basic'");
+      expect(sql).toContain("p.code = 'users:read:all'");
+      expect(sql).toContain("p.code = 'users:update:all'");
       expect(sql).toContain('ON CONFLICT (role_id, permission_id) DO NOTHING');
     });
   });
@@ -123,7 +137,7 @@ describe('PermissionSeedGenerator', () => {
     it('should generate permissions only when no role mappings', () => {
       const sql = generator.generateCompleteSetup('users');
 
-      expect(sql).toContain('users.create');
+      expect(sql).toContain('users:create:basic');
       expect(sql).not.toContain('Role-Permission Mappings');
     });
 
@@ -132,16 +146,21 @@ describe('PermissionSeedGenerator', () => {
         roleMappings: [
           {
             roleCode: 'admin',
-            permissions: ['users.create', 'users.read', 'users.update', 'users.delete'],
+            permissions: [
+              'users:create:basic',
+              'users:read:all',
+              'users:update:all',
+              'users:delete:all',
+            ],
           },
           {
             roleCode: 'viewer',
-            permissions: ['users.read'],
+            permissions: ['users:read:own'],
           },
         ],
       });
 
-      expect(sql).toContain('users.create');
+      expect(sql).toContain('users:create:basic');
       expect(sql).toContain('Role-Permission Mappings');
       expect(sql).toContain("r.code = 'admin'");
       expect(sql).toContain("r.code = 'viewer'");
@@ -154,27 +173,32 @@ describe('PermissionSeedGenerator', () => {
             action: 'export',
             name: 'Export Products',
             description: 'Export to CSV',
+            scope: 'all',
           },
         ],
         roleMappings: [
           {
             roleCode: 'admin',
-            permissions: ['products.export'],
+            permissions: ['products:export:all'],
           },
         ],
       });
 
-      expect(sql).toContain('products.export');
+      expect(sql).toContain('products:export:all');
       expect(sql).toContain('Export Products');
-      expect(sql).toContain("p.code = 'products.export'");
+      expect(sql).toContain("p.code = 'products:export:all'");
     });
   });
 
   describe('SQL Formatting', () => {
     it('should include auto-generated comments', () => {
-      const sql = generator.generateCrudPermissions({ resourceName: 'users' });
+      const sql = generator.generateCrudPermissions({
+        resourceName: 'users',
+        generateScopes: true,
+      });
 
       expect(sql).toContain('Auto-generated by nest-generator');
+      expect(sql).toContain('Format: {resource}:{action}:{scope}');
       expect(sql).toContain('Generated at:');
     });
 

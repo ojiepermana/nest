@@ -130,7 +130,7 @@ export class PermissionsGuard implements CanActivate {
     }
 
     for (const permission of permissions) {
-      const hasPermission = await this.permissionService.userHasPermission(userId, permission);
+      const hasPermission = await this.permissionService.hasPermission(userId, permission);
       if (!hasPermission) {
         return false;
       }
@@ -148,7 +148,7 @@ export class PermissionsGuard implements CanActivate {
     }
 
     for (const permission of permissions) {
-      const hasPermission = await this.permissionService.userHasPermission(userId, permission);
+      const hasPermission = await this.permissionService.hasPermission(userId, permission);
       if (hasPermission) {
         return true;
       }

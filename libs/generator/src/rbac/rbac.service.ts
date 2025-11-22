@@ -66,6 +66,51 @@ export class RBACService {
   }
 
   /**
+   * Check if user has permission with scope awareness
+   *
+   * @param userId - User ID
+   * @param resource - Resource name (e.g., 'users', 'orders')
+   * @param action - Action name (e.g., 'read', 'update', 'delete')
+   * @param requiredScope - Required scope level ('own', 'team', 'department', 'all')
+   * @returns Promise<boolean>
+   *
+   * Scope Hierarchy: own < team < department < all
+   * User with higher scope automatically has lower scope access
+   *
+   * Example:
+   * - User with 'team' scope can access 'own' and 'team' resources
+   * - User with 'all' scope can access everything
+   */
+  async hasPermissionWithScope(
+    userId: string,
+    resource: string,
+    action: string,
+    requiredScope: 'own' | 'team' | 'department' | 'all' = 'own',
+  ): Promise<boolean> {
+    const cacheKey = `${this.cachePrefix}:user:${userId}:scope:${resource}:${action}:${requiredScope}`;
+
+    if (this.cacheEnabled && this.cacheManager) {
+      const cached = await this.cacheManager.get<boolean>(cacheKey);
+      if (cached !== undefined) {
+        return cached;
+      }
+    }
+
+    const hasPermission = await this.repository.hasPermissionWithScope(
+      userId,
+      resource,
+      action,
+      requiredScope,
+    );
+
+    if (this.cacheEnabled && this.cacheManager) {
+      await this.cacheManager.set(cacheKey, hasPermission, this.cacheTTL * 1000);
+    }
+
+    return hasPermission;
+  }
+
+  /**
    * Check if user has ALL specified permissions
    */
   async hasAllPermissions(userId: string, permissions: string[]): Promise<PermissionCheckResult> {
@@ -203,7 +248,12 @@ export class RBACService {
     const context: UserContext = {
       id: userId,
       roles: roles.map((r) => r.name),
-      permissions: permissions.map((p) => p.name),
+      permissions: permissions.map((p) => p.code), // Changed: use code instead of name
+      // Optional: Add user metadata for scope checking
+      metadata: {
+        department: undefined, // Should be populated from user table if available
+        team: undefined, // Should be populated from user table if available
+      },
     };
 
     if (this.cacheEnabled && this.cacheManager) {

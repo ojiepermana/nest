@@ -52,30 +52,48 @@ export interface PermissionMetadata {
 /**
  * Decorator to require specific permissions for endpoint access
  *
- * @param permissions - Permission name(s) in format "resource:action" (e.g., "users:create")
+ * @param permissions - Permission code(s) in format "resource:action:scope" or "resource:action:scope:condition"
  * @param options - Additional options for permission checking
+ *
+ * Permission Format: {resource}:{action}:{scope}[:{condition}]
+ * - resource: Resource type (e.g., 'users', 'orders', 'products')
+ * - action: Action type (e.g., 'create', 'read', 'update', 'delete', 'approve')
+ * - scope: Access scope (e.g., 'own', 'team', 'department', 'all')
+ * - condition: Optional condition (e.g., 'active-only', 'under-10k')
  *
  * @example
  * ```typescript
- * // Single permission
- * @RequirePermission('users:create')
- * async createUser() { }
+ * // Basic permission - allow users to read their own data
+ * @RequirePermission('users:read:own')
+ * async getProfile() { }
  *
- * // Multiple permissions with AND logic (default)
- * @RequirePermission(['users:create', 'users:manage'])
- * async createUser() { }
+ * // Team-level permission - allow reading team members
+ * @RequirePermission('users:read:team')
+ * async getTeamMembers() { }
  *
- * // Multiple permissions with OR logic
- * @RequirePermission(['users:update', 'users:manage'], { logic: PermissionLogic.OR })
+ * // All-level permission - admin access
+ * @RequirePermission('users:read:all')
+ * async getAllUsers() { }
+ *
+ * // Multiple permissions with AND logic (default) - user needs both
+ * @RequirePermission(['orders:read:team', 'orders:approve:team'])
+ * async approveTeamOrder() { }
+ *
+ * // Multiple permissions with OR logic - user needs at least one
+ * @RequirePermission(['users:update:own', 'users:update:team'], { logic: PermissionLogic.OR })
  * async updateUser() { }
  *
+ * // Conditional permission - only for specific conditions
+ * @RequirePermission('orders:approve:team:under-10k')
+ * async approveSmallOrder() { }
+ *
  * // With ownership check
- * @RequirePermission('posts:update', { requireOwnership: true })
+ * @RequirePermission('posts:update:own', { requireOwnership: true })
  * async updatePost(@Param('id') id: string) { }
  *
  * // Custom error message
- * @RequirePermission('admin:access', {
- *   errorMessage: 'Administrator access required'
+ * @RequirePermission('system:admin:all', {
+ *   errorMessage: 'System administrator access required'
  * })
  * async adminPanel() { }
  * ```

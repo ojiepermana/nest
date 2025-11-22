@@ -14,7 +14,7 @@
     "build:rbac": "tsc -p libs/rbac/tsconfig.lib.json && npm run postbuild:rbac",
     "build:generator": "nest build generator && npm run postbuild:generator",
     "build:nest": "nest build nest && npm run postbuild:nest",
-    "postbuild:rbac": "mkdir -p libs/rbac/dist && cp -r libs/rbac/schemas libs/rbac/dist/ && cp -r libs/rbac/migrations libs/rbac/dist/ && cp libs/rbac/README.md libs/rbac/dist/ 2>/dev/null || true",
+    "postbuild:rbac": "mkdir -p libs/rbac/dist && cp -r libs/rbac/schemas libs/rbac/dist/ && cp -r libs/rbac/migrations libs/rbac/dist/ && cp -r libs/rbac/src/cli/schemas libs/rbac/dist/cli/ && cp -r libs/rbac/src/cli/migrations libs/rbac/dist/cli/ && cp libs/rbac/README.md libs/rbac/dist/ 2>/dev/null || true",
     "postbuild:generator": "mkdir -p libs/generator/dist && cp -r dist/libs/generator/* libs/generator/dist/",
     "postbuild:nest": "mkdir -p libs/nest/dist && cp -r dist/libs/nest/* libs/nest/dist/",
     "build:all-libs": "npm run build:rbac && npm run build:generator && npm run build:nest",

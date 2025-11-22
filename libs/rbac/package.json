@@ -1,6 +1,6 @@
 {
   "name": "@ojiepermana/nest-rbac",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Role-Based Access Control (RBAC) for NestJS - Production-ready decorators, guards, and services",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -44,6 +44,7 @@
   "files": [
     "dist/**/*.js",
     "dist/**/*.d.ts",
+    "dist/**/*.js.map",
     "schemas/*.sql",
     "migrations/*.sql",
     "README.md",

@@ -29,11 +29,13 @@ get_current_version() {
 echo -e "\n${BLUE}📚 Select library:${NC}"
 GENERATOR_VERSION=$(get_current_version "libs/generator")
 NEST_VERSION=$(get_current_version "libs/nest")
+RBAC_VERSION=$(get_current_version "libs/rbac")
 
 echo "1. @ojiepermana/nest-generator (current: ${GENERATOR_VERSION})"
 echo "2. @ojiepermana/nest (current: ${NEST_VERSION})"
-echo "3. Both libraries"
-read -p "Enter choice (1-3): " lib_choice
+echo "3. @ojiepermana/nest-rbac (current: ${RBAC_VERSION})"
+echo "4. All libraries"
+read -p "Enter choice (1-4): " lib_choice
 
 # Menu pilihan version type
 echo -e "\n${BLUE}📈 Select version bump type:${NC}"
@@ -70,8 +72,8 @@ bump_version() {
     
     # Calculate new version
     if [ "$VERSION_TYPE" = "custom" ]; then
-        # For custom version, ask for each library separately when bumping both
-        if [ "$lib_choice" = "3" ]; then
+        # For custom version, ask for each library separately when bumping all
+        if [ "$lib_choice" = "4" ]; then
             read -p "Enter custom version for ${lib_name} (e.g., 2.1.5): " LIB_CUSTOM_VERSION
             NEW_VERSION="$LIB_CUSTOM_VERSION"
         else
@@ -108,7 +110,7 @@ bump_version() {
     
     # Bump version
     if [ "$VERSION_TYPE" = "custom" ]; then
-        if [ "$lib_choice" = "3" ]; then
+        if [ "$lib_choice" = "4" ]; then
             npm version "$LIB_CUSTOM_VERSION" --no-git-tag-version --allow-same-version
         else
             npm version "$CUSTOM_VERSION" --no-git-tag-version --allow-same-version
@@ -133,8 +135,12 @@ case $lib_choice in
         bump_version "libs/nest" "@ojiepermana/nest"
         ;;
     3)
+        bump_version "libs/rbac" "@ojiepermana/nest-rbac"
+        ;;
+    4)
         bump_version "libs/generator" "@ojiepermana/nest-generator"
         bump_version "libs/nest" "@ojiepermana/nest"
+        bump_version "libs/rbac" "@ojiepermana/nest-rbac"
         ;;
     *)
         echo -e "${RED}❌ Invalid choice${NC}"

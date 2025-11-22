@@ -19,3 +19,7 @@ export * from './guards';
 
 // Interfaces
 export * from './interfaces';
+
+// CLI Tools
+export * from './cli/permission-seed.generator';
+export * from './cli/rbac-schema.generator';

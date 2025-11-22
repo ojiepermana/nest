@@ -2,11 +2,12 @@
 
 **Package**: `@ojiepermana/nest-generator`
 
-- **Version**: 1.1.3+
-- **Last updated**: 16 November 2025
-- **Automated tests**: 707 / 740 passing (95.5%)
+- **Version**: 4.0.3
+- **Last updated**: 22 November 2025
+- **Automated tests**: 711 / 742 passing (95.8%)
 - **Feature score vs. prompt**: 119 / 100 (see [Feature Scoring](./FEATURE_SCORING.md))
 - **Compilation errors**: 0 (all architectures tested)
+- **Auto-generation rate**: 92% (11/12 core features)
 
 Use this document to understand current capabilities, locate implementation details, and identify roadmap items for the generator.
 
@@ -31,12 +32,15 @@ Use this document to understand current capabilities, locate implementation deta
 | RBAC                 | Permission decorators, module auto-registration, metadata seeding (92 tests)                | Complete | `libs/generator/src/rbac/**`                                                               |
 | File Upload          | Multi-provider storage (local, S3, GCS, Azure) with generated helpers (40 tests)            | Complete | `generators/features/file-upload.generator.ts`                                             |
 | Caching              | Redis cache service, decorators, invalidation strategy                                      | Complete | `libs/generator/src/cache/**`                                                              |
-| Search               | Configurable driver abstractions (Elasticsearch, Algolia, Meilisearch, SQL fallback)        | Complete | `libs/generator/src/search/**`                                                             |
+| JOIN Queries         | Auto-detect FKs, generate findWithRelations with INNER/LEFT JOIN                            | Complete | `generators/repository/repository.generator.ts` (v4.0.2+)                                  |
+| Recap/Analytics      | Time-based aggregations (daily/monthly/yearly) from timestamp columns                       | Complete | `generators/repository/repository.generator.ts` (v4.0.2+)                                  |
+| Aggregation/Stats    | COUNT/SUM/AVG/MIN/MAX for numeric columns with GROUP BY support                            | Complete | `generators/repository/repository.generator.ts` (v4.0.3+)                                  |
+| Full-Text Search     | PostgreSQL ILIKE search, fuzzy search (pg_trgm), multi-column queries                       | Complete | `generators/repository/repository.generator.ts` (v4.0.3+)                                  |
 | Export               | CSV/Excel/PDF endpoint scaffolding (manual enable)                                          | Optional | `generators/features/export.generator.ts`                                                  |
 | Microservices        | Gateway (HTTP + ClientProxy) & Service (@MessagePattern) controllers                        | Complete | `generators/controller/gateway-controller.generator.ts`, `service-controller.generator.ts` |
 | CLI                  | `init`, `generate` with `--app` flag, `delete`, architecture auto-detection                 | Complete | `libs/generator/src/cli/**`                                                                |
 
-Legend: Complete = shipped - Optional = manual enablement
+Legend: Complete = auto-generated | Optional = manual enablement
 
 ## Core Generators
 

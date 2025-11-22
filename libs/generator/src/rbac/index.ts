@@ -1,43 +1,49 @@
 /**
- * @deprecated This module has moved to @ojiepermana/nest-rbac
+ * RBAC Generator Tools
  *
- * Please update your imports:
+ * @deprecated For RBAC runtime (decorators, guards, services), use @ojiepermana/nest-rbac
  *
- * Before:
- *   import { RequirePermission, RBACModule } from '@ojiepermana/nest-generator/rbac';
+ * This module now only contains generator-specific tools:
+ * - PermissionSeedGenerator: Generate permission SQL seeds
+ * - RBACSchemaGenerator: Generate RBAC database schemas
  *
- * After:
- *   import { RequirePermission, RBACModule } from '@ojiepermana/nest-rbac';
- *
- * This re-export will be removed in v6.0.0
- *
- * Install the new package:
+ * For runtime RBAC features, install:
  *   npm install @ojiepermana/nest-rbac
+ *
+ * Then import from:
+ *   import { RequirePermission, RBACModule } from '@ojiepermana/nest-rbac';
  */
 
-// Re-export everything from new package for backward compatibility
+// Re-export RBAC runtime for backward compatibility (will be removed in v6.0.0)
 export * from '@ojiepermana/nest-rbac';
 
-// Keep generator-specific tools here
+// Generator-specific tools (these will remain in this package)
 export * from './permission-seed.generator';
 export * from './rbac-schema.generator';
 
-// Log deprecation warning only once
+// Deprecation warning for runtime imports
 let warningShown = false;
 if (!warningShown && typeof console !== 'undefined') {
-  console.warn(`
+  const stack = new Error().stack || '';
+  // Only show warning if importing runtime features (not generator tools)
+  if (!stack.includes('permission-seed') && !stack.includes('rbac-schema')) {
+    console.warn(`
 ⚠️  DEPRECATION WARNING
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-You are importing RBAC from @ojiepermana/nest-generator/rbac
+You are importing RBAC runtime from @ojiepermana/nest-generator/rbac
 
 This path is deprecated. Please update to:
   npm install @ojiepermana/nest-rbac
 
 Then update your imports to:
-  import { ... } from '@ojiepermana/nest-rbac'
+  import { RequirePermission, RBACModule, ... } from '@ojiepermana/nest-rbac'
 
-The old path will be removed in v6.0.0
+Generator tools (PermissionSeedGenerator, RBACSchemaGenerator) will 
+remain in @ojiepermana/nest-generator/rbac
+
+This re-export will be removed in v6.0.0
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  `);
-  warningShown = true;
+    `);
+    warningShown = true;
+  }
 }

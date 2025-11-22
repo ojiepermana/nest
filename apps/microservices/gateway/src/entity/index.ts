@@ -8,3 +8,7 @@ export * from './dto/location/create-location.dto';
 export * from './dto/location/update-location.dto';
 export * from './dto/location/location-filter.dto';
 export * from './controllers/location.controller';
+export * from './dto/area/create-area.dto';
+export * from './dto/area/update-area.dto';
+export * from './dto/area/area-filter.dto';
+export * from './controllers/area.controller';

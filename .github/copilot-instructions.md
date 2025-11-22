@@ -174,6 +174,18 @@ nest-generator generate users --features.audit=true  # With audit
 - [ ] `docs/generator/INDEX.md` updated with new status
 - [ ] Feature-specific guides updated if needed
 - [ ] Version bumped if breaking changes
+- [ ] **Code formatted (`npm run format`)** before commit
+
+**🚨 CRITICAL - Always Format Before Commit**:
+
+```bash
+npm run format  # Format all code with Prettier
+git add -A
+git commit -m "your message"
+git push
+```
+
+Never commit without formatting - ensures consistent code style across the project.
 
 ---
 

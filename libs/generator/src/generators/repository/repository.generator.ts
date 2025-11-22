@@ -901,6 +901,10 @@ export const auditConfig = {
     const timestampColumn = this.getTimestampColumn();
     const hasTimestamps = timestampColumn !== null;
 
+    // Detect numeric columns for aggregation
+    const numericColumns = this.getNumericColumns();
+    const hasNumericColumns = numericColumns.length > 0;
+
     // Generate JOIN query methods if there are foreign keys
     const joinMethods = hasRelations
       ? this.generateJoinMethods(entityName, schemaName, tableName, pkName, pkType, fkColumns)
@@ -909,6 +913,11 @@ export const auditConfig = {
     // Generate recap methods if there are timestamp columns
     const recapMethods = hasTimestamps
       ? this.generateRecapMethods(entityName, schemaName, tableName, timestampColumn)
+      : '';
+
+    // Generate aggregation methods if there are numeric columns
+    const aggregationMethods = hasNumericColumns
+      ? this.generateAggregationMethods(entityName, schemaName, tableName, numericColumns)
       : '';
 
     return `import { Injectable, Inject } from '@nestjs/common';
@@ -1057,6 +1066,7 @@ export class ${repositoryName} {
   }
 ${joinMethods}
 ${recapMethods}
+${aggregationMethods}
 }
 `;
   }
@@ -1347,5 +1357,193 @@ ${recapMethods}
     };
   }
 `;
+  }
+
+  /**
+   * Get numeric columns for aggregation
+   * Priority: integer > decimal > float > numeric
+   */
+  private getNumericColumns(): Array<{ name: string; type: string }> {
+    const numericTypes = [
+      'integer',
+      'bigint',
+      'smallint',
+      'decimal',
+      'numeric',
+      'real',
+      'double precision',
+      'money',
+    ];
+
+    return this.columns
+      .filter((col) => {
+        const dataType = col.data_type?.toLowerCase() || '';
+        return numericTypes.some((type) => dataType.includes(type));
+      })
+      .map((col) => ({
+        name: col.column_name,
+        type: col.data_type,
+      }));
+  }
+
+  /**
+   * Generate aggregation and statistics methods
+   * Generates: getStatistics(), getAggregation(groupBy), getSum(column), etc.
+   */
+  private generateAggregationMethods(
+    entityName: string,
+    schemaName: string,
+    tableName: string,
+    numericColumns: Array<{ name: string; type: string }>,
+  ): string {
+    const methods: string[] = [];
+
+    // Generate getStatistics() - all aggregations for all numeric columns
+    const statsFields = numericColumns
+      .map((col) => {
+        const colName = col.name;
+        return `
+      COUNT(${colName}) as ${colName}_count,
+      SUM(${colName}) as ${colName}_sum,
+      AVG(${colName}) as ${colName}_avg,
+      MIN(${colName}) as ${colName}_min,
+      MAX(${colName}) as ${colName}_max`;
+      })
+      .join(',');
+
+    methods.push(`
+  /**
+   * Get comprehensive statistics for all numeric columns
+   * Returns: COUNT, SUM, AVG, MIN, MAX for each numeric field
+   */
+  async getStatistics(): Promise<Record<string, any>> {
+    const query = \`
+      SELECT${statsFields}
+      FROM "${schemaName}"."${tableName}"
+      WHERE deleted_at IS NULL
+    \`;
+
+    const result = await this.pool.query(query);
+    return result.rows[0] || {};
+  }`);
+
+    // Generate getAggregation(groupBy, column) - GROUP BY support
+    const categoricalColumns = this.columns
+      .filter((col) => {
+        const dataType = col.data_type?.toLowerCase() || '';
+        return (
+          dataType.includes('varchar') ||
+          dataType.includes('text') ||
+          dataType.includes('char') ||
+          dataType === 'uuid'
+        );
+      })
+      .map((col) => col.column_name);
+
+    if (categoricalColumns.length > 0 && numericColumns.length > 0) {
+      methods.push(`
+  /**
+   * Get aggregated statistics grouped by a categorical column
+   * @param groupBy - Column to group by (e.g., 'status', 'type')
+   * @param aggregateColumn - Numeric column to aggregate (e.g., 'amount', 'quantity')
+   * @returns Array of grouped statistics
+   */
+  async getAggregation(
+    groupBy: string,
+    aggregateColumn: string,
+  ): Promise<Array<Record<string, any>>> {
+    const validGroupByColumns = [${categoricalColumns.map((col) => `'${col}'`).join(', ')}];
+    const validAggregateColumns = [${numericColumns.map((col) => `'${col.name}'`).join(', ')}];
+
+    if (!validGroupByColumns.includes(groupBy)) {
+      throw new Error(\`Invalid groupBy column: \${groupBy}\`);
+    }
+
+    if (!validAggregateColumns.includes(aggregateColumn)) {
+      throw new Error(\`Invalid aggregate column: \${aggregateColumn}\`);
+    }
+
+    const query = \`
+      SELECT
+        \${groupBy} as group_value,
+        COUNT(\${aggregateColumn}) as count,
+        SUM(\${aggregateColumn}) as sum,
+        AVG(\${aggregateColumn}) as avg,
+        MIN(\${aggregateColumn}) as min,
+        MAX(\${aggregateColumn}) as max
+      FROM "${schemaName}"."${tableName}"
+      WHERE deleted_at IS NULL
+        AND \${groupBy} IS NOT NULL
+      GROUP BY \${groupBy}
+      ORDER BY count DESC
+    \`;
+
+    const result = await this.pool.query(query);
+    return result.rows.map((row) => ({
+      group: row.group_value,
+      count: parseInt(row.count, 10),
+      sum: parseFloat(row.sum),
+      avg: parseFloat(row.avg),
+      min: parseFloat(row.min),
+      max: parseFloat(row.max),
+    }));
+  }`);
+    }
+
+    // Generate individual aggregation methods for each numeric column
+    numericColumns.forEach((col) => {
+      const colName = col.name;
+      const methodSuffix = toPascalCase(colName);
+
+      methods.push(`
+  /**
+   * Get sum of ${colName}
+   */
+  async getSum${methodSuffix}(): Promise<number> {
+    const query = \`
+      SELECT COALESCE(SUM(${colName}), 0) as total
+      FROM "${schemaName}"."${tableName}"
+      WHERE deleted_at IS NULL
+    \`;
+
+    const result = await this.pool.query(query);
+    return parseFloat(result.rows[0]?.total || '0');
+  }
+
+  /**
+   * Get average of ${colName}
+   */
+  async getAvg${methodSuffix}(): Promise<number> {
+    const query = \`
+      SELECT COALESCE(AVG(${colName}), 0) as average
+      FROM "${schemaName}"."${tableName}"
+      WHERE deleted_at IS NULL
+    \`;
+
+    const result = await this.pool.query(query);
+    return parseFloat(result.rows[0]?.average || '0');
+  }
+
+  /**
+   * Get min/max of ${colName}
+   */
+  async getMinMax${methodSuffix}(): Promise<{ min: number; max: number }> {
+    const query = \`
+      SELECT
+        COALESCE(MIN(${colName}), 0) as min,
+        COALESCE(MAX(${colName}), 0) as max
+      FROM "${schemaName}"."${tableName}"
+      WHERE deleted_at IS NULL
+    \`;
+
+    const result = await this.pool.query(query);
+    return {
+      min: parseFloat(result.rows[0]?.min || '0'),
+      max: parseFloat(result.rows[0]?.max || '0'),
+    };
+  }`);
+    });
+
+    return `${methods.join('\n')}`;
   }
 }

@@ -3,6 +3,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CacheModule } from '@nestjs/cache-manager';
 import { EntityController } from './controllers/entity.controller';
 import { AuditModule } from '@ojiepermana/nest-generator/audit';
+import { LocationController } from './controllers/location.controller';
 
 @Module({
   imports: [
@@ -16,6 +17,6 @@ import { AuditModule } from '@ojiepermana/nest-generator/audit';
         },
       },
     ]), CacheModule.register(), AuditModule],
-  controllers: [EntityController]
+  controllers: [EntityController, LocationController]
 })
 export class EntityModule {}

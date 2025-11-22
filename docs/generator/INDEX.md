@@ -8,7 +8,7 @@ NestJS metadata-driven CRUD generator with audit, caching, RBAC, and file upload
 
 Based on actual generation testing (`apps/microservices/entity`):
 
-### ✅ Auto-Generated Features (6/9 - 67%)
+### ✅ Auto-Generated Features (8/9 - 89%)
 
 | Feature | Status | Evidence |
 |---------|--------|----------|
@@ -18,17 +18,17 @@ Based on actual generation testing (`apps/microservices/entity`):
 | **Microservices** | ✅ Complete | @MessagePattern handlers, proper payload handling |
 | **RBAC Decorators** | ✅ Complete | @RequirePermission, @RequireRole, @Public auto-applied (v4.0.1) |
 | **Swagger/OpenAPI** | ✅ Complete | Full suite: @ApiTags, @ApiOperation, @ApiResponse, @ApiBody, @ApiParam, @ApiQuery (v4.0.1) |
+| **File Upload** | ✅ Complete | Auto-detect file columns, upload/delete endpoints with Swagger (v4.0.1) |
+| **JOIN Queries** | ✅ Complete | findWithRelations(), findAllWithRelations() with FK detection (v4.0.2) |
+| **Recap/Analytics** | ✅ Complete | getDailyRecap(), getMonthlyRecap(), getYearlyRecap(), getMonthlyBreakdown() (v4.0.2) |
 
-### ❌ Features Requiring Manual Setup (3/9 - 33%)
+### ❌ Features Requiring Manual Setup (1/9 - 11%)
 
 | Feature | Status | Missing Component | Required Action |
 |---------|--------|-------------------|-----------------|
-| **File Upload** | ❌ Not Detected | StorageModule, upload methods | Requires file columns in metadata |
-| **Advanced Queries** | ❌ Not Detected | JOINs, CTEs, recaps, aggregations | Requires foreign keys in metadata |
-| **Search** | ❌ Not Generated | SearchModule, fulltext search | Manual enable with `--features.search` |
-| **Export** | ❌ Not Generated | CSV/Excel endpoints | Manual enable with `--features.export` |
+| **Advanced Queries** | ⚠️ Partial | Aggregations (COUNT/SUM/AVG), Search, Export, CTEs | Manual implementation or future enhancement |
 
-**Note**: Features depend on metadata structure and explicit flags. See [Feature Detection](#feature-detection) below.
+**Note**: 89% of core features are now auto-generated! Only advanced query features require manual setup.
 
 ## Start Here
 
@@ -171,20 +171,29 @@ docs/generator/
 - **Issues**: [Open issues](https://github.com/ojiepermana/nest/issues)
 - **License**: MIT © Ojie Permana
 
-## Recent Updates (v4.0.1)
+## Recent Updates (v4.0.2)
 
 **New Features**:
 
+- ✅ **JOIN Query Methods** - Auto-generate findWithRelations() methods with FK detection
+  - Detects foreign keys from metadata (ref_schema, ref_table, ref_column)
+  - Generates INNER/LEFT JOIN based on column nullability
+  - Returns entity with related data (id, name from referenced tables)
+  - Pagination and filtering support for relations
+
+- ✅ **Recap/Analytics Methods** - Auto-generate time-based analytics
+  - getDailyRecap(startDate, endDate) - daily aggregation
+  - getMonthlyRecap(year) - monthly counts
+  - getYearlyRecap() - yearly statistics
+  - getMonthlyBreakdown(year) - full 12-month breakdown
+  - Auto-detects timestamp columns (created_at, updated_at, *_at)
+
+**Previous Updates (v4.0.1)**:
+
 - ✅ **RBAC Decorators Auto-Generation** - Smart decorator selection (@Public, @RequireRole, @RequirePermission) based on endpoint action
 - ✅ **Complete Swagger/OpenAPI Suite** - Full decorators (@ApiTags, @ApiOperation, @ApiResponse, @ApiBody, @ApiParam, @ApiQuery) for gateway controllers
+- ✅ **File Upload Detection** - Auto-detect file columns and generate upload/delete endpoints
 - ✅ **RBAC Schema Migration** - Consolidated RBAC tables from `rbac` schema to `user` schema
-
-**Previous Updates (v4.0.0)**:
-
-- ✅ Full microservices support with @MessagePattern handlers
-- ✅ Gateway controller generation for HTTP → microservice proxy
-- ✅ Improved RBAC module with global guards
-- ✅ Enhanced audit trail integration
 
 **Breaking Changes (v4.0.0)**:
 

@@ -897,9 +897,18 @@ export const auditConfig = {
     );
     const hasRelations = fkColumns.length > 0;
 
+    // Detect timestamp columns for recap queries
+    const timestampColumn = this.getTimestampColumn();
+    const hasTimestamps = timestampColumn !== null;
+
     // Generate JOIN query methods if there are foreign keys
     const joinMethods = hasRelations
       ? this.generateJoinMethods(entityName, schemaName, tableName, pkName, pkType, fkColumns)
+      : '';
+
+    // Generate recap methods if there are timestamp columns
+    const recapMethods = hasTimestamps
+      ? this.generateRecapMethods(entityName, schemaName, tableName, timestampColumn)
       : '';
 
     return `import { Injectable, Inject } from '@nestjs/common';
@@ -1047,6 +1056,7 @@ export class ${repositoryName} {
     return result.rows.length > 0;
   }
 ${joinMethods}
+${recapMethods}
 }
 `;
   }
@@ -1174,6 +1184,166 @@ ${joinMethods}
     return {
       data: dataResult.rows,
       total,
+    };
+  }
+`;
+  }
+
+  /**
+   * Get timestamp column for recap queries
+   * Looks for created_at, updated_at, or any *_at column
+   */
+  private getTimestampColumn(): string | null {
+    // Priority: created_at > updated_at > any *_at column
+    const createdAt = this.columns.find((col) => col.column_name === 'created_at');
+    if (createdAt) return 'created_at';
+
+    const updatedAt = this.columns.find((col) => col.column_name === 'updated_at');
+    if (updatedAt) return 'updated_at';
+
+    // Find any column ending with _at that is a timestamp/date type
+    const timestampCol = this.columns.find(
+      (col) =>
+        col.column_name.endsWith('_at') &&
+        (col.data_type.includes('timestamp') || col.data_type.includes('date')),
+    );
+
+    return timestampCol?.column_name || null;
+  }
+
+  /**
+   * Generate recap/analytics methods for timestamp columns
+   */
+  private generateRecapMethods(
+    entityName: string,
+    schemaName: string,
+    tableName: string,
+    timestampColumn: string,
+  ): string {
+    const camelName = toCamelCase(entityName);
+
+    return `
+  /**
+   * Get daily recap for ${camelName}s
+   * Returns count of records per day for a date range
+   */
+  async getDailyRecap(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<Array<{ date: string; count: number }>> {
+    const query = \`
+      SELECT
+        DATE(${timestampColumn}) as date,
+        COUNT(*) as count
+      FROM "${schemaName}"."${tableName}"
+      WHERE ${timestampColumn} >= $1
+        AND ${timestampColumn} <= $2
+        AND deleted_at IS NULL
+      GROUP BY DATE(${timestampColumn})
+      ORDER BY date
+    \`;
+    
+    const result = await this.pool.query(query, [startDate, endDate]);
+    return result.rows.map(row => ({
+      date: row.date,
+      count: parseInt(row.count, 10),
+    }));
+  }
+
+  /**
+   * Get monthly recap for ${camelName}s
+   * Returns count of records per month for a specific year
+   */
+  async getMonthlyRecap(year: number): Promise<Array<{ month: number; count: number }>> {
+    const query = \`
+      SELECT
+        EXTRACT(MONTH FROM ${timestampColumn})::integer as month,
+        COUNT(*) as count
+      FROM "${schemaName}"."${tableName}"
+      WHERE EXTRACT(YEAR FROM ${timestampColumn}) = $1
+        AND deleted_at IS NULL
+      GROUP BY EXTRACT(MONTH FROM ${timestampColumn})
+      ORDER BY month
+    \`;
+    
+    const result = await this.pool.query(query, [year]);
+    return result.rows.map(row => ({
+      month: row.month,
+      count: parseInt(row.count, 10),
+    }));
+  }
+
+  /**
+   * Get yearly recap for ${camelName}s
+   * Returns count of records per year
+   */
+  async getYearlyRecap(): Promise<Array<{ year: number; count: number }>> {
+    const query = \`
+      SELECT
+        EXTRACT(YEAR FROM ${timestampColumn})::integer as year,
+        COUNT(*) as count
+      FROM "${schemaName}"."${tableName}"
+      WHERE deleted_at IS NULL
+      GROUP BY EXTRACT(YEAR FROM ${timestampColumn})
+      ORDER BY year DESC
+    \`;
+    
+    const result = await this.pool.query(query);
+    return result.rows.map(row => ({
+      year: row.year,
+      count: parseInt(row.count, 10),
+    }));
+  }
+
+  /**
+   * Get monthly breakdown recap with all 12 months
+   * Returns count for each month (Jan-Dec) in a specific year
+   */
+  async getMonthlyBreakdown(year: number): Promise<{
+    year: number;
+    months: { month: string; count: number }[];
+    total: number;
+  }> {
+    const query = \`
+      SELECT
+        COUNT(CASE WHEN EXTRACT(MONTH FROM ${timestampColumn}) = 1 THEN 1 END)::integer as jan,
+        COUNT(CASE WHEN EXTRACT(MONTH FROM ${timestampColumn}) = 2 THEN 1 END)::integer as feb,
+        COUNT(CASE WHEN EXTRACT(MONTH FROM ${timestampColumn}) = 3 THEN 1 END)::integer as mar,
+        COUNT(CASE WHEN EXTRACT(MONTH FROM ${timestampColumn}) = 4 THEN 1 END)::integer as apr,
+        COUNT(CASE WHEN EXTRACT(MONTH FROM ${timestampColumn}) = 5 THEN 1 END)::integer as may,
+        COUNT(CASE WHEN EXTRACT(MONTH FROM ${timestampColumn}) = 6 THEN 1 END)::integer as jun,
+        COUNT(CASE WHEN EXTRACT(MONTH FROM ${timestampColumn}) = 7 THEN 1 END)::integer as jul,
+        COUNT(CASE WHEN EXTRACT(MONTH FROM ${timestampColumn}) = 8 THEN 1 END)::integer as aug,
+        COUNT(CASE WHEN EXTRACT(MONTH FROM ${timestampColumn}) = 9 THEN 1 END)::integer as sep,
+        COUNT(CASE WHEN EXTRACT(MONTH FROM ${timestampColumn}) = 10 THEN 1 END)::integer as oct,
+        COUNT(CASE WHEN EXTRACT(MONTH FROM ${timestampColumn}) = 11 THEN 1 END)::integer as nov,
+        COUNT(CASE WHEN EXTRACT(MONTH FROM ${timestampColumn}) = 12 THEN 1 END)::integer as dec,
+        COUNT(*)::integer as total
+      FROM "${schemaName}"."${tableName}"
+      WHERE EXTRACT(YEAR FROM ${timestampColumn}) = $1
+        AND deleted_at IS NULL
+    \`;
+    
+    const result = await this.pool.query(query, [year]);
+    const row = result.rows[0];
+    
+    return {
+      year,
+      months: [
+        { month: 'jan', count: row.jan },
+        { month: 'feb', count: row.feb },
+        { month: 'mar', count: row.mar },
+        { month: 'apr', count: row.apr },
+        { month: 'may', count: row.may },
+        { month: 'jun', count: row.jun },
+        { month: 'jul', count: row.jul },
+        { month: 'aug', count: row.aug },
+        { month: 'sep', count: row.sep },
+        { month: 'oct', count: row.oct },
+        { month: 'nov', count: row.nov },
+        { month: 'dec', count: row.dec },
+      ],
+      total: row.total,
     };
   }
 `;

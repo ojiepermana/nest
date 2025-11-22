@@ -362,46 +362,46 @@ export class RBACService {
    */
   async grantPermission(
     roleName: string,
-    permissionName: string,
+    permissionCode: string,
     grantedBy?: string,
   ): Promise<void> {
     const [role, permission] = await Promise.all([
       this.repository.getRoleByName(roleName),
-      this.repository.getPermissionByName(permissionName),
+      this.repository.getPermissionByCode(permissionCode),
     ]);
 
     if (!role) {
       throw new Error(`Role not found: ${roleName}`);
     }
     if (!permission) {
-      throw new Error(`Permission not found: ${permissionName}`);
+      throw new Error(`Permission not found: ${permissionCode}`);
     }
 
     await this.repository.grantPermissionToRole(role.id, permission.id, grantedBy);
 
     // Invalidate cache for all users with this role
-    this.logger.log(`Granted permission ${permissionName} to role ${roleName}`);
+    this.logger.log(`Granted permission ${permissionCode} to role ${roleName}`);
   }
 
   /**
    * Revoke permission from role
    */
-  async revokePermission(roleName: string, permissionName: string): Promise<void> {
+  async revokePermission(roleName: string, permissionCode: string): Promise<void> {
     const [role, permission] = await Promise.all([
       this.repository.getRoleByName(roleName),
-      this.repository.getPermissionByName(permissionName),
+      this.repository.getPermissionByCode(permissionCode),
     ]);
 
     if (!role) {
       throw new Error(`Role not found: ${roleName}`);
     }
     if (!permission) {
-      throw new Error(`Permission not found: ${permissionName}`);
+      throw new Error(`Permission not found: ${permissionCode}`);
     }
 
     await this.repository.revokePermissionFromRole(role.id, permission.id);
 
-    this.logger.log(`Revoked permission ${permissionName} from role ${roleName}`);
+    this.logger.log(`Revoked permission ${permissionCode} from role ${roleName}`);
   }
 
   /**

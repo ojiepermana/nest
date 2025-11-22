@@ -25,7 +25,7 @@ export class RBACRepository {
         AND ur.is_active = true
         AND p.is_active = true
         AND (ur.expires_at IS NULL OR ur.expires_at > NOW())
-      ORDER BY p.resource, p.action
+      ORDER BY p.priority DESC, p.resource, p.action, p.scope
     `;
 
     const result = await this.pool.query<Permission>(query, [userId]);
@@ -62,9 +62,9 @@ export class RBACRepository {
   }
 
   /**
-   * Check if user has specific permission
+   * Check if user has specific permission (by code)
    */
-  async hasPermission(userId: string, permissionName: string): Promise<boolean> {
+  async hasPermission(userId: string, permissionCode: string): Promise<boolean> {
     const query = `
       SELECT EXISTS(
         SELECT 1
@@ -72,7 +72,7 @@ export class RBACRepository {
         INNER JOIN user.role_permissions rp ON p.id = rp.permission_id
         INNER JOIN user.user_roles ur ON rp.role_id = ur.role_id
         WHERE ur.user_id = $1
-          AND p.name = $2
+          AND p.code = $2
           AND ur.is_active = true
           AND p.is_active = true
           AND (ur.expires_at IS NULL OR ur.expires_at > NOW())
@@ -81,7 +81,7 @@ export class RBACRepository {
 
     const result = await this.pool.query<{ has_permission: boolean }>(query, [
       userId,
-      permissionName,
+      permissionCode,
     ]);
     return result.rows[0]?.has_permission || false;
   }
@@ -119,16 +119,88 @@ export class RBACRepository {
   }
 
   /**
-   * Get permission by name
+   * Get permission by code
    */
-  async getPermissionByName(name: string): Promise<Permission | null> {
+  async getPermissionByCode(code: string): Promise<Permission | null> {
     const query = `
       SELECT * FROM user.permissions
-      WHERE name = $1 AND is_active = true
+      WHERE code = $1 AND is_active = true
     `;
 
-    const result = await this.pool.query<Permission>(query, [name]);
+    const result = await this.pool.query<Permission>(query, [code]);
     return result.rows[0] || null;
+  }
+
+  /**
+   * Get permissions by resource and action with scope filtering
+   * Returns permissions ordered by priority (descending)
+   */
+  async getPermissionsByResourceAction(
+    resource: string,
+    action: string,
+    scope?: string,
+  ): Promise<Permission[]> {
+    let query = `
+      SELECT * FROM user.permissions
+      WHERE resource = $1 AND action = $2 AND is_active = true
+    `;
+
+    const params: any[] = [resource, action];
+
+    if (scope) {
+      query += ` AND scope = $3`;
+      params.push(scope);
+    }
+
+    query += ` ORDER BY priority DESC, scope`;
+
+    const result = await this.pool.query<Permission>(query, params);
+    return result.rows;
+  }
+
+  /**
+   * Check if user has permission with specific scope
+   * Checks if user has exact permission or higher scope
+   * Scope hierarchy: own < team < department < all
+   */
+  async hasPermissionWithScope(
+    userId: string,
+    resource: string,
+    action: string,
+    requiredScope: 'own' | 'team' | 'department' | 'all' = 'own',
+  ): Promise<boolean> {
+    // Define scope hierarchy
+    const scopeHierarchy = { own: 1, team: 2, department: 3, all: 4 };
+    const requiredLevel = scopeHierarchy[requiredScope];
+
+    const query = `
+      SELECT EXISTS(
+        SELECT 1
+        FROM user.permissions p
+        INNER JOIN user.role_permissions rp ON p.id = rp.permission_id
+        INNER JOIN user.user_roles ur ON rp.role_id = ur.role_id
+        WHERE ur.user_id = $1
+          AND p.resource = $2
+          AND p.action = $3
+          AND p.is_active = true
+          AND ur.is_active = true
+          AND (ur.expires_at IS NULL OR ur.expires_at > NOW())
+          AND (
+            (p.scope = 'all') OR
+            (p.scope = 'department' AND $4 <= 3) OR
+            (p.scope = 'team' AND $4 <= 2) OR
+            (p.scope = 'own' AND $4 <= 1)
+          )
+      ) as has_permission
+    `;
+
+    const result = await this.pool.query<{ has_permission: boolean }>(query, [
+      userId,
+      resource,
+      action,
+      requiredLevel,
+    ]);
+    return result.rows[0]?.has_permission || false;
   }
 
   /**

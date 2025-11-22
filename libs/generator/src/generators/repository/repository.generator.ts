@@ -905,6 +905,10 @@ export const auditConfig = {
     const numericColumns = this.getNumericColumns();
     const hasNumericColumns = numericColumns.length > 0;
 
+    // Detect text columns for search
+    const textColumns = this.getTextColumns();
+    const hasTextColumns = textColumns.length > 0;
+
     // Generate JOIN query methods if there are foreign keys
     const joinMethods = hasRelations
       ? this.generateJoinMethods(entityName, schemaName, tableName, pkName, pkType, fkColumns)
@@ -918,6 +922,11 @@ export const auditConfig = {
     // Generate aggregation methods if there are numeric columns
     const aggregationMethods = hasNumericColumns
       ? this.generateAggregationMethods(entityName, schemaName, tableName, numericColumns)
+      : '';
+
+    // Generate search methods if there are text columns
+    const searchMethods = hasTextColumns
+      ? this.generateSearchMethods(entityName, schemaName, tableName, textColumns)
       : '';
 
     return `import { Injectable, Inject } from '@nestjs/common';
@@ -1067,6 +1076,7 @@ export class ${repositoryName} {
 ${joinMethods}
 ${recapMethods}
 ${aggregationMethods}
+${searchMethods}
 }
 `;
   }
@@ -1541,6 +1551,210 @@ ${aggregationMethods}
       min: parseFloat(result.rows[0]?.min || '0'),
       max: parseFloat(result.rows[0]?.max || '0'),
     };
+  }`);
+    });
+
+    return `${methods.join('\n')}`;
+  }
+
+  /**
+   * Get text columns for full-text search
+   * Includes: varchar, text, char types
+   */
+  private getTextColumns(): Array<{ name: string; type: string }> {
+    const textTypes = ['varchar', 'text', 'char', 'character varying', 'character'];
+
+    return this.columns
+      .filter((col) => {
+        const dataType = col.data_type?.toLowerCase() || '';
+        return textTypes.some((type) => dataType.includes(type));
+      })
+      .map((col) => ({
+        name: col.column_name,
+        type: col.data_type,
+      }));
+  }
+
+  /**
+   * Generate full-text search methods
+   * Generates: search(query), searchByColumn(column, query)
+   */
+  private generateSearchMethods(
+    entityName: string,
+    schemaName: string,
+    tableName: string,
+    textColumns: Array<{ name: string; type: string }>,
+  ): string {
+    const methods: string[] = [];
+    const toCamelCase = (str: string) =>
+      str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+
+    // Generate search() - search across all text columns
+    const searchConditions = textColumns
+      .map((col, idx) => `${col.name}::text ILIKE $${idx + 1}`)
+      .join(' OR ');
+
+    methods.push(`
+  /**
+   * Full-text search across all text columns
+   * Uses PostgreSQL ILIKE for case-insensitive search
+   * @param query - Search query (supports % wildcards)
+   * @param options - Pagination options
+   * @returns Array of matching records
+   */
+  async search(
+    query: string,
+    options?: { limit?: number; offset?: number },
+  ): Promise<any[]> {
+    const limit = options?.limit || 10;
+    const offset = options?.offset || 0;
+    const searchPattern = \`%\${query}%\`;
+    
+    const sql = \`
+      SELECT *
+      FROM "${schemaName}"."${tableName}"
+      WHERE (${searchConditions})
+        AND deleted_at IS NULL
+      ORDER BY id
+      LIMIT $${textColumns.length + 1} OFFSET $${textColumns.length + 2}
+    \`;
+    
+    const params = [
+      ${textColumns.map(() => 'searchPattern').join(', ')},
+      limit,
+      offset,
+    ];
+    
+    const result = await this.pool.query(sql, params);
+    return result.rows;
+  }`);
+
+    // Generate searchByColumn() - search specific column
+    methods.push(`
+  /**
+   * Search by specific column
+   * @param column - Column name to search in
+   * @param query - Search query (supports % wildcards)
+   * @param options - Pagination options
+   * @returns Array of matching records
+   */
+  async searchByColumn(
+    column: string,
+    query: string,
+    options?: { limit?: number; offset?: number },
+  ): Promise<any[]> {
+    const validColumns = [${textColumns.map((col) => `'${col.name}'`).join(', ')}];
+    
+    if (!validColumns.includes(column)) {
+      throw new Error(\`Invalid search column: \${column}\`);
+    }
+    
+    const limit = options?.limit || 10;
+    const offset = options?.offset || 0;
+    const searchPattern = \`%\${query}%\`;
+    
+    const sql = \`
+      SELECT *
+      FROM "${schemaName}"."${tableName}"
+      WHERE \${column}::text ILIKE $1
+        AND deleted_at IS NULL
+      ORDER BY id
+      LIMIT $2 OFFSET $3
+    \`;
+    
+    const result = await this.pool.query(sql, [searchPattern, limit, offset]);
+    return result.rows;
+  }`);
+
+    // Generate searchCount() - count search results
+    methods.push(`
+  /**
+   * Count search results across all text columns
+   * @param query - Search query
+   * @returns Number of matching records
+   */
+  async searchCount(query: string): Promise<number> {
+    const searchPattern = \`%\${query}%\`;
+    
+    const sql = \`
+      SELECT COUNT(*) as count
+      FROM "${schemaName}"."${tableName}"
+      WHERE (${searchConditions})
+        AND deleted_at IS NULL
+    \`;
+    
+    const params = [${textColumns.map(() => 'searchPattern').join(', ')}];
+    const result = await this.pool.query(sql, params);
+    return parseInt(result.rows[0]?.count || '0', 10);
+  }`);
+
+    // Generate fuzzy search using PostgreSQL similarity
+    methods.push(`
+  /**
+   * Fuzzy search using PostgreSQL trigram similarity
+   * Requires pg_trgm extension
+   * @param query - Search query
+   * @param threshold - Similarity threshold (0.0-1.0, default: 0.3)
+   * @param options - Pagination options
+   * @returns Array of matching records with similarity score
+   */
+  async fuzzySearch(
+    query: string,
+    threshold: number = 0.3,
+    options?: { limit?: number; offset?: number },
+  ): Promise<Array<any & { similarity: number }>> {
+    const limit = options?.limit || 10;
+    const offset = options?.offset || 0;
+    
+    // Build similarity columns for each text field
+    const similarityColumns = [${textColumns.map((col) => `'similarity(${col.name}::text, $1) as ${col.name}_similarity'`).join(', ')}];
+    const maxSimilarity = \`GREATEST(\${similarityColumns.join(', ')})\`;
+    
+    const sql = \`
+      SELECT *,
+        \${maxSimilarity} as similarity
+      FROM "${schemaName}"."${tableName}"
+      WHERE \${maxSimilarity} > $2
+        AND deleted_at IS NULL
+      ORDER BY similarity DESC, id
+      LIMIT $3 OFFSET $4
+    \`;
+    
+    const result = await this.pool.query(sql, [query, threshold, limit, offset]);
+    return result.rows.map((row) => ({
+      ...row,
+      similarity: parseFloat(row.similarity),
+    }));
+  }`);
+
+    // Generate individual search methods for important columns (name, title, description)
+    const importantColumns = textColumns.filter((col) =>
+      ['name', 'title', 'description', 'email'].some((key) => col.name.includes(key)),
+    );
+
+    importantColumns.forEach((col) => {
+      const methodName = toCamelCase(col.name);
+      methods.push(`
+  /**
+   * Search by ${col.name}
+   * @param query - Search query
+   * @returns Array of matching records
+   */
+  async searchBy${methodName.charAt(0).toUpperCase() + methodName.slice(1)}(
+    query: string,
+  ): Promise<any[]> {
+    const searchPattern = \`%\${query}%\`;
+    const sql = \`
+      SELECT *
+      FROM "${schemaName}"."${tableName}"
+      WHERE ${col.name}::text ILIKE $1
+        AND deleted_at IS NULL
+      ORDER BY ${col.name}
+      LIMIT 50
+    \`;
+    
+    const result = await this.pool.query(sql, [searchPattern]);
+    return result.rows;
   }`);
     });
 

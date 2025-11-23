@@ -2,174 +2,94 @@
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
-<h1 align="center">NestJS Libraries Monorepo</h1>
+<h1 align="center">@ojiepermana/* - NestJS Libraries</h1>
 
 <p align="center">
-  Collection of NestJS libraries by Ojie Permana
+  Enterprise-grade NestJS libraries for rapid development
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@ojiepermana/nest-generator"><img src="https://img.shields.io/npm/v/@ojiepermana/nest-generator.svg" alt="nest-generator version" /></a>
-  <a href="https://www.npmjs.com/package/@ojiepermana/nest"><img src="https://img.shields.io/npm/v/@ojiepermana/nest.svg" alt="nest version" /></a>
+  <a href="https://www.npmjs.com/package/@ojiepermana/nest-generator"><img src="https://img.shields.io/npm/v/@ojiepermana/nest-generator.svg" alt="Generator" /></a>
+  <a href="https://www.npmjs.com/package/@ojiepermana/nest"><img src="https://img.shields.io/npm/v/@ojiepermana/nest.svg" alt="Core" /></a>
+  <a href="https://www.npmjs.com/package/@ojiepermana/rbac"><img src="https://img.shields.io/npm/v/@ojiepermana/rbac.svg" alt="RBAC" /></a>
   <a href="https://github.com/ojiepermana/nest/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/@ojiepermana/nest.svg" alt="License" /></a>
 </p>
 
-## 📦 Published Libraries
+## 📦 Libraries
 
-### [@ojiepermana/nest-generator](https://www.npmjs.com/package/@ojiepermana/nest-generator)
+### 🎯 [@ojiepermana/nest-generator](https://www.npmjs.com/package/@ojiepermana/nest-generator)
 
-**Metadata-driven NestJS CRUD generator** - Generate complete, production-ready modules from database schema metadata. NO ORM, uses native database drivers (pg/mysql2) with raw SQL for maximum performance.
+Metadata-driven CRUD generator - Generate production-ready modules from database metadata.
 
 ```bash
-npm install @ojiepermana/nest-generator
+npm install -g @ojiepermana/nest-generator
 ```
 
-**Features:**
+**Key Features:** CRUD, JOINs, Aggregations, Audit, RBAC, File Upload, Caching, Export, Microservices
 
-- ✅ **Core CRUD** - Create, Read, Update, Delete with validation
-- ✅ **Advanced Queries** - JOINs, CTEs, Aggregations, Recaps (daily/monthly/yearly)
-- ✅ **Caching** - Redis integration with smart invalidation
-- ✅ **Audit Trail** - Auto-track CREATE, UPDATE, DELETE with change history
-- ✅ **File Upload** - 4 storage providers (Local, S3, GCS, Azure Blob)
-- ✅ **RBAC** - Complete Role-Based Access Control system
-- ✅ **Export** - CSV/Excel streaming for large datasets
-- ✅ **Swagger** - Auto-generated API documentation
-- ✅ **Multi-Architecture** - Standalone, Monorepo, Microservices (FULLY TESTED!)
+📖 **[Complete Documentation](./docs/generator/INDEX.md)** | [Quick Start](./docs/generator/QUICKSTART.md) | [Features](./docs/generator/FEATURES.md)
 
-**RBAC Features:**
+### 🛠️ [@ojiepermana/nest](https://www.npmjs.com/package/@ojiepermana/nest)
 
-- 🔐 Permission-based & Role-based access control
-- 🔐 Ownership verification (row-level security)
-- 🔐 Field-level permissions
-- 🔐 Decorators: `@RequirePermission`, `@RequireRole`, `@RequireOwnership`
-- 🔐 Guards: PermissionsGuard, RolesGuard, OwnershipGuard
-- 🔐 Hierarchical roles with super admin support
-- 🔐 Role expiration and active status
-- 🔐 Redis caching for performance
-- 🔐 92 passing tests
-- 📖 [Complete RBAC Guide](./docs/generator/rbac/RBAC_GUIDE.md) (1432 lines)
-
-**Microservices Support:**
-
-- 🚀 Auto-detect architecture from project structure
-- 🚀 Gateway generation with HTTP endpoints + ClientProxy
-- 🚀 Service generation with @MessagePattern handlers
-- 🚀 TCP transport configuration
-- 🚀 Support for gRPC, Redis, RabbitMQ, Kafka, NATS
-- 🚀 CLI flags: `--app=<name>` for targeting specific services
-- 🚀 Fully tested with 0 compilation errors
-
-**Test Coverage:** 707/740 passing (95.5%)
-
-### [@ojiepermana/nest](https://www.npmjs.com/package/@ojiepermana/nest)
-
-NestJS Core Library - Core utilities and common modules.
+Shared NestJS utilities - DTOs, Filters, Interceptors, Decorators, Pipes.
 
 ```bash
 npm install @ojiepermana/nest
 ```
 
+**Key Components:** PaginationDto, ResponseDto, AllExceptionsFilter, LoggingInterceptor, TransformInterceptor
+
+📖 **[Library Documentation](./libs/nest/README.md)** | [API Reference](./libs/nest/IMPLEMENTATION_COMPLETE.md)
+
+### 🔐 [@ojiepermana/rbac](https://www.npmjs.com/package/@ojiepermana/rbac)
+
+Role-Based Access Control system - Complete RBAC implementation with decorators and guards.
+
+```bash
+npm install @ojiepermana/rbac
+```
+
+**Key Features:** Permission-based, Role-based, Ownership verification, Field-level permissions
+
+📖 **[RBAC Guide](./docs/generator/rbac/RBAC_GUIDE.md)** | [Implementation Status](./docs/generator/rbac/IMPLEMENTATION_STATUS.md)
+
 ## 🚀 Quick Start
 
-### Using the Generator
-
-**1. Install the generator:**
+### Generator
 
 ```bash
+# Install
 npm install -g @ojiepermana/nest-generator
-# or
-npx @ojiepermana/nest-generator
-```
 
-**2. Initialize metadata tables:**
-
-```bash
+# Initialize
 nest-generator init
+
+# Generate module
+nest-generator generate users.profile --features.audit=true
 ```
 
-**3. Generate a module:**
+📖 **See:** [Quick Start Guide](./docs/generator/QUICKSTART.md) for complete tutorial
 
-```bash
-# Basic CRUD module
-nest-generator generate users.profile
-
-# With features
-nest-generator generate users.profile \
-  --features.audit=true \
-  --features.fileUpload=true \
-  --features.rbac=true \
-  --storageProvider=s3
-
-# For monorepo/microservices: specify target app
-nest-generator generate users.profile --app=user
-
-# Interactive mode
-nest-generator generate users.profile
-# Follow the prompts to select features
-```
-
-### 📌 CLI Options
-
-**Generate Command:**
-
-```bash
-nest-generator generate <schema.table> [options]
-
-Options:
-  --app=<name>              Target app in monorepo/microservices (e.g., --app=user)
-  --features.audit=<bool>   Enable audit trail (default: auto-detect)
-  --features.rbac=<bool>    Enable role-based access control
-  --features.upload=<bool>  Enable file upload
-  --features.cache=<bool>   Enable caching
-  --storageProvider=<type>  File storage: local|s3|gcs|azure
-  --skip-prompts            Skip interactive prompts (use defaults)
-  --help                    Show help
-```
-
-**Init Command:**
-
-```bash
-nest-generator init [options]
-
-Options:
-  --architecture=<type>     Architecture type: standalone|monorepo|microservices
-  --help                    Show help
-```
-
-**4. Generated structure:**
-
-```
-src/modules/users-profile/
-├── controllers/
-│   ├── users.controller.ts       # Users resource controller
-│   └── profile.controller.ts     # Profile resource controller
-├── dto/
-│   ├── users/
-│   │   ├── create-users.dto.ts
-│   │   ├── update-users.dto.ts
-│   │   └── users-filter.dto.ts
-│   └── profile/
-│       ├── create-profile.dto.ts
-│       ├── update-profile.dto.ts
-│       └── profile-filter.dto.ts
-├── entities/
-│   ├── users.entity.ts
-│   └── profile.entity.ts
-├── repositories/
-│   ├── users.repository.ts
-│   └── profile.repository.ts
-├── services/
-│   ├── users.service.ts
-│   └── profile.service.ts
-├── users-profile.module.ts       # Module wiring all components
-└── index.ts                      # Barrel exports
-```
-
-**5. Use RBAC decorators:**
+### Core Library
 
 ```typescript
-import { Controller, Get, Post, Body } from '@nestjs/common';
-import { RequirePermission, RequireRole } from '../rbac/decorators';
+import { PaginationDto, ResponseDto } from '@ojiepermana/nest';
+
+// Use pagination
+class GetUsersDto extends PaginationDto {}
+
+// Use response wrapper
+return ResponseDto.success(data, 'Users retrieved');
+return ResponseDto.paginated(items, meta, links);
+return ResponseDto.error('Not found', 404);
+```
+
+📖 **See:** [Library README](./libs/nest/README.md) for usage examples
+
+### RBAC
+
+```typescript
+import { RequirePermission, RequireRole } from '@ojiepermana/rbac';
 
 @Controller('users')
 export class UsersController {
@@ -178,461 +98,45 @@ export class UsersController {
   async create(@Body() dto: CreateUserDto) {
     return this.service.create(dto);
   }
-
-  @Get('admin')
-  @RequireRole('admin')
-  async adminDashboard() {
-    return this.service.getAdminStats();
-  }
 }
 ```
 
-## 🏗️ Architecture-Specific Usage
+📖 **See:** [RBAC Guide](./docs/generator/rbac/RBAC_GUIDE.md) for complete implementation
 
-The generator supports three architecture patterns. Each has different setup and usage patterns:
+## 📚 Architecture Support
 
-### 1️⃣ Standalone Architecture
+The generator supports three patterns:
 
-**Best for:** Single application, simple projects, MVPs
+| Architecture      | Best For       | Complexity     | Documentation                                                                  |
+| ----------------- | -------------- | -------------- | ------------------------------------------------------------------------------ |
+| **Standalone**    | MVPs, Startups | ⭐ Simple      | [Quick Start](./docs/generator/QUICKSTART.md)                                  |
+| **Monorepo**      | Medium teams   | ⭐⭐ Med       | [Quick Start](./docs/generator/QUICKSTART.md)                                  |
+| **Microservices** | Enterprise     | ⭐⭐⭐ Complex | [Microservices Guide](./docs/generator/quickstart/MICROSERVICES_QUICKSTART.md) |
 
-**Setup:**
+📖 **See:** [Complete Documentation Index](./docs/generator/INDEX.md) for detailed guides
 
-```bash
-# Navigate to standalone app
-cd apps/standalone
-
-# Initialize generator (creates generator.config.json)
-npx @ojiepermana/nest-generator init --architecture=standalone
-
-# Generate module
-npx @ojiepermana/nest-generator generate users.profile
-```
-
-**Directory structure:**
-
-```
-apps/standalone/
-├── src/
-│   ├── modules/
-│   │   └── users-profile/         # Generated module
-│   │       ├── controllers/
-│   │       │   ├── users.controller.ts
-│   │       │   └── profile.controller.ts
-│   │       ├── dto/
-│   │       │   ├── users/
-│   │       │   │   ├── create-users.dto.ts
-│   │       │   │   ├── update-users.dto.ts
-│   │       │   │   └── users-filter.dto.ts
-│   │       │   └── profile/
-│   │       │       ├── create-profile.dto.ts
-│   │       │       ├── update-profile.dto.ts
-│   │       │       └── profile-filter.dto.ts
-│   │       ├── entities/
-│   │       │   ├── users.entity.ts
-│   │       │   └── profile.entity.ts
-│   │       ├── repositories/
-│   │       │   ├── users.repository.ts
-│   │       │   └── profile.repository.ts
-│   │       ├── services/
-│   │       │   ├── users.service.ts
-│   │       │   └── profile.service.ts
-│   │       ├── users-profile.module.ts
-│   │       └── index.ts
-│   ├── database/                 # Shared database module
-│   ├── rbac/                     # RBAC system (if enabled)
-│   └── app.module.ts
-└── generator.config.json
-```
-
-**Import generated module:**
-
-```typescript
-// apps/standalone/src/app.module.ts
-import { Module } from '@nestjs/common';
-import { UsersProfileModule } from './modules/users-profile/users-profile.module';
-
-@Module({
-  imports: [UsersProfileModule],
-})
-export class AppModule {}
-```
-
-### 2️⃣ Monorepo Architecture
-
-**Best for:** Multiple apps sharing common modules, team collaboration
-
-**Setup:**
-
-```bash
-# Option 1: From project root with --app flag (recommended for automation)
-npx @ojiepermana/nest-generator init --architecture=monorepo
-npx @ojiepermana/nest-generator generate users.profile --app=user
-npx @ojiepermana/nest-generator generate orders.order --app=order
-
-# Option 2: From app directory
-cd apps/monorepo/user
-npx @ojiepermana/nest-generator init --architecture=monorepo
-npx @ojiepermana/nest-generator generate users.profile
-```
-
-**Directory structure:**
-
-```
-apps/monorepo/
-├── user/
-│   ├── src/
-│   │   ├── modules/
-│   │   │   └── users-profile/    # Generated module
-│   │   │       ├── controllers/
-│   │   │       │   ├── users.controller.ts
-│   │   │       │   └── profile.controller.ts
-│   │   │       ├── dto/
-│   │   │       │   ├── users/*.dto.ts
-│   │   │       │   └── profile/*.dto.ts
-│   │   │       ├── entities/
-│   │   │       │   ├── users.entity.ts
-│   │   │       │   └── profile.entity.ts
-│   │   │       ├── repositories/
-│   │   │       ├── services/
-│   │   │       ├── users-profile.module.ts
-│   │   │       └── index.ts
-│   │   └── user.module.ts
-│   └── generator.config.json
-├── order/
-│   ├── src/
-│   │   ├── modules/
-│   │   │   └── orders/           # Generated module
-│   │   │       ├── controllers/
-│   │   │       │   └── orders.controller.ts
-│   │   │       ├── dto/orders/
-│   │   │       ├── entities/
-│   │   │       ├── repositories/
-│   │   │       ├── services/
-│   │   │       └── orders.module.ts
-│   │   └── order.module.ts
-│   └── generator.config.json
-└── libs/                         # Shared libraries (optional)
-    ├── database/
-    └── rbac/
-```
-
-**Shared modules setup:**
-
-```bash
-# Create shared database module (run once)
-cd apps/monorepo/user
-nest generate module database
-nest generate service database
-
-# Both apps can now import from libs or duplicate minimal config
-```
-
-**Import in each app:**
-
-```typescript
-// apps/monorepo/user/src/user.module.ts
-import { Module } from '@nestjs/common';
-import { UsersProfileModule } from './modules/users-profile/users-profile.module';
-
-@Module({
-  imports: [UsersProfileModule],
-})
-export class UserModule {}
-```
-
-### 3️⃣ Microservices Architecture
-
-**Best for:** Distributed systems, scalability, independent deployments
-
-**Setup:**
-
-```bash
-# Option 1: From project root with --app flag (recommended for automation)
-npx @ojiepermana/nest-generator init --architecture=microservices
-npx @ojiepermana/nest-generator generate users.profile --app=user
-npx @ojiepermana/nest-generator generate orders.order --app=gateway
-
-# Option 2: From microservice directory
-cd apps/microservices/user
-npx @ojiepermana/nest-generator init --architecture=microservices
-npx @ojiepermana/nest-generator generate users.profile
-```
-
-**Directory structure:**
-
-```
-apps/microservices/
-├── gateway/                      # API Gateway
-│   ├── src/
-│   │   ├── modules/
-│   │   │   └── users-profile/
-│   │   │       ├── controllers/
-│   │   │       │   ├── users.controller.ts      # HTTP + ClientProxy
-│   │   │       │   └── profile.controller.ts    # HTTP + ClientProxy
-│   │   │       └── users-profile.module.ts
-│   │   └── gateway.module.ts
-│   └── generator.config.json
-├── user/                         # User Microservice
-│   ├── src/
-│   │   ├── modules/
-│   │   │   └── users-profile/    # Generated module
-│   │   │       ├── controllers/
-│   │   │       │   ├── users.controller.ts      # @MessagePattern
-│   │   │       │   └── profile.controller.ts    # @MessagePattern
-│   │   │       ├── dto/
-│   │   │       │   ├── users/*.dto.ts
-│   │   │       │   └── profile/*.dto.ts
-│   │   │       ├── entities/
-│   │   │       │   ├── users.entity.ts
-│   │   │       │   └── profile.entity.ts
-│   │   │       ├── repositories/
-│   │   │       ├── services/
-│   │   │       └── users-profile.module.ts
-│   │   └── main.ts
-│   └── generator.config.json
-└── order/                        # Order Microservice
-    ├── src/
-    │   ├── modules/
-    │   │   └── orders/
-    │   │       ├── controllers/
-    │   │       │   └── orders.controller.ts
-    │   │       ├── dto/orders/
-    │   │       ├── entities/
-    │   │       ├── repositories/
-    │   │       ├── services/
-    │   │       └── orders.module.ts
-    │   └── main.ts
-    └── generator.config.json
-```
-
-**Gateway setup (HTTP → gRPC/TCP):**
-
-```typescript
-// apps/microservices/gateway/src/gateway.module.ts
-import { Module } from '@nestjs/common';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-
-@Module({
-  imports: [
-    ClientsModule.register([
-      {
-        name: 'USER_SERVICE',
-        transport: Transport.TCP,
-        options: { host: 'localhost', port: 3001 },
-      },
-    ]),
-  ],
-})
-export class GatewayModule {}
-```
-
-**Microservice setup:**
-
-```typescript
-// apps/microservices/user/src/main.ts
-import { NestFactory } from '@nestjs/core';
-import { Transport, MicroserviceOptions } from '@nestjs/microservices';
-import { UserServiceModule } from './user-service.module';
-
-async function bootstrap() {
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>(UserServiceModule, {
-    transport: Transport.TCP,
-    options: { host: 'localhost', port: 3001 },
-  });
-  await app.listen();
-}
-bootstrap();
-```
-
-**Generated controller with message patterns:**
-
-```typescript
-// apps/microservices/user/src/modules/users-profile/users-profile.controller.ts
-import { Controller } from '@nestjs/common';
-import { MessagePattern } from '@nestjs/microservices';
-
-@Controller()
-export class UsersProfileController {
-  @MessagePattern({ cmd: 'users.create' })
-  async create(data: CreateUserDto) {
-    return this.service.create(data);
-  }
-
-  @MessagePattern({ cmd: 'users.findAll' })
-  async findAll(filter: UserFilterDto) {
-    return this.service.findAll(filter);
-  }
-}
-```
-
-### 🔑 Microservices Auto-Generation
-
-When generating for microservices architecture, **one command generates both controllers** with **Contract-First pattern**:
-
-| Aspect             | Shared Contracts                    | Gateway Controller                       | Service Controller                     |
-| ------------------ | ----------------------------------- | ---------------------------------------- | -------------------------------------- |
-| **Di-generate?**   | ✅ YA (base DTOs)                   | ✅ YA (extends contracts)                | ✅ YA (extends contracts)              |
-| **Location**       | `libs/contracts/{module}/dto/`      | `apps/microservices/gateway/src/module/` | `apps/microservices/order/src/module/` |
-| **DTOs**           | Base validation (no Swagger)        | Extends + Swagger decorators             | Extends + internal validation          |
-| **HTTP Endpoints** | ❌ Tidak                            | ✅ Ya (@Get, @Post, dll)                 | ❌ Tidak                               |
-| **Pattern**        | -                                   | ClientProxy.send()                       | @MessagePattern()                      |
-| **Purpose**        | Type-safe contract between services | Menerima HTTP, forward ke service        | Menerima message, jalankan logic       |
-| **Swagger**        | ❌ Tidak                            | ✅ Ya                                    | ❌ Tidak                               |
-| **Public Facing**  | ❌ Tidak                            | ✅ Ya (REST API)                         | ❌ Tidak (internal)                    |
-
-**Example:**
-
-```bash
-# One command:
-nest-generator generate orders.transactions --app=order
-
-# Generates THREE locations:
-# 1. libs/contracts/transactions/dto/ ← Base DTOs (shared contract)
-#    - create-transactions.dto.ts
-#    - update-transactions.dto.ts
-#    - transactions-filter.dto.ts
-#
-# 2. apps/microservices/order/src/transactions/
-#    - Controllers with @MessagePattern()
-#    - DTOs extend from @app/contracts/transactions
-#
-# 3. apps/microservices/gateway/src/transactions/
-#    - Controllers with HTTP REST + ClientProxy
-#    - DTOs extend from @app/contracts/transactions + Swagger
-```
-
-**Contract Structure:**
-
-```typescript
-// libs/contracts/transactions/dto/create-transactions.dto.ts
-export class CreateTransactionsDto {
-  @IsString()
-  orderId: string;
-
-  @IsNumber()
-  amount: number;
-}
-
-// Gateway DTO (extends with Swagger)
-import { CreateTransactionsDto } from '@app/contracts/transactions';
-
-export class CreateTransactionsRequestDto extends CreateTransactionsDto {
-  @ApiProperty({ example: 'ORD-001' })
-  orderId: string; // Override with Swagger
-}
-
-// Service DTO (extends with internal validation)
-import { CreateTransactionsDto } from '@app/contracts/transactions';
-
-export class CreateTransactionsInternalDto extends CreateTransactionsDto {
-  @IsUUID()
-  tenantId: string; // Internal-only field
-}
-```
-
-**Benefits:**
-
-- ✅ **Type Safety** - Shared TypeScript contracts
-- ✅ **No Duplication** - Single source of truth
-- ✅ **Flexibility** - Gateway/Service can add specific validation
-- ✅ **Versioning** - Easy to version contracts (v1, v2)
-- ✅ **Maintainability** - Update once, affects all services
-
-**Configuration (`generator.config.json`):**
-
-```json
-{
-  "architecture": "microservices",
-  "microservices": {
-    "gatewayApp": "apps/microservices/gateway"  ← Gateway location
-  }
-}
-```
-
-**TypeScript Path Mapping (`tsconfig.json`):**
-
-```json
-{
-  "compilerOptions": {
-    "paths": {
-      "@app/contracts/*": ["libs/contracts/*"]
-    }
-  }
-}
-```
-
-### Architecture Comparison
-
-| Feature                | Standalone     | Monorepo      | Microservices  |
-| ---------------------- | -------------- | ------------- | -------------- |
-| **Setup Complexity**   | ⭐ Simple      | ⭐⭐ Moderate | ⭐⭐⭐ Complex |
-| **Code Sharing**       | ❌ None        | ✅ Shared     | ⚠️ Duplicated  |
-| **Scalability**        | ⚠️ Limited     | ⭐⭐ Good     | ⭐⭐⭐ Best    |
-| **Deployment**         | ⭐⭐⭐ Simple  | ⭐⭐ Moderate | ⭐ Complex     |
-| **Team Collaboration** | ⚠️ Limited     | ✅ Good       | ✅ Excellent   |
-| **Best For**           | MVPs, Startups | Medium teams  | Enterprise     |
-
-📖 **Documentation:**
-
-- [Complete Documentation Index](./docs/generator/INDEX.md)
-- [Quick Start Guide](./docs/generator/QUICKSTART.md)
-- [Feature Scoring](./docs/generator/FEATURE_SCORING.md)
-- [RBAC Complete Guide](./docs/generator/rbac/RBAC_GUIDE.md)
-- [Audit Trail Guide](./docs/generator/audit/AUDIT_DOCUMENTATION.md)
-- [Publishing Guide](./PUBLISHING.md)
-
-### Development Setup
+## 💻 Development
 
 ### Prerequisites
 
-- **Node.js**: 24.0.0 or higher (enforced by .nvmrc and engines)
-- **npm**: 11.0.0 or higher
-- **NestJS**: 11.x
-- **Database**: PostgreSQL 18+ or MySQL 8+
+- **Node.js** 24.0.0+ (enforced by .nvmrc)
+- **npm** 11.0.0+
+- **PostgreSQL** 18+ or **MySQL** 8+
 
-### Node Version Management
-
-This project uses `.nvmrc` to specify the required Node.js version:
+### Setup
 
 ```bash
-# Automatically switch to correct Node.js version
+# Use correct Node version
 nvm use
 
-# Or install if not available
-nvm install
-
-# Verify version
-node --version  # Should show v24.x.x
-```
-
-### Install Dependencies
-
-```bash
+# Install dependencies
 npm install
-```
 
-### Build Libraries
-
-```bash
-# Build all libraries
+# Build libraries
 npm run build:all-libs
-
-# Build specific library
-npm run build:generator
-npm run build:nest
 ```
 
-### Publish to npm
-
-```bash
-# Interactive publish
-./scripts/publish-libs.sh
-
-# Or use npm scripts
-npm run publish:all-libs
-```
-
-📖 **See:** [QUICK-PUBLISH.md](./QUICK-PUBLISH.md) for quick guide or [PUBLISHING.md](./PUBLISHING.md) for complete documentation.
+📖 **See:** [Development Guide](./docs/workspace/INDEX.md) | [Publishing Guide](./docs/workspace/PUBLISHING.md)
 
 ## � Feature Comparison
 
@@ -676,142 +180,39 @@ npm run publish:all-libs
 
 **Overall Score:** 119/100 🎉 (exceeds enterprise quality standards)
 
-## Documentation
+## 📖 Documentation
 
-### Generator Documentation
+### Quick Links
 
-**Complete Documentation Index](./docs/generator/INDEX.md)** - All generator documentation in one place
+- 🎯 **[Generator Documentation](./docs/generator/INDEX.md)** - Complete guide
+  - [Quick Start](./docs/generator/QUICKSTART.md) - 5-minute tutorial
+  - [Features](./docs/generator/FEATURES.md) - All features
+  - [RBAC Guide](./docs/generator/rbac/RBAC_GUIDE.md) - Complete RBAC (1432 lines)
+  - [Microservices](./docs/generator/quickstart/MICROSERVICES_QUICKSTART.md) - Architecture guide
 
-- **[Quick Start Guide](./docs/generator/QUICKSTART.md)** - Get started in 5 minutes
-- **[Feature Scoring](./docs/generator/FEATURE_SCORING.md)** - Complete feature analysis (119/100)
-- **[Microservices Quickstart](./docs/generator/quickstart/MICROSERVICES_QUICKSTART.md)** - Microservices setup guide (NEW!)
-- **[Feature Status](./docs/generator/FEATURE_STATUS.md)** - Implementation progress and capabilities
-- **[RBAC Complete Guide](./docs/generator/rbac/RBAC_GUIDE.md)** - Comprehensive RBAC documentation (1432 lines)
-- **[Audit Trail Documentation](./docs/generator/audit/AUDIT_DOCUMENTATION.md)** - Audit trail setup and usage
-- **[File Upload Guide](./docs/generator/FILE_UPLOAD.md)** - Multi-provider file upload implementation
-- **[Caching Guide](./docs/generator/CACHING.md)** - Redis caching implementation
-- **[Database Guide](./docs/generator/DATABASE.md)** - PostgreSQL & MySQL setup
-- **[Requirements](./docs/generator/REQUIREMENTS.md)** - System requirements compliance
+- 🛠️ **[Core Library](./libs/nest/README.md)** - Usage guide
+  - [API Reference](./libs/nest/IMPLEMENTATION_COMPLETE.md)
 
-### Publishing & Development
+- 🔐 **[RBAC Library](./docs/generator/rbac/RBAC_GUIDE.md)** - Complete implementation
 
-- **[Publishing Guide](./PUBLISHING.md)** - Complete guide untuk publish libraries
-- **[Quick Publish Guide](./QUICK-PUBLISH.md)** - Panduan cepat publish
-- **[Libraries Documentation](./LIBRARIES.md)** - Dokumentasi libraries
-- **[Checklist](./CHECKLIST.md)** - Pre-publish verification checklist
+- 💻 **[Development](./docs/workspace/INDEX.md)** - Workspace documentation
+  - [Publishing Guide](./docs/workspace/PUBLISHING.md)
+  - [Code Quality](./docs/workspace/CODE_QUALITY.md)
 
-### Examples & Tutorials
+## 🤝 Contributing
 
-**Basic CRUD Module:**
+Contributions are welcome! Please read our [Contributing Guide](./CONTRIBUTING.md) first.
 
-```bash
-nest-generator generate products.categories
-```
+## 📄 License
 
-**With All Features:**
+MIT © [Ojie Permana](https://github.com/ojiepermana)
 
-```bash
-nest-generator generate users.profile \
-  --features.audit=true \
-  --features.fileUpload=true \
-  --features.rbac=true \
-  --features.export=true \
-  --storageProvider=s3 \
-  --enableCache=true \
-  --swagger=true
-```
+## 🔗 Links
 
-**Microservices Architecture:**
+- **npm**: [@ojiepermana/nest-generator](https://www.npmjs.com/package/@ojiepermana/nest-generator) | [@ojiepermana/nest](https://www.npmjs.com/package/@ojiepermana/nest) | [@ojiepermana/rbac](https://www.npmjs.com/package/@ojiepermana/rbac)
+- **GitHub**: [ojiepermana/nest](https://github.com/ojiepermana/nest)
+- **Issues**: [Report a bug](https://github.com/ojiepermana/nest/issues)
 
-```bash
-# Initialize microservices architecture
-nest-generator init --architecture=microservices
+---
 
-# Generate in service - AUTO-generates gateway controller too!
-nest-generator generate orders.transactions --app=order
-
-# Single command generates BOTH:
-# 1. Service controller in apps/microservices/order/ (@MessagePattern)
-# 2. Gateway controller in apps/microservices/gateway/ (HTTP + ClientProxy)
-#
-# Gateway path is read from generator.config.json:
-# "microservices": {
-#   "gatewayApp": "apps/microservices/gateway"
-# }
-```
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-npm install
-```
-
-## Compile and run the project
-
-```bash
-# development
-npm run start
-
-# watch mode
-npm run start:dev
-
-# production mode
-npm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Built with ❤️ using [NestJS](https://nestjs.com)

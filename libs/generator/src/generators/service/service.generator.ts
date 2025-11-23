@@ -4,6 +4,7 @@
  * Generates NestJS service classes with business logic layer
  */
 
+import { Project, Scope, StructureKind } from 'ts-morph';
 import { toPascalCase, toCamelCase } from '../../utils/string.util';
 import type { TableMetadata, ColumnMetadata } from '../../interfaces/generator.interface';
 
@@ -33,672 +34,300 @@ export class ServiceGenerator {
     const serviceName = `${entityName}Service`;
     const repositoryName = `${entityName}Repository`;
     const filterDtoName = `${entityName}FilterDto`;
-
-    const imports = this.generateImports(entityName, repositoryName, filterDtoName);
-    const classDeclaration = this.generateClassDeclaration(serviceName);
-    const constructor = this.generateConstructor(repositoryName);
-    const crudMethods = this.generateCRUDMethods(entityName, repositoryName);
-    const filterMethods = this.generateFilterMethods(entityName, filterDtoName, repositoryName);
-    const customMethods = this.generateCustomMethods(entityName, repositoryName);
-
-    return `${imports}
-
-${classDeclaration}
-${constructor}
-${crudMethods}
-${filterMethods}
-${customMethods}
-}
-`;
-  }
-
-  /**
-   * Generate imports
-   */
-  private generateImports(
-    entityName: string,
-    repositoryName: string,
-    filterDtoName: string,
-  ): string {
-    const imports = [
-      "import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';",
-      `import { ${repositoryName} } from '../repositories/${this.toKebabCase(entityName)}.repository';`,
-      `import { ${entityName} } from '../entities/${this.toKebabCase(entityName)}.entity';`,
-      `import { Create${entityName}Dto } from '../dto/${this.toKebabCase(entityName)}/create-${this.toKebabCase(entityName)}.dto';`,
-      `import { Update${entityName}Dto } from '../dto/${this.toKebabCase(entityName)}/update-${this.toKebabCase(entityName)}.dto';`,
-      `import { ${filterDtoName} } from '../dto/${this.toKebabCase(entityName)}/${this.toKebabCase(entityName)}-filter.dto';`,
-    ];
-
-    if (this.options.enableCaching) {
-      imports.push(
-        "import { CACHE_MANAGER } from '@nestjs/cache-manager';",
-        "import { Inject } from '@nestjs/common';",
-        "import type { Cache } from 'cache-manager';",
-      );
-    }
-
-    if (this.options.enableTransactions) {
-      imports.push("import { DataSource } from 'typeorm';");
-    }
-
-    if (this.options.enableAuditLog) {
-      imports.push("import { AuditLogService } from '@ojiepermana/nest-generator/audit';");
-    }
-
-    return imports.join('\n');
-  }
-
-  /**
-   * Generate class declaration
-   */
-  private generateClassDeclaration(serviceName: string): string {
-    return `@Injectable()
-export class ${serviceName} {`;
-  }
-
-  /**
-   * Generate constructor
-   */
-  private generateConstructor(repositoryName: string): string {
-    const params = [`private readonly repository: ${repositoryName}`];
-
-    if (this.options.enableCaching) {
-      params.push('@Inject(CACHE_MANAGER) private readonly cacheManager: Cache');
-    }
-
-    if (this.options.enableTransactions) {
-      params.push('private readonly dataSource: DataSource');
-    }
-
-    if (this.options.enableAuditLog) {
-      params.push('private readonly auditLogService: AuditLogService');
-    }
-
-    return `  constructor(
-    ${params.join(',\n    ')},
-  ) {}
-`;
-  }
-
-  /**
-   * Generate CRUD methods
-   */
-  private generateCRUDMethods(entityName: string, repositoryName: string): string {
     const camelName = toCamelCase(entityName);
-    const pkColumn = this.getPrimaryKeyColumn();
-    const pkType = this.getTypeScriptType(pkColumn?.data_type || 'integer');
-    const cacheKey = `${camelName}`;
-
-    let createMethod = `
-  /**
-   * Create a new ${camelName}
-   */
-  async create(createDto: Create${entityName}Dto): Promise<${entityName}> {`;
-
-    if (this.options.enableValidation) {
-      createMethod += `
-    // Validate unique constraints
-    await this.validateUniqueConstraints(createDto);
-`;
-    }
-
-    if (this.options.enableErrorHandling) {
-      createMethod += `
-    try {
-      const ${camelName} = await this.repository.create(createDto);`;
-
-      if (this.options.enableCaching) {
-        createMethod += `
-      
-      // Invalidate cache
-      await this.invalidateCache();`;
-      }
-
-      if (this.options.enableAuditLog) {
-        createMethod += `
-      
-      // Log audit
-      await this.auditLogService.log({
-        entity_type: '${entityName}',
-        entity_id: String(${camelName}.${pkColumn?.column_name || 'id'}),
-        action: 'CREATE',
-        new_values: createDto,
-        user_id: 'system', // TODO: Get from context
-      });`;
-      }
-
-      createMethod += `
-      
-      return ${camelName};
-    } catch (error) {
-      throw new BadRequestException(\`Failed to create ${camelName}: \${error.message}\`);
-    }`;
-    } else {
-      createMethod += `
-    const ${camelName} = await this.repository.create(createDto);`;
-
-      if (this.options.enableCaching) {
-        createMethod += `
-    
-    // Invalidate cache
-    await this.invalidateCache();`;
-      }
-
-      if (this.options.enableAuditLog) {
-        createMethod += `
-    
-    // Log audit
-    await this.auditLogService.log({
-      entity_type: '${entityName}',
-      entity_id: String(${camelName}.${pkColumn?.column_name || 'id'}),
-      action: 'CREATE',
-      new_values: createDto,
-      user_id: 'system', // TODO: Get from context
-    });`;
-      }
-
-      createMethod += `
-    
-    return ${camelName};`;
-    }
-
-    createMethod += `
-  }
-`;
-
-    let findAllMethod = `
-  /**
-   * Find all ${camelName}s
-   */
-  async findAll(): Promise<${entityName}[]> {`;
-
-    if (this.options.enableCaching) {
-      findAllMethod += `
-    const cacheKey = '${cacheKey}:all';
-    const cached = await this.cacheManager.get<${entityName}[]>(cacheKey);
-    
-    if (cached) {
-      return cached;
-    }
-    
-    const ${camelName}s = await this.repository.findAll();
-    await this.cacheManager.set(cacheKey, ${camelName}s, 300); // 5 minutes
-    
-    return ${camelName}s;`;
-    } else {
-      findAllMethod += `
-    return this.repository.findAll();`;
-    }
-
-    findAllMethod += `
-  }
-`;
-
-    let findOneMethod = `
-  /**
-   * Find one ${camelName} by ID
-   */
-  async findOne(id: ${pkType}): Promise<${entityName}> {`;
-
-    if (this.options.enableCaching) {
-      findOneMethod += `
-    const cacheKey = \`${cacheKey}:\${id}\`;
-    const cached = await this.cacheManager.get<${entityName}>(cacheKey);
-    
-    if (cached) {
-      return cached;
-    }
-    `;
-    }
-
-    if (this.options.enableErrorHandling) {
-      findOneMethod += `
-    const ${camelName} = await this.repository.findOne(id);
-    
-    if (!${camelName}) {
-      throw new NotFoundException(\`${entityName} with ID \${id} not found\`);
-    }`;
-
-      if (this.options.enableCaching) {
-        findOneMethod += `
-    
-    await this.cacheManager.set(cacheKey, ${camelName}, 300);`;
-      }
-
-      findOneMethod += `
-    
-    return ${camelName};`;
-    } else {
-      findOneMethod += `
-    const ${camelName} = await this.repository.findOne(id);`;
-
-      if (this.options.enableCaching) {
-        findOneMethod += `
-    
-    if (${camelName}) {
-      await this.cacheManager.set(cacheKey, ${camelName}, 300);
-    }`;
-      }
-
-      findOneMethod += `
-    
-    return ${camelName};`;
-    }
-
-    findOneMethod += `
-  }
-`;
-
-    let updateMethod = `
-  /**
-   * Update a ${camelName}
-   */
-  async update(id: ${pkType}, updateDto: Update${entityName}Dto): Promise<${entityName}> {`;
-
-    if (this.options.enableValidation) {
-      updateMethod += `
-    // Validate exists
-    await this.findOne(id);
-    
-    // Validate unique constraints
-    await this.validateUniqueConstraints(updateDto, id);
-`;
-    }
-
-    if (this.options.enableErrorHandling) {
-      updateMethod += `
-    try {
-      const ${camelName} = await this.repository.update(id, updateDto);`;
-
-      if (this.options.enableCaching) {
-        updateMethod += `
-      
-      // Invalidate cache
-      await this.invalidateCache();
-      await this.cacheManager.del(\`${cacheKey}:\${id}\`);`;
-      }
-
-      if (this.options.enableAuditLog) {
-        updateMethod += `
-      
-      // Log audit
-      await this.auditLogService.log({
-        entity_type: '${entityName}',
-        entity_id: String(id),
-        action: 'UPDATE',
-        new_values: updateDto,
-        user_id: 'system', // TODO: Get from context
-      });`;
-      }
-
-      updateMethod += `
-      
-      return ${camelName};
-    } catch (error) {
-      throw new BadRequestException(\`Failed to update ${camelName}: \${error.message}\`);
-    }`;
-    } else {
-      updateMethod += `
-    const ${camelName} = await this.repository.update(id, updateDto);`;
-
-      if (this.options.enableCaching) {
-        updateMethod += `
-    
-    // Invalidate cache
-    await this.invalidateCache();
-    await this.cacheManager.del(\`${cacheKey}:\${id}\`);`;
-      }
-
-      if (this.options.enableAuditLog) {
-        updateMethod += `
-    
-    // Log audit
-    await this.auditLogService.log({
-      entity_type: '${entityName}',
-      entity_id: String(id),
-      action: 'UPDATE',
-      new_values: updateDto,
-      user_id: 'system', // TODO: Get from context
-    });`;
-      }
-
-      updateMethod += `
-    
-    return ${camelName};`;
-    }
-
-    updateMethod += `
-  }
-`;
-
-    let removeMethod = `
-  /**
-   * Remove a ${camelName}
-   */
-  async remove(id: ${pkType}): Promise<void> {`;
-
-    if (this.options.enableValidation) {
-      removeMethod += `
-    // Validate exists
-    await this.findOne(id);
-`;
-    }
-
-    if (this.options.enableErrorHandling) {
-      removeMethod += `
-    try {
-      await this.repository.delete(id);`;
-
-      if (this.options.enableCaching) {
-        removeMethod += `
-      
-      // Invalidate cache
-      await this.invalidateCache();
-      await this.cacheManager.del(\`${cacheKey}:\${id}\`);`;
-      }
-
-      if (this.options.enableAuditLog) {
-        removeMethod += `
-      
-      // Log audit
-      await this.auditLogService.log({
-        entity_type: '${entityName}',
-        entity_id: String(id),
-        action: 'DELETE',
-        user_id: 'system', // TODO: Get from context
-      });`;
-      }
-
-      removeMethod += `
-    } catch (error) {
-      throw new BadRequestException(\`Failed to remove ${camelName}: \${error.message}\`);
-    }`;
-    } else {
-      removeMethod += `
-    await this.repository.delete(id);`;
-
-      if (this.options.enableCaching) {
-        removeMethod += `
-    
-    // Invalidate cache
-    await this.invalidateCache();
-    await this.cacheManager.del(\`${cacheKey}:\${id}\`);`;
-      }
-
-      if (this.options.enableAuditLog) {
-        removeMethod += `
-    
-    // Log audit
-    await this.auditLogService.log({
-      entity_type: '${entityName}',
-      entity_id: String(id),
-      action: 'DELETE',
-      user_id: 'system', // TODO: Get from context
-    });`;
-      }
-    }
-
-    removeMethod += `
-  }
-`;
-
-    return createMethod + findAllMethod + findOneMethod + updateMethod + removeMethod;
-  }
-
-  /**
-   * Generate filter methods
-   */
-  private generateFilterMethods(
-    entityName: string,
-    filterDtoName: string,
-    repositoryName: string,
-  ): string {
-    const camelName = toCamelCase(entityName);
-    const cacheKey = `${camelName}`;
-
-    let method = `
-  /**
-   * Find ${camelName}s with filters
-   */
-  async findWithFilters(
-    filterDto: ${filterDtoName},
-    options?: { page?: number; limit?: number; sort?: Array<{ field: string; order: 'ASC' | 'DESC' }> },
-  ): Promise<{ data: ${entityName}[]; total: number; page: number; limit: number }> {`;
-
-    if (this.options.enableCaching) {
-      method += `
-    const cacheKey = \`${cacheKey}:filter:\${JSON.stringify({ filterDto, options })}\`;
-    const cached = await this.cacheManager.get<{ data: ${entityName}[]; total: number; page: number; limit: number }>(cacheKey);
-    
-    if (cached) {
-      return cached;
-    }
-    `;
-    }
-
-    method += `
-    const { data, total } = await this.repository.findWithFilters(filterDto, options);
-    
-    const result = {
-      data,
-      total,
-      page: options?.page || 1,
-      limit: options?.limit || 20,
-    };`;
-
-    if (this.options.enableCaching) {
-      method += `
-    
-    await this.cacheManager.set(cacheKey, result, 300);`;
-    }
-
-    method += `
-    
-    return result;
-  }
-`;
-
-    return method;
-  }
-
-  /**
-   * Generate custom methods
-   */
-  private generateCustomMethods(entityName: string, repositoryName: string): string {
-    const camelName = toCamelCase(entityName);
-    const cacheKey = `${camelName}`;
-
-    let methods = '';
-
-    // Count method
-    methods += `
-  /**
-   * Count ${camelName}s
-   */
-  async count(): Promise<number> {`;
-
-    if (this.options.enableCaching) {
-      methods += `
-    const cacheKey = '${cacheKey}:count';
-    const cached = await this.cacheManager.get<number>(cacheKey);
-    
-    if (cached !== undefined) {
-      return cached;
-    }
-    
-    const count = await this.repository.count();
-    await this.cacheManager.set(cacheKey, count, 300);
-    
-    return count;`;
-    } else {
-      methods += `
-    return this.repository.count();`;
-    }
-
-    methods += `
-  }
-`;
-
-    // Exists method
-    methods += `
-  /**
-   * Check if ${camelName} exists
-   */
-  async exists(id: number): Promise<boolean> {`;
-
-    if (this.options.enableCaching) {
-      methods += `
-    const cacheKey = \`${cacheKey}:\${id}:exists\`;
-    const cached = await this.cacheManager.get<boolean>(cacheKey);
-    
-    if (cached !== undefined) {
-      return cached;
-    }
-    
-    const exists = await this.repository.exists({ id } as any);
-    await this.cacheManager.set(cacheKey, exists, 300);
-    
-    return exists;`;
-    } else {
-      methods += `
-    return this.repository.exists({ id } as any);`;
-    }
-
-    methods += `
-  }
-`;
-
-    // Validation methods
-    if (this.options.enableValidation) {
-      const pkColumn = this.getPrimaryKeyColumn();
-      const pkType = pkColumn ? this.getTypeScriptType(pkColumn.data_type) : 'string';
-
-      methods += `
-  /**
-   * Validate unique constraints
-   */
-  private async validateUniqueConstraints(
-    data: Create${entityName}Dto | Update${entityName}Dto,
-    excludeId?: ${pkType},
-  ): Promise<void> {
-    // Add custom validation logic here based on unique columns
-    // Example: Check if email already exists
-    ${this.generateUniqueValidation(entityName, 'excludeId')}
-  }
-`;
-    }
-
-    // Cache invalidation helper
-    if (this.options.enableCaching) {
-      methods += `
-  /**
-   * Invalidate all cache for ${camelName}
-   */
-  private async invalidateCache(): Promise<void> {
-    // Invalidate common cache keys
-    await this.cacheManager.del('${cacheKey}:all');
-    
-    // Note: cache-manager v5 doesn't support listing all keys
-    // For production, consider using a cache with pattern-based deletion
-    // or maintain a list of cache keys in your application
-  }
-`;
-    }
-
-    // Transaction helper
-    if (this.options.enableTransactions) {
-      methods += `
-  /**
-   * Execute in transaction
-   */
-  async transaction<T>(callback: () => Promise<T>): Promise<T> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      const result = await callback();
-      await queryRunner.commitTransaction();
-      return result;
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
-  }
-`;
-    }
-
-    return methods;
-  }
-
-  /**
-   * Generate unique validation logic
-   */
-  private generateUniqueValidation(entityName: string, excludeIdParam: string): string {
-    const uniqueColumns = this.columns.filter((col) => col.is_unique);
-
-    if (uniqueColumns.length === 0) {
-      return '// No unique constraints defined';
-    }
-
-    const validations = uniqueColumns.map((col) => {
-      const fieldName = col.column_name;
-      const pkColumn = this.getPrimaryKeyColumn();
-      const pkName = pkColumn?.column_name || 'id';
-
-      return `    if ('${fieldName}' in data && data.${fieldName}) {
-      const existing = await this.repository.findOne(data.${fieldName} as string);
-      if (existing && (!${excludeIdParam} || existing.${pkName} !== ${excludeIdParam})) {
-        throw new ConflictException('${fieldName} already exists');
-      }
-    }`;
+    const kebabName = this.toKebabCase(entityName);
+
+    const project = new Project();
+    const sourceFile = project.createSourceFile(`${serviceName}.ts`, '', { overwrite: true });
+
+    // Add Imports
+    sourceFile.addImportDeclaration({
+      moduleSpecifier: '@nestjs/common',
+      namedImports: [
+        'Injectable',
+        'NotFoundException',
+        'BadRequestException',
+        'ConflictException',
+        'Inject',
+      ],
     });
 
-    return validations.join('\n    ');
+    sourceFile.addImportDeclaration({
+      moduleSpecifier: `../repositories/${kebabName}.repository`,
+      namedImports: [repositoryName],
+    });
+
+    sourceFile.addImportDeclaration({
+      moduleSpecifier: `../entities/${kebabName}.entity`,
+      namedImports: [entityName],
+    });
+
+    sourceFile.addImportDeclaration({
+      moduleSpecifier: `../dto/${kebabName}/create-${kebabName}.dto`,
+      namedImports: [`Create${entityName}Dto`],
+    });
+
+    sourceFile.addImportDeclaration({
+      moduleSpecifier: `../dto/${kebabName}/update-${kebabName}.dto`,
+      namedImports: [`Update${entityName}Dto`],
+    });
+
+    sourceFile.addImportDeclaration({
+      moduleSpecifier: `../dto/${kebabName}/${kebabName}-filter.dto`,
+      namedImports: [filterDtoName],
+    });
+
+    if (this.options.enableCaching) {
+      sourceFile.addImportDeclaration({
+        moduleSpecifier: '@nestjs/cache-manager',
+        namedImports: ['CACHE_MANAGER'],
+      });
+      sourceFile.addImportDeclaration({
+        moduleSpecifier: 'cache-manager',
+        namedImports: ['Cache'],
+        isTypeOnly: true,
+      });
+      sourceFile.addImportDeclaration({
+        moduleSpecifier: '@ojiepermana/nest-generator/decorators',
+        namedImports: ['InvalidateCache'],
+      });
+    }
+
+    if (this.options.enableAuditLog) {
+      sourceFile.addImportDeclaration({
+        moduleSpecifier: '@ojiepermana/nest-generator/decorators',
+        namedImports: ['AuditLog'],
+      });
+    }
+
+    if (this.options.enableTransactions) {
+      sourceFile.addImportDeclaration({
+        moduleSpecifier: 'typeorm',
+        namedImports: ['DataSource'],
+      });
+    }
+
+    // Create Class
+    const classDecl = sourceFile.addClass({
+      name: serviceName,
+      isExported: true,
+      decorators: [{ name: 'Injectable', arguments: [] }],
+    });
+
+    // Constructor
+    const ctor = classDecl.addConstructor();
+    ctor.addParameter({
+      name: 'repository',
+      type: repositoryName,
+      scope: Scope.Private,
+      isReadonly: true,
+    });
+
+    if (this.options.enableCaching) {
+      ctor.addParameter({
+        name: 'cacheManager',
+        type: 'Cache',
+        scope: Scope.Private,
+        isReadonly: true,
+        decorators: [{ name: 'Inject', arguments: ['CACHE_MANAGER'] }],
+      });
+    }
+
+    if (this.options.enableTransactions) {
+      ctor.addParameter({
+        name: 'dataSource',
+        type: 'DataSource',
+        scope: Scope.Private,
+        isReadonly: true,
+      });
+    }
+
+    // Methods
+    this.addCreateMethod(classDecl, entityName, camelName);
+    this.addFindAllMethod(classDecl, entityName, camelName);
+    this.addFindOneMethod(classDecl, entityName, camelName);
+    this.addUpdateMethod(classDecl, entityName, camelName);
+    this.addRemoveMethod(classDecl, entityName, camelName);
+    this.addFilterMethod(classDecl, entityName, filterDtoName);
+
+    return sourceFile.getFullText();
   }
 
-  /**
-   * Get primary key column
-   */
+  private addCreateMethod(classDecl: any, entityName: string, camelName: string) {
+    const method = classDecl.addMethod({
+      name: 'create',
+      isAsync: true,
+      returnType: `Promise<${entityName}>`,
+      parameters: [{ name: 'createDto', type: `Create${entityName}Dto` }],
+    });
+
+    if (this.options.enableAuditLog) {
+      method.addDecorator({
+        name: 'AuditLog',
+        arguments: [`{ action: 'CREATE', resource: '${entityName}' }`],
+      });
+    }
+
+    if (this.options.enableCaching) {
+      method.addDecorator({
+        name: 'InvalidateCache',
+        arguments: [`{ key: '${camelName}' }`],
+      });
+    }
+
+    method.setBodyText((writer) => {
+      if (this.options.enableValidation) {
+        // TODO: Move to class-validator
+        // writer.writeLine('await this.validateUniqueConstraints(createDto);');
+      }
+      writer.writeLine(`return this.repository.create(createDto);`);
+    });
+  }
+
+  private addFindAllMethod(classDecl: any, entityName: string, camelName: string) {
+    const method = classDecl.addMethod({
+      name: 'findAll',
+      isAsync: true,
+      returnType: `Promise<${entityName}[]>`,
+    });
+
+    // Caching for read operations is complex to do via simple decorator without interceptor logic
+    // For now, we keep it simple or assume a @Cacheable decorator exists (not implemented yet)
+
+    method.setBodyText(`return this.repository.findAll();`);
+  }
+
+  private addFindOneMethod(classDecl: any, entityName: string, camelName: string) {
+    const pkColumn = this.getPrimaryKeyColumn();
+    const pkType = this.getTypeScriptType(pkColumn?.data_type || 'integer');
+
+    const method = classDecl.addMethod({
+      name: 'findOne',
+      isAsync: true,
+      returnType: `Promise<${entityName}>`,
+      parameters: [{ name: 'id', type: pkType }],
+    });
+
+    method.setBodyText((writer) => {
+      writer.writeLine(`const ${camelName} = await this.repository.findOne(id);`);
+      if (this.options.enableErrorHandling) {
+        writer.writeLine(`if (!${camelName}) {`);
+        writer.writeLine(
+          `  throw new NotFoundException(\`${entityName} with ID \${id} not found\`);`,
+        );
+        writer.writeLine(`}`);
+      }
+      writer.writeLine(`return ${camelName};`);
+    });
+  }
+
+  private addUpdateMethod(classDecl: any, entityName: string, camelName: string) {
+    const pkColumn = this.getPrimaryKeyColumn();
+    const pkType = this.getTypeScriptType(pkColumn?.data_type || 'integer');
+
+    const method = classDecl.addMethod({
+      name: 'update',
+      isAsync: true,
+      returnType: `Promise<${entityName}>`,
+      parameters: [
+        { name: 'id', type: pkType },
+        { name: 'updateDto', type: `Update${entityName}Dto` },
+      ],
+    });
+
+    if (this.options.enableAuditLog) {
+      method.addDecorator({
+        name: 'AuditLog',
+        arguments: [`{ action: 'UPDATE', resource: '${entityName}' }`],
+      });
+    }
+
+    if (this.options.enableCaching) {
+      method.addDecorator({
+        name: 'InvalidateCache',
+        arguments: [`{ key: '${camelName}' }`],
+      });
+    }
+
+    method.setBodyText((writer) => {
+      if (this.options.enableErrorHandling) {
+        writer.writeLine(`await this.findOne(id);`);
+      }
+      writer.writeLine(`return this.repository.update(id, updateDto);`);
+    });
+  }
+
+  private addRemoveMethod(classDecl: any, entityName: string, camelName: string) {
+    const pkColumn = this.getPrimaryKeyColumn();
+    const pkType = this.getTypeScriptType(pkColumn?.data_type || 'integer');
+
+    const method = classDecl.addMethod({
+      name: 'remove',
+      isAsync: true,
+      returnType: `Promise<void>`,
+      parameters: [{ name: 'id', type: pkType }],
+    });
+
+    if (this.options.enableAuditLog) {
+      method.addDecorator({
+        name: 'AuditLog',
+        arguments: [`{ action: 'DELETE', resource: '${entityName}' }`],
+      });
+    }
+
+    if (this.options.enableCaching) {
+      method.addDecorator({
+        name: 'InvalidateCache',
+        arguments: [`{ key: '${camelName}' }`],
+      });
+    }
+
+    method.setBodyText((writer) => {
+      if (this.options.enableErrorHandling) {
+        writer.writeLine(`await this.findOne(id);`);
+      }
+      writer.writeLine(`await this.repository.delete(id);`);
+    });
+  }
+
+  private addFilterMethod(classDecl: any, entityName: string, filterDtoName: string) {
+    classDecl.addMethod({
+      name: 'findWithFilters',
+      isAsync: true,
+      returnType: `Promise<{ data: ${entityName}[]; total: number; page: number; limit: number }>`,
+      parameters: [
+        { name: 'filterDto', type: filterDtoName },
+        {
+          name: 'options',
+          type: `{ page?: number; limit?: number; sort?: Array<{ field: string; order: 'ASC' | 'DESC' }> }`,
+          hasQuestionToken: true,
+        },
+      ],
+      statements: [
+        `const { data, total } = await this.repository.findWithFilters(filterDto, options);`,
+        `return {`,
+        `  data,`,
+        `  total,`,
+        `  page: options?.page || 1,`,
+        `  limit: options?.limit || 20,`,
+        `};`,
+      ],
+    });
+  }
+
   private getPrimaryKeyColumn(): ColumnMetadata | undefined {
     return this.columns.find((col) => col.is_primary_key);
   }
 
-  /**
-   * Get TypeScript type from database type
-   */
   private getTypeScriptType(dbType: string): string {
     const lowerType = dbType.toLowerCase();
-
-    if (lowerType.includes('int') || lowerType.includes('serial') || lowerType.includes('number')) {
+    if (lowerType.includes('int') || lowerType.includes('serial') || lowerType.includes('number'))
       return 'number';
-    }
-
-    if (
-      lowerType.includes('varchar') ||
-      lowerType.includes('text') ||
-      lowerType.includes('char') ||
-      lowerType.includes('uuid')
-    ) {
-      return 'string';
-    }
-
-    if (lowerType.includes('bool')) {
-      return 'boolean';
-    }
-
-    if (lowerType.includes('date') || lowerType.includes('time')) {
-      return 'Date';
-    }
-
-    return 'any';
+    if (lowerType.includes('bool')) return 'boolean';
+    if (lowerType.includes('date') || lowerType.includes('time')) return 'Date';
+    return 'string';
   }
 
-  /**
-   * Convert to kebab-case
-   */
   private toKebabCase(str: string): string {
     return str
       .replace(/([a-z])([A-Z])/g, '$1-$2')

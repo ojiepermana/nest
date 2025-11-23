@@ -1,0 +1,20 @@
+{
+  "displayName": "nest",
+  "preset": "../../jest.config.json",
+  "testMatch": ["**/test/**/*.spec.ts"],
+  "collectCoverageFrom": [
+    "src/**/*.ts",
+    "!src/**/*.interface.ts",
+    "!src/**/index.ts",
+    "!src/nest.module.ts"
+  ],
+  "coverageDirectory": "../../coverage/libs/nest",
+  "coverageThreshold": {
+    "global": {
+      "branches": 90,
+      "functions": 90,
+      "lines": 90,
+      "statements": 90
+    }
+  }
+}

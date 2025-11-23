@@ -29,6 +29,12 @@ lerna-debug.log*
 /coverage
 /.nyc_output
 
+# Library coverage reports
+/libs/*/coverage
+libs/generator/coverage
+libs/nest/coverage
+libs/rbac/coverage
+
 # IDEs and editors
 /.idea
 .project

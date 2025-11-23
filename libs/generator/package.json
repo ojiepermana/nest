@@ -19,6 +19,11 @@
       "types": "./dist/rbac/index.d.ts",
       "import": "./dist/rbac/index.js",
       "require": "./dist/rbac/index.js"
+    },
+    "./decorators": {
+      "types": "./dist/decorators/index.d.ts",
+      "import": "./dist/decorators/index.js",
+      "require": "./dist/decorators/index.js"
     }
   },
   "bin": {
@@ -50,24 +55,24 @@
     "npm": ">=11.0.0"
   },
   "scripts": {
+    "build": "tsc -p tsconfig.lib.json",
     "preinstall": "node -e \"if (process.env.npm_config_save_prod === 'true') { console.error('\\n⚠️  @ojiepermana/nest-generator should be installed as a dev dependency.\\n   Use: npm install --save-dev @ojiepermana/nest-generator\\n'); process.exit(1); }\"",
     "postinstall": "node -e \"console.log('\\n✅ @ojiepermana/nest-generator installed successfully!\\n   Run: npx nest-generator --help\\n')\""
   },
   "peerDependencies": {
-    "@ojiepermana/nest-rbac": "^1.0.0",
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
-    "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.0.0",
-    "pg": "^8.13.0",
-    "mysql2": "^3.11.0",
-    "commander": "^12.1.0",
-    "inquirer": "^8.2.0",
+    "@ojiepermana/nest-rbac": "^1.0.0",
     "chalk": "^4.1.0",
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.0",
+    "inquirer": "^8.2.0",
+    "mysql2": "^3.11.0",
     "ora": "^5.4.0",
-    "dotenv": "^16.4.0"
+    "pg": "^8.13.0",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.0.0"
   },
-  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   },
@@ -77,5 +82,8 @@
     "README.md",
     "INSTALLATION.md",
     "DATABASE_COMPATIBILITY.md"
-  ]
+  ],
+  "dependencies": {
+    "ts-morph": "^27.0.2"
+  }
 }
